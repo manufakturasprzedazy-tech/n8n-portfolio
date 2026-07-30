@@ -1,0 +1,697 @@
+{
+    "updatedAt":  "2026-07-19T16:42:56.152Z",
+    "createdAt":  "2026-07-17T21:13:39.479Z",
+    "id":  "xBosD1b0WTJuzJql",
+    "name":  "ET-A_Slack_Akcje_Odbiornik",
+    "description":  null,
+    "active":  true,
+    "isArchived":  false,
+    "nodes":  [
+                  {
+                      "id":  "hook",
+                      "name":  "odbior-akcji-slack",
+                      "type":  "n8n-nodes-base.webhook",
+                      "typeVersion":  2.1,
+                      "position":  [
+                                       0,
+                                       300
+                                   ],
+                      "parameters":  {
+                                         "httpMethod":  "POST",
+                                         "path":  "et-slack-actions",
+                                         "responseMode":  "onReceived",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "webhookId":  "et-slack-actions-hook"
+                  },
+                  {
+                      "id":  "parse",
+                      "name":  "parsuj-akcje",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       220,
+                                       300
+                                   ],
+                      "parameters":  {
+                                         "mode":  "runOnceForEachItem",
+                                         "jsCode":  "// Slack wysyla interactivity jako form-encoded z polem \u0027payload\u0027 (JSON string).\nconst body = $json.body || {};\nlet p = {};\ntry { p = typeof body.payload === \u0027string\u0027 ? JSON.parse(body.payload) : (body.payload || {}); } catch (e) {}\nconst a = (p.actions \u0026\u0026 p.actions[0]) || {};\nlet v = {};\ntry { v = a.value ? JSON.parse(a.value) : {}; } catch (e) { v = { raw: a.value }; }\nreturn { json: {\n  action_id: a.action_id || \u0027\u0027,\n  value: v,\n  user: (p.user \u0026\u0026 p.user.id) || \u0027\u0027,\n  userName: (p.user \u0026\u0026 (p.user.username || p.user.name)) || \u0027ktos\u0027,\n  channel: (p.channel \u0026\u0026 p.channel.id) || \u0027\u0027,\n  ts: (p.message \u0026\u0026 p.message.ts) || \u0027\u0027\n} };"
+                                     }
+                  },
+                  {
+                      "id":  "ifsend",
+                      "name":  "czy-wyslij",
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       440,
+                                       300
+                                   ],
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  true,
+                                                                            "leftValue":  "",
+                                                                            "typeValidation":  "loose",
+                                                                            "version":  2
+                                                                        },
+                                                            "combinator":  "and",
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "id":  "c1",
+                                                                                   "leftValue":  "={{ $json.action_id }}",
+                                                                                   "rightValue":  "wyslij_szkic",
+                                                                                   "operator":  {
+                                                                                                    "type":  "string",
+                                                                                                    "operation":  "equals"
+                                                                                                }
+                                                                               }
+                                                                           ]
+                                                        },
+                                         "options":  {
+
+                                                     }
+                                     }
+                  },
+                  {
+                      "id":  "reply",
+                      "name":  "wyslij-odpowiedz-gmail",
+                      "type":  "n8n-nodes-base.gmail",
+                      "typeVersion":  2.1,
+                      "position":  [
+                                       680,
+                                       200
+                                   ],
+                      "parameters":  {
+                                         "resource":  "message",
+                                         "operation":  "reply",
+                                         "messageId":  "={{ $json.value.mid }}",
+                                         "message":  "={{ $json.value.draft }}",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "credentials":  {
+                                          "gmailOAuth2":  {
+                                                              "id":  "QaEBC5SeQqoHZZ3i",
+                                                              "name":  "Gmail_Ogrodzenia"
+                                                          }
+                                      },
+                      "webhookId":  "b33455cf-8320-4531-8ffb-d5c3b197faaf"
+                  },
+                  {
+                      "id":  "okmsg",
+                      "name":  "slack-wyslano",
+                      "type":  "n8n-nodes-base.slack",
+                      "typeVersion":  2.3,
+                      "position":  [
+                                       900,
+                                       200
+                                   ],
+                      "parameters":  {
+                                         "select":  "channel",
+                                         "channelId":  {
+                                                           "__rl":  true,
+                                                           "mode":  "id",
+                                                           "value":  "={{ $(\u0027parsuj-akcje\u0027).item.json.channel }}"
+                                                       },
+                                         "text":  "=:white_check_mark: Szkic wyslany do klienta przez \u003c@{{ $(\u0027parsuj-akcje\u0027).item.json.user }}\u003e — temat: {{ $(\u0027parsuj-akcje\u0027).item.json.value.subj }}",
+                                         "otherOptions":  {
+
+                                                          }
+                                     },
+                      "credentials":  {
+                                          "slackApi":  {
+                                                           "id":  "5CVzetMyusnABbOK",
+                                                           "name":  "Slack Testowe"
+                                                       }
+                                      },
+                      "webhookId":  "fec03cb5-6e21-4946-801e-34b61de251ff"
+                  },
+                  {
+                      "id":  "ackmsg",
+                      "name":  "slack-przejmuje",
+                      "type":  "n8n-nodes-base.slack",
+                      "typeVersion":  2.3,
+                      "position":  [
+                                       680,
+                                       420
+                                   ],
+                      "parameters":  {
+                                         "select":  "channel",
+                                         "channelId":  {
+                                                           "__rl":  true,
+                                                           "mode":  "id",
+                                                           "value":  "={{ $json.channel }}"
+                                                       },
+                                         "text":  "=:raising_hand: \u003c@{{ $json.user }}\u003e przejmuje sprawe — temat: {{ $json.value.subj }}",
+                                         "otherOptions":  {
+
+                                                          }
+                                     },
+                      "credentials":  {
+                                          "slackApi":  {
+                                                           "id":  "5CVzetMyusnABbOK",
+                                                           "name":  "Slack Testowe"
+                                                       }
+                                      },
+                      "webhookId":  "bef5704f-1174-425a-87be-d31c835ce26c"
+                  },
+                  {
+                      "id":  "getdrafts",
+                      "name":  "pobierz-drafty",
+                      "type":  "n8n-nodes-base.gmail",
+                      "typeVersion":  2.1,
+                      "position":  [
+                                       900,
+                                       400
+                                   ],
+                      "parameters":  {
+                                         "resource":  "draft",
+                                         "operation":  "getAll",
+                                         "returnAll":  false,
+                                         "limit":  50,
+                                         "simple":  false,
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "credentials":  {
+                                          "gmailOAuth2":  {
+                                                              "id":  "QaEBC5SeQqoHZZ3i",
+                                                              "name":  "Gmail_Ogrodzenia"
+                                                          }
+                                      },
+                      "onError":  "continueRegularOutput",
+                      "webhookId":  "d87ebd60-91f7-4f4f-8f92-9279cc1f749f"
+                  },
+                  {
+                      "id":  "finddraft",
+                      "name":  "znajdz-draft",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       1120,
+                                       400
+                                   ],
+                      "parameters":  {
+                                         "mode":  "runOnceForAllItems",
+                                         "jsCode":  "// Znajdz draft agenta nalezacy do tego samego watku co wyslana odpowiedz.\nconst tid = (($(\u0027parsuj-akcje\u0027).first().json || {}).value || {}).tid || \u0027\u0027;\nconst out = [];\nif (!tid) return out;\nfor (const it of $input.all()) {\n  const d = it.json || {};\n  const dThread = (d.message \u0026\u0026 d.message.threadId) || d.threadId || \u0027\u0027;\n  const draftId = d.id || \u0027\u0027;\n  if (draftId \u0026\u0026 dThread === tid) out.push({ json: { draftId: draftId } });\n}\nreturn out;"
+                                     }
+                  },
+                  {
+                      "id":  "deldraft",
+                      "name":  "usun-draft",
+                      "type":  "n8n-nodes-base.gmail",
+                      "typeVersion":  2.1,
+                      "position":  [
+                                       1340,
+                                       400
+                                   ],
+                      "parameters":  {
+                                         "resource":  "draft",
+                                         "operation":  "delete",
+                                         "messageId":  "={{ $json.draftId }}"
+                                     },
+                      "credentials":  {
+                                          "gmailOAuth2":  {
+                                                              "id":  "QaEBC5SeQqoHZZ3i",
+                                                              "name":  "Gmail_Ogrodzenia"
+                                                          }
+                                      },
+                      "onError":  "continueRegularOutput",
+                      "webhookId":  "943de058-66c8-4e82-8d46-04d55ba8827b"
+                  }
+              ],
+    "connections":  {
+                        "odbior-akcji-slack":  {
+                                                   "main":  [
+                                                                [
+                                                                    {
+                                                                        "node":  "parsuj-akcje",
+                                                                        "type":  "main",
+                                                                        "index":  0
+                                                                    }
+                                                                ]
+                                                            ]
+                                               },
+                        "parsuj-akcje":  {
+                                             "main":  [
+                                                          [
+                                                              {
+                                                                  "node":  "czy-wyslij",
+                                                                  "type":  "main",
+                                                                  "index":  0
+                                                              }
+                                                          ]
+                                                      ]
+                                         },
+                        "czy-wyslij":  {
+                                           "main":  [
+                                                        [
+                                                            {
+                                                                "node":  "wyslij-odpowiedz-gmail",
+                                                                "type":  "main",
+                                                                "index":  0
+                                                            }
+                                                        ],
+                                                        [
+                                                            {
+                                                                "node":  "slack-przejmuje",
+                                                                "type":  "main",
+                                                                "index":  0
+                                                            }
+                                                        ]
+                                                    ]
+                                       },
+                        "wyslij-odpowiedz-gmail":  {
+                                                       "main":  [
+                                                                    [
+                                                                        {
+                                                                            "node":  "slack-wyslano",
+                                                                            "type":  "main",
+                                                                            "index":  0
+                                                                        },
+                                                                        {
+                                                                            "node":  "pobierz-drafty",
+                                                                            "type":  "main",
+                                                                            "index":  0
+                                                                        }
+                                                                    ]
+                                                                ]
+                                                   },
+                        "pobierz-drafty":  {
+                                               "main":  [
+                                                            [
+                                                                {
+                                                                    "node":  "znajdz-draft",
+                                                                    "type":  "main",
+                                                                    "index":  0
+                                                                }
+                                                            ]
+                                                        ]
+                                           },
+                        "znajdz-draft":  {
+                                             "main":  [
+                                                          [
+                                                              {
+                                                                  "node":  "usun-draft",
+                                                                  "type":  "main",
+                                                                  "index":  0
+                                                              }
+                                                          ]
+                                                      ]
+                                         }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1",
+                     "saveDataErrorExecution":  "all",
+                     "saveDataSuccessExecution":  "all",
+                     "saveManualExecutions":  true,
+                     "saveExecutionProgress":  true
+                 },
+    "staticData":  null,
+    "meta":  null,
+    "nodeGroups":  [
+
+                   ],
+    "pinData":  null,
+    "versionId":  "18050bad-1942-43bf-b484-22dc23d4eb80",
+    "activeVersionId":  "18050bad-1942-43bf-b484-22dc23d4eb80",
+    "versionCounter":  2,
+    "triggerCount":  1,
+    "sourceWorkflowId":  null,
+    "shared":  [
+                   {
+                       "updatedAt":  "2026-07-17T21:13:39.479Z",
+                       "createdAt":  "2026-07-17T21:13:39.479Z",
+                       "role":  "workflow:owner",
+                       "workflowId":  "xBosD1b0WTJuzJql",
+                       "projectId":  "9rVJoULaKk30HdBB",
+                       "project":  {
+                                       "updatedAt":  "2025-06-26T00:18:14.615Z",
+                                       "createdAt":  "2025-06-25T23:37:35.363Z",
+                                       "id":  "9rVJoULaKk30HdBB",
+                                       "name":  "Nicolas Bednarz \u003cowner@example.com\u003e",
+                                       "type":  "personal",
+                                       "icon":  null,
+                                       "description":  null,
+                                       "customTelemetryTags":  [
+
+                                                               ],
+                                       "creatorId":  "af23e566-dd44-45a3-ac35-e15a8cdef3f2"
+                                   }
+                   }
+               ],
+    "tags":  [
+
+             ],
+    "activeVersion":  {
+                          "updatedAt":  "2026-07-19T16:42:56.153Z",
+                          "createdAt":  "2026-07-19T16:42:56.153Z",
+                          "versionId":  "18050bad-1942-43bf-b484-22dc23d4eb80",
+                          "workflowId":  "xBosD1b0WTJuzJql",
+                          "nodes":  [
+                                        {
+                                            "id":  "hook",
+                                            "name":  "odbior-akcji-slack",
+                                            "type":  "n8n-nodes-base.webhook",
+                                            "typeVersion":  2.1,
+                                            "position":  [
+                                                             0,
+                                                             300
+                                                         ],
+                                            "parameters":  {
+                                                               "httpMethod":  "POST",
+                                                               "path":  "et-slack-actions",
+                                                               "responseMode":  "onReceived",
+                                                               "options":  {
+
+                                                                           }
+                                                           },
+                                            "webhookId":  "et-slack-actions-hook"
+                                        },
+                                        {
+                                            "id":  "parse",
+                                            "name":  "parsuj-akcje",
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             220,
+                                                             300
+                                                         ],
+                                            "parameters":  {
+                                                               "mode":  "runOnceForEachItem",
+                                                               "jsCode":  "// Slack wysyla interactivity jako form-encoded z polem \u0027payload\u0027 (JSON string).\nconst body = $json.body || {};\nlet p = {};\ntry { p = typeof body.payload === \u0027string\u0027 ? JSON.parse(body.payload) : (body.payload || {}); } catch (e) {}\nconst a = (p.actions \u0026\u0026 p.actions[0]) || {};\nlet v = {};\ntry { v = a.value ? JSON.parse(a.value) : {}; } catch (e) { v = { raw: a.value }; }\nreturn { json: {\n  action_id: a.action_id || \u0027\u0027,\n  value: v,\n  user: (p.user \u0026\u0026 p.user.id) || \u0027\u0027,\n  userName: (p.user \u0026\u0026 (p.user.username || p.user.name)) || \u0027ktos\u0027,\n  channel: (p.channel \u0026\u0026 p.channel.id) || \u0027\u0027,\n  ts: (p.message \u0026\u0026 p.message.ts) || \u0027\u0027\n} };"
+                                                           }
+                                        },
+                                        {
+                                            "id":  "ifsend",
+                                            "name":  "czy-wyslij",
+                                            "type":  "n8n-nodes-base.if",
+                                            "typeVersion":  2.2,
+                                            "position":  [
+                                                             440,
+                                                             300
+                                                         ],
+                                            "parameters":  {
+                                                               "conditions":  {
+                                                                                  "options":  {
+                                                                                                  "caseSensitive":  true,
+                                                                                                  "leftValue":  "",
+                                                                                                  "typeValidation":  "loose",
+                                                                                                  "version":  2
+                                                                                              },
+                                                                                  "combinator":  "and",
+                                                                                  "conditions":  [
+                                                                                                     {
+                                                                                                         "id":  "c1",
+                                                                                                         "leftValue":  "={{ $json.action_id }}",
+                                                                                                         "rightValue":  "wyslij_szkic",
+                                                                                                         "operator":  {
+                                                                                                                          "type":  "string",
+                                                                                                                          "operation":  "equals"
+                                                                                                                      }
+                                                                                                     }
+                                                                                                 ]
+                                                                              },
+                                                               "options":  {
+
+                                                                           }
+                                                           }
+                                        },
+                                        {
+                                            "id":  "reply",
+                                            "name":  "wyslij-odpowiedz-gmail",
+                                            "type":  "n8n-nodes-base.gmail",
+                                            "typeVersion":  2.1,
+                                            "position":  [
+                                                             680,
+                                                             200
+                                                         ],
+                                            "parameters":  {
+                                                               "resource":  "message",
+                                                               "operation":  "reply",
+                                                               "messageId":  "={{ $json.value.mid }}",
+                                                               "message":  "={{ $json.value.draft }}",
+                                                               "options":  {
+
+                                                                           }
+                                                           },
+                                            "credentials":  {
+                                                                "gmailOAuth2":  {
+                                                                                    "id":  "QaEBC5SeQqoHZZ3i",
+                                                                                    "name":  "Gmail_Ogrodzenia"
+                                                                                }
+                                                            },
+                                            "webhookId":  "b33455cf-8320-4531-8ffb-d5c3b197faaf"
+                                        },
+                                        {
+                                            "id":  "okmsg",
+                                            "name":  "slack-wyslano",
+                                            "type":  "n8n-nodes-base.slack",
+                                            "typeVersion":  2.3,
+                                            "position":  [
+                                                             900,
+                                                             200
+                                                         ],
+                                            "parameters":  {
+                                                               "select":  "channel",
+                                                               "channelId":  {
+                                                                                 "__rl":  true,
+                                                                                 "mode":  "id",
+                                                                                 "value":  "={{ $(\u0027parsuj-akcje\u0027).item.json.channel }}"
+                                                                             },
+                                                               "text":  "=:white_check_mark: Szkic wyslany do klienta przez \u003c@{{ $(\u0027parsuj-akcje\u0027).item.json.user }}\u003e — temat: {{ $(\u0027parsuj-akcje\u0027).item.json.value.subj }}",
+                                                               "otherOptions":  {
+
+                                                                                }
+                                                           },
+                                            "credentials":  {
+                                                                "slackApi":  {
+                                                                                 "id":  "5CVzetMyusnABbOK",
+                                                                                 "name":  "Slack Testowe"
+                                                                             }
+                                                            },
+                                            "webhookId":  "fec03cb5-6e21-4946-801e-34b61de251ff"
+                                        },
+                                        {
+                                            "id":  "ackmsg",
+                                            "name":  "slack-przejmuje",
+                                            "type":  "n8n-nodes-base.slack",
+                                            "typeVersion":  2.3,
+                                            "position":  [
+                                                             680,
+                                                             420
+                                                         ],
+                                            "parameters":  {
+                                                               "select":  "channel",
+                                                               "channelId":  {
+                                                                                 "__rl":  true,
+                                                                                 "mode":  "id",
+                                                                                 "value":  "={{ $json.channel }}"
+                                                                             },
+                                                               "text":  "=:raising_hand: \u003c@{{ $json.user }}\u003e przejmuje sprawe — temat: {{ $json.value.subj }}",
+                                                               "otherOptions":  {
+
+                                                                                }
+                                                           },
+                                            "credentials":  {
+                                                                "slackApi":  {
+                                                                                 "id":  "5CVzetMyusnABbOK",
+                                                                                 "name":  "Slack Testowe"
+                                                                             }
+                                                            },
+                                            "webhookId":  "bef5704f-1174-425a-87be-d31c835ce26c"
+                                        },
+                                        {
+                                            "id":  "getdrafts",
+                                            "name":  "pobierz-drafty",
+                                            "type":  "n8n-nodes-base.gmail",
+                                            "typeVersion":  2.1,
+                                            "position":  [
+                                                             900,
+                                                             400
+                                                         ],
+                                            "parameters":  {
+                                                               "resource":  "draft",
+                                                               "operation":  "getAll",
+                                                               "returnAll":  false,
+                                                               "limit":  50,
+                                                               "simple":  false,
+                                                               "options":  {
+
+                                                                           }
+                                                           },
+                                            "credentials":  {
+                                                                "gmailOAuth2":  {
+                                                                                    "id":  "QaEBC5SeQqoHZZ3i",
+                                                                                    "name":  "Gmail_Ogrodzenia"
+                                                                                }
+                                                            },
+                                            "onError":  "continueRegularOutput",
+                                            "webhookId":  "d87ebd60-91f7-4f4f-8f92-9279cc1f749f"
+                                        },
+                                        {
+                                            "id":  "finddraft",
+                                            "name":  "znajdz-draft",
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             1120,
+                                                             400
+                                                         ],
+                                            "parameters":  {
+                                                               "mode":  "runOnceForAllItems",
+                                                               "jsCode":  "// Znajdz draft agenta nalezacy do tego samego watku co wyslana odpowiedz.\nconst tid = (($(\u0027parsuj-akcje\u0027).first().json || {}).value || {}).tid || \u0027\u0027;\nconst out = [];\nif (!tid) return out;\nfor (const it of $input.all()) {\n  const d = it.json || {};\n  const dThread = (d.message \u0026\u0026 d.message.threadId) || d.threadId || \u0027\u0027;\n  const draftId = d.id || \u0027\u0027;\n  if (draftId \u0026\u0026 dThread === tid) out.push({ json: { draftId: draftId } });\n}\nreturn out;"
+                                                           }
+                                        },
+                                        {
+                                            "id":  "deldraft",
+                                            "name":  "usun-draft",
+                                            "type":  "n8n-nodes-base.gmail",
+                                            "typeVersion":  2.1,
+                                            "position":  [
+                                                             1340,
+                                                             400
+                                                         ],
+                                            "parameters":  {
+                                                               "resource":  "draft",
+                                                               "operation":  "delete",
+                                                               "messageId":  "={{ $json.draftId }}"
+                                                           },
+                                            "credentials":  {
+                                                                "gmailOAuth2":  {
+                                                                                    "id":  "QaEBC5SeQqoHZZ3i",
+                                                                                    "name":  "Gmail_Ogrodzenia"
+                                                                                }
+                                                            },
+                                            "onError":  "continueRegularOutput",
+                                            "webhookId":  "943de058-66c8-4e82-8d46-04d55ba8827b"
+                                        }
+                                    ],
+                          "connections":  {
+                                              "odbior-akcji-slack":  {
+                                                                         "main":  [
+                                                                                      [
+                                                                                          {
+                                                                                              "node":  "parsuj-akcje",
+                                                                                              "type":  "main",
+                                                                                              "index":  0
+                                                                                          }
+                                                                                      ]
+                                                                                  ]
+                                                                     },
+                                              "parsuj-akcje":  {
+                                                                   "main":  [
+                                                                                [
+                                                                                    {
+                                                                                        "node":  "czy-wyslij",
+                                                                                        "type":  "main",
+                                                                                        "index":  0
+                                                                                    }
+                                                                                ]
+                                                                            ]
+                                                               },
+                                              "czy-wyslij":  {
+                                                                 "main":  [
+                                                                              [
+                                                                                  {
+                                                                                      "node":  "wyslij-odpowiedz-gmail",
+                                                                                      "type":  "main",
+                                                                                      "index":  0
+                                                                                  }
+                                                                              ],
+                                                                              [
+                                                                                  {
+                                                                                      "node":  "slack-przejmuje",
+                                                                                      "type":  "main",
+                                                                                      "index":  0
+                                                                                  }
+                                                                              ]
+                                                                          ]
+                                                             },
+                                              "wyslij-odpowiedz-gmail":  {
+                                                                             "main":  [
+                                                                                          [
+                                                                                              {
+                                                                                                  "node":  "slack-wyslano",
+                                                                                                  "type":  "main",
+                                                                                                  "index":  0
+                                                                                              },
+                                                                                              {
+                                                                                                  "node":  "pobierz-drafty",
+                                                                                                  "type":  "main",
+                                                                                                  "index":  0
+                                                                                              }
+                                                                                          ]
+                                                                                      ]
+                                                                         },
+                                              "pobierz-drafty":  {
+                                                                     "main":  [
+                                                                                  [
+                                                                                      {
+                                                                                          "node":  "znajdz-draft",
+                                                                                          "type":  "main",
+                                                                                          "index":  0
+                                                                                      }
+                                                                                  ]
+                                                                              ]
+                                                                 },
+                                              "znajdz-draft":  {
+                                                                   "main":  [
+                                                                                [
+                                                                                    {
+                                                                                        "node":  "usun-draft",
+                                                                                        "type":  "main",
+                                                                                        "index":  0
+                                                                                    }
+                                                                                ]
+                                                                            ]
+                                                               }
+                                          },
+                          "nodeGroups":  [
+
+                                         ],
+                          "authors":  "Nicolas Bednarz",
+                          "name":  null,
+                          "description":  null,
+                          "autosaved":  false,
+                          "workflowPublishHistory":  [
+                                                         {
+                                                             "createdAt":  "2026-07-19T16:42:56.292Z",
+                                                             "id":  49,
+                                                             "workflowId":  "xBosD1b0WTJuzJql",
+                                                             "versionId":  "18050bad-1942-43bf-b484-22dc23d4eb80",
+                                                             "event":  "deactivated",
+                                                             "userId":  "af23e566-dd44-45a3-ac35-e15a8cdef3f2"
+                                                         },
+                                                         {
+                                                             "createdAt":  "2026-07-19T16:42:56.379Z",
+                                                             "id":  50,
+                                                             "workflowId":  "xBosD1b0WTJuzJql",
+                                                             "versionId":  "18050bad-1942-43bf-b484-22dc23d4eb80",
+                                                             "event":  "activated",
+                                                             "userId":  "af23e566-dd44-45a3-ac35-e15a8cdef3f2"
+                                                         },
+                                                         {
+                                                             "createdAt":  "2026-07-19T16:42:56.633Z",
+                                                             "id":  51,
+                                                             "workflowId":  "xBosD1b0WTJuzJql",
+                                                             "versionId":  "18050bad-1942-43bf-b484-22dc23d4eb80",
+                                                             "event":  "deactivated",
+                                                             "userId":  "af23e566-dd44-45a3-ac35-e15a8cdef3f2"
+                                                         },
+                                                         {
+                                                             "createdAt":  "2026-07-19T16:42:56.722Z",
+                                                             "id":  52,
+                                                             "workflowId":  "xBosD1b0WTJuzJql",
+                                                             "versionId":  "18050bad-1942-43bf-b484-22dc23d4eb80",
+                                                             "event":  "activated",
+                                                             "userId":  "af23e566-dd44-45a3-ac35-e15a8cdef3f2"
+                                                         }
+                                                     ]
+                      }
+}

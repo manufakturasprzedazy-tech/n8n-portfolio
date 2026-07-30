@@ -1,0 +1,509 @@
+{
+    "updatedAt":  "2025-10-21T07:10:36.233Z",
+    "createdAt":  "2025-06-29T14:00:43.138Z",
+    "id":  "q8Ryw3h57yFFe25n",
+    "name":  "Konwersacja Mailowa",
+    "description":  null,
+    "active":  false,
+    "isArchived":  false,
+    "nodes":  [
+                  {
+                      "parameters":  {
+                                         "promptType":  "define",
+                                         "text":  "={{ $json.snippet }} {{ $json.From }}",
+                                         "options":  {
+                                                         "systemMessage":  "=\u003cSalesEmailAutomationAssistant\u003e\n\u003cRola\u003e\n  \u003cNazwa\u003eKonsultant Ogrodzeń\u003c/Nazwa\u003e\n  \u003cOpis\u003eProwadzisz rozmowę email z klientem, badasz potrzeby, przygotowujesz ofertę z Google Sheets i finalizujesz kontakt.\u003c/Opis\u003e\n  \u003cDataAktualna\u003e{{$now}}\u003c/DataAktualna\u003e\n\u003c/Rola\u003e\n\n\u003cKRYTYCZNE_ZASADY\u003e\n   ZAWSZE odpowiadaj w pełnym HTML (od \u003c!DOCTYPE html\u003e)\n   \"Dzień dobry, Panie [Imię]\" TYLKO w pierwszym emailu\n   W kolejnych: \"Świetnie!\", \"Dzięki!\", \"Super!\" (BEZ powtarzania \"Dzień dobry\")\n   Przed ofertą ZAPYTAJ o telefon\n   Do oferty UŻYJ Ceny_Ogrodzenia MIN 5 razy (CONFIG, MATERIALS_*, LABOR, TRAVEL, DISCOUNTS)\n   Każda opcja MA koszt całkowity brutto\n   Po wysłaniu oferty CZEKAJ na reakcję\n   Jak klient zaakceptuje LUB odrzuci → zapisz do CRM\n   NIE używaj markdown - tylko HTML\n    NIGDY NIE WYMYŚLAJ DŁUGOŚCI - jeśli klient nie podał, ZAPYTAJ O NIĄ EXPLICITE\n    Każda wycena MUSI zawierać furtki/bramy jeśli klient o nie pytał lub potwierdził ich potrzebę\n\u003c/KRYTYCZNE_ZASADY\u003e\n\n\u003cETAPY_4_KROKI\u003e\n\n  \u003cEtap1 nazwa=\"Pierwsze_Rozpoznanie\"\u003e\n    CEL: Zrozumieć potrzebę i zebrać podstawy\n    \n    PYTAJ O:\n    • Główny powód (prywatność/bezpieczeństwo/estetyka)\n    • Lokalizacja (miasto)\n    • Długość (przybliżona) -  ZAWSZE ZAPYTAJ EXPLICITE, NIE ZAKŁADAJ!\n    \n    STYL: Ciepły, pomocny. Max 2-3 pytania.\n    POWITANIE: \"Dzień dobry, Panie [Imię]!\" (TYLKO TU!)\n    \n     DŁUGOŚĆ:\n    - Jeśli klient NIE podał długości → ZAPYTAJ: \"Jaka jest orientacyjna długość ogrodzenia w metrach?\"\n    - Jeśli podał zakres (np. \"około 40-50m\") → przyjmij środek zakresu\n    - NIGDY nie przyjmuj domyślnej wartości typu 20m!\n  \u003c/Etap1\u003e\n\n  \u003cEtap2 nazwa=\"Doprecyzowanie\"\u003e\n    CEL: Szczegóły techniczne\n    \n    PYTAJ O:\n    • Wysokość (1.5m/1.8m/2.0m) - wyjaśnij różnice\n    • Typ (panelowe/betonowe) - pomóż wybrać\n    • Bramy/furtki?  ZAWSZE ZAPYTAJ: \"Czy potrzebne będą furtki lub bramy wjazdowe?\"\n    • Priorytet (cena/jakość/szybkość)\n    \n    STYL: Edukuj klienta. Pomagaj wybierać.\n    POWITANIE: \"Świetnie!\" / \"Dzięki za info!\"\n    \n     WALIDACJA DŁUGOŚCI:\n    - Jeśli nadal nie masz długości → ZAPYTAJ PONOWNIE\n    - Nie przechodź do oferty bez konkretnej długości od klienta!\n  \u003c/Etap2\u003e\n\n  \u003cEtap3 nazwa=\"Finalizacja_Przed_Ofertą\"\u003e\n    CEL: Potwierdzić dane + pobrać telefon\n    \n     PRZED TYM ETAPEM SPRAWDŹ CZY MASZ:\n    - Długość (od klienta, nie wymyśloną!)\n    - Lokalizację\n    - Typ ogrodzenia\n    - Wysokość\n    - Informację o furtkach/bramach\n    \n    ZRÓB:\n    1. Podsumuj co ustaliliście (ze WSZYSTKIMI szczegółami)\n    2. ZAPYTAJ O TELEFON: \"Podaj proszę numer telefonu żebyśmy mogli umówić darmową wizję lokalną\"\n    3. Powiedz że przygotowujesz ofertę\n    \n    POWITANIE: \"Super, mam pełny obraz!\"\n  \u003c/Etap3\u003e\n\n  \u003cEtap4 nazwa=\"Oferta_Cenowa\"\u003e\n     WARUNKI ROZPOCZĘCIA:\n    - MASZ długość podaną przez klienta (nie wymyśloną!)\n    - MASZ lokalizację\n    - MASZ typ i wysokość\n    - WIESZ czy potrzebne furtki/bramy\n    \n    PROCES:\n    1. POBIERZ dane (Ceny_Ogrodzenia × 5-7 razy):\n       - CONFIG\n       - MATERIALS_PANELS\n       - MATERIALS_CONCRETE (jeśli beton)\n       - MATERIALS_GATES ( ZAWSZE pobierz dla furtek/bram!)\n       - LABOR\n       - TRAVEL\n       - DISCOUNTS\n       - LEAD_TIMES\n    \n    2. OBLICZ 3 warianty:\n       EKONOMICZNA: najtańsza sensowna\n       STANDARDOWA: najlepsza wartość (POLECAJ)\n       PREMIUM: top jakość\n       \n        W KAŻDYM WARIANCIE:\n       - Materiały (panele/beton)\n       - Furtki/bramy (jeśli potrzebne - z ceną ze Sheets!)\n       - Robocizna\n       - Transport\n       - VAT\n       = CAŁKOWITY BRUTTO\n       \n        TERMIN: Użyj JEDNEGO terminu dla wszystkich 3 opcji (weź najdłuższy z LEAD_TIMES)\n    \n    3. WYŚLIJ ofertę HTML:\n       - Podsumowanie potrzeb (z długością od klienta!)\n       - 3 opcje (kolorowe divy: zielony, pomarańczowy, niebieski)\n       - Każda z KOSZTEM CAŁKOWITYM + uzasadnieniem\n       -  Każda z TAKIM SAMYM TERMINEM realizacji\n       -  Jeśli furtki/bramy - WYMIEŃ JE w itemizacji każdej opcji!\n       - Na końcu: \"Która opcja Cię interesuje? Daj znać a umówimy wizję!\"\n    \n    4. CZEKAJ na odpowiedź klienta\n    \n    POWITANIE: \"Super! Mam dla Ciebie wycenę.\"\n  \u003c/Etap4\u003e\n\n  \u003cEtap5 nazwa=\"Po_Ofercie\"\u003e\n    SCENARIUSZ A - Klient zainteresowany (\"OK\", \"biorę standardową\", \"umówmy wizję\"):\n    1. Potwierdź: \"Świetnie! Opcja [X] to dobry wybór.\"\n    2. ZAPISZ DO CRM (CRM_LEAD):\n       - Status: \"W kontakcie\"\n       - Priorytet: \"Wysoki\"\n       - Notatki: \"ZAAKCEPTOWAŁ OFERTĘ: [opcja] za [kwota] zł. Długość: [X]m, furtki/bramy: [tak/nie]\"\n    3. Daj link: \"Zarezerwuj wizję: https://calendar.app.google/5SbfGkdZrDJCkk1T9\"\n    \n    SCENARIUSZ B - Klient NIE zainteresowany (\"za drogo\", \"nie pasuje\", \"poszukam dalej\"):\n    1. Potwierdź: \"Rozumiem, dziękuję za czas!\"\n    2. ZAPISZ DO CRM (CRM_LEAD):\n       - Status: \"Przegrany\"\n       - Priorytet: \"Niski\"\n       - Notatki: \"ODRZUCIŁ OFERTĘ: [powód]. Możliwy recontact za 3 msc.\"\n    3. Powiedz: \"Nasz konsultant może się z Panem skontaktować żeby dopasować lepszą opcję. Dziękuję!\"\n    \n    SCENARIUSZ C - Klient ma pytania:\n    1. Odpowiedz na pytania\n    2. Jeśli dalej zainteresowany → SCENARIUSZ A\n    3. Jeśli rezygnuje → SCENARIUSZ B\n  \u003c/Etap5\u003e\n\n\u003c/ETAPY_4_KROKI\u003e\n\n\u003cCRM_LEAD_ZAPIS\u003e\n  Używaj narzędzia CRM_LEAD w 2 momentach:\n  \n  MOMENT 1 - Po wysłaniu oferty (opcjonalnie, wstępny zapis):\n  - \"E-mail\": z From\n  - \"Imię i nazwisko\": jeśli masz\n  - \"Status\": \"Ofertowanie\"\n  - \"Priorytet leada (AI)\": \"Średni\"\n  - \"Notatki\": Historia konwersacji + długość od klienta\n  \n  MOMENT 2 - Po reakcji na ofertę (OBOWIĄZKOWO):\n  Jeśli AKCEPTUJE:\n  - \"Status\": \"W kontakcie\"\n  - \"Priorytet leada (AI)\": \"Wysoki\"\n  - \"Notatki\": \"ZAAKCEPTOWAŁ: [opcja] za [kwota] zł. Długość: [X]m (podana przez klienta). Data: {{$now.format(\u0027YYYY-MM-DD\u0027)}}\"\n  - \"Telefon\": jeśli podał\n  \n  Jeśli ODRZUCA:\n  - \"Status\": \"Przegrany\"\n  - \"Priorytet leada (AI)\": \"Niski\"\n  - \"Notatki\": \"ODRZUCIŁ ofertę. Powód: [co napisał]. Data: {{$now.format(\u0027YYYY-MM-DD\u0027)}}\"\n  \n  POLA:\n  - \"Imię i nazwisko\": z wiadomości lub \"Klient - [imię]\"\n  - \"E-mail\": dokładnie z From\n  - \"Telefon\": jeśli podał\n  - \"Data pozyskania\": {{$now.format(\u0027YYYY-MM-DD\u0027)}}\n  - \"Podsumowanie notatki (AI)\": \"[Typ] [długość]m (od klienta), [lokalizacja], furtki/bramy: [tak/nie], oferta: [kwota], status: [zaakceptował/odrzucił]\"\n\u003c/CRM_LEAD_ZAPIS\u003e\n\n\u003cGOOGLE_SHEETS\u003e\n  Przed ofertą wywołaj Ceny_Ogrodzenia dla arkuszy:\n  • CONFIG (VAT, marże)\n  • MATERIALS_PANELS (panele stalowe)\n  • MATERIALS_CONCRETE (beton, jeśli rozważany)\n  • MATERIALS_GATES ( ZAWSZE dla furtek/bram!)\n  • LABOR (robocizna)\n  • TRAVEL (transport dla lokalizacji)\n  • DISCOUNTS (rabaty dla długości)\n  • LEAD_TIMES (czasy - weź najdłuższy dla wszystkich opcji)\n  \n  Składnia: Ceny_Ogrodzenia(Sheet=\"NAZWA_ARKUSZA\")\n  \n  BEZ tego nie masz danych do oferty!\n\u003c/GOOGLE_SHEETS\u003e\n\n\u003cHTML_SZABLON_OFERTY\u003e\n\u003c!DOCTYPE html\u003e\n\u003chtml\u003e\n\u003cbody style=\"font-family: Arial; max-width: 600px; margin: 0 auto; padding: 20px;\"\u003e\n\n\u003cp\u003eSuper! Mam dla Ciebie wycenę.\u003c/p\u003e\n\n\u003cp\u003e\u003cstrong\u003eUstaliliśmy:\u003c/strong\u003e\u003cbr\u003e\n- [Typ] [wysokość]m\u003cbr\u003e\n- [Długość]m (podana przez Ciebie) w [lokalizacja]\u003cbr\u003e\n- Furtki/bramy: [tak - ilość / nie]\u003cbr\u003e\n- Priorytet: [co ważne dla klienta]\u003c/p\u003e\n\n\u003cp\u003e3 warianty dopasowane do Twoich potrzeb:\u003c/p\u003e\n\n\u003cdiv style=\"background: #e8f5e9; padding: 15px; margin: 15px 0; border-radius: 8px; border-left: 4px solid #4caf50;\"\u003e\n  \u003ch3 style=\"margin-top: 0; color: #2e7d32;\"\u003e🟢 EKONOMICZNA\u003c/h3\u003e\n  \u003cp style=\"font-size: 20px; font-weight: bold; color: #1b5e20;\"\u003e💰 KOSZT: [KWOTA] zł brutto\u003c/p\u003e\n  \u003cp\u003e\u003cstrong\u003eDlaczego:\u003c/strong\u003e [Uzasadnienie dla klienta]\u003c/p\u003e\n  \u003cul\u003e\n    \u003cli\u003e[Szczegóły materiałów - panele]\u003c/li\u003e\n    \u003cli\u003e[Furtki: [ilość] × [cena] = [suma] zł (jeśli dotyczy)]\u003c/li\u003e\n    \u003cli\u003e[Bramy: [ilość] × [cena] = [suma] zł (jeśli dotyczy)]\u003c/li\u003e\n    \u003cli\u003e[Montaż + fundamenty]\u003c/li\u003e\n    \u003cli\u003e[Transport]\u003c/li\u003e\n  \u003c/ul\u003e\n  \u003cp\u003e⏱️ Termin: [X] dni roboczych\u003c/p\u003e\n\u003c/div\u003e\n\n\u003cdiv style=\"background: #fff3e0; padding: 15px; margin: 15px 0; border-radius: 8px; border-left: 4px solid #ff9800;\"\u003e\n  \u003ch3 style=\"margin-top: 0; color: #e65100;\"\u003e🟡 STANDARDOWA ⭐ POLECAM\u003c/h3\u003e\n  \u003cp style=\"font-size: 20px; font-weight: bold; color: #bf360c;\"\u003e💰 KOSZT: [KWOTA] zł brutto\u003c/p\u003e\n  \u003cp\u003e\u003cstrong\u003eDlaczego:\u003c/strong\u003e [Uzasadnienie - najlepsza wartość]\u003c/p\u003e\n  \u003cul\u003e\n    \u003cli\u003e[Szczegóły materiałów]\u003c/li\u003e\n    \u003cli\u003e[Furtki: [ilość] × [cena] = [suma] zł (jeśli dotyczy)]\u003c/li\u003e\n    \u003cli\u003e[Bramy: [ilość] × [cena] = [suma] zł (jeśli dotyczy)]\u003c/li\u003e\n    \u003cli\u003e[Montaż]\u003c/li\u003e\n    \u003cli\u003e[Transport]\u003c/li\u003e\n  \u003c/ul\u003e\n  \u003cp\u003e⏱️ Termin: [X] dni roboczych\u003c/p\u003e\n\u003c/div\u003e\n\n\u003cdiv style=\"background: #e3f2fd; padding: 15px; margin: 15px 0; border-radius: 8px; border-left: 4px solid #2196f3;\"\u003e\n  \u003ch3 style=\"margin-top: 0; color: #0d47a1;\"\u003e🔵 PREMIUM\u003c/h3\u003e\n  \u003cp style=\"font-size: 20px; font-weight: bold; color: #01579b;\"\u003e💰 KOSZT: [KWOTA] zł brutto\u003c/p\u003e\n  \u003cp\u003e\u003cstrong\u003eDlaczego:\u003c/strong\u003e [Inwestycja na lata]\u003c/p\u003e\n  \u003cul\u003e\n    \u003cli\u003e[Szczegóły materiałów premium]\u003c/li\u003e\n    \u003cli\u003e[Furtki: [ilość] × [cena] = [suma] zł (jeśli dotyczy)]\u003c/li\u003e\n    \u003cli\u003e[Bramy: [ilość] × [cena] = [suma] zł (jeśli dotyczy)]\u003c/li\u003e\n    \u003cli\u003e[Montaż]\u003c/li\u003e\n    \u003cli\u003e[Transport]\u003c/li\u003e\n  \u003c/ul\u003e\n  \u003cp\u003e⏱️ Termin: [X] dni roboczych\u003c/p\u003e\n\u003c/div\u003e\n\n\u003cp\u003e\u003cstrong\u003e WAŻNE:\u003c/strong\u003e We wszystkich wariantach termin realizacji jest identyczny: \u003cstrong\u003e[X] dni roboczych\u003c/strong\u003e od potwierdzenia zamówienia.\u003c/p\u003e\n\n\u003cp\u003e\u003cstrong\u003eKtóra opcja Cię interesuje? Daj znać a umówimy wizję lokalną!\u003c/strong\u003e\u003c/p\u003e\n\n\u003cp\u003ePozdrawiamy,\u003cbr\u003eZespół Ogrodzenia\u003cbr\u003eclient-inbox@example.com\u003c/p\u003e\n\n\u003c/body\u003e\n\u003c/html\u003e\n\u003c/HTML_SZABLON_OFERTY\u003e\n\n\u003cHTML_SZABLON_PYTAŃ\u003e\n\u003c!DOCTYPE html\u003e\n\u003chtml\u003e\n\u003cbody style=\"font-family: Arial; max-width: 600px; margin: 0 auto; padding: 20px; line-height: 1.6;\"\u003e\n\n\u003cp\u003e[Powitanie - pierwszy mail: \"Dzień dobry!\" | kolejne: \"Świetnie!\"]\u003c/p\u003e\n\n\u003cp\u003e[Nawiązanie do wiadomości klienta]\u003c/p\u003e\n\n\u003cp\u003e[Pytanie 1 z kontekstem]\u003c/p\u003e\n\n\u003cp\u003e[Pytanie 2 jeśli trzeba - max 3]\u003c/p\u003e\n\n\u003cp\u003e[Opcjonalnie: edukacja/pomoc w wyborze]\u003c/p\u003e\n\n\u003cp\u003ePozdrawiamy,\u003cbr\u003eZespół Ogrodzenia\u003c/p\u003e\n\n\u003c/body\u003e\n\u003c/html\u003e\n\u003c/HTML_SZABLON_PYTAŃ\u003e\n\n\u003cPRZYKŁAD_FLOW\u003e\nMail 1 Klient: \"Interesuje mnie ogrodzenie, co polecacie?\"\n→ Odpowiedź: \"Dzień dobry! [pytania o lokalizację,  DŁUGOŚĆ, potrzebę]\"\n\nMail 2 Klient: \"Kraków, sąsiedzi zaglądają\" ( brak długości!)\n→ Odpowiedź: \"Świetnie! [pytanie o DŁUGOŚĆ + wysokość, typ, priorytet]\"\n\nMail 3 Klient: \"45 metrów, coś solidnego, może betonowe\"\n→ Odpowiedź: \"Super! [pytanie o furtki/bramy + podsumowanie + prośba o telefon]\"\n\nMail 4 Klient: \"Tak, 1 furtka. Tel: 123456789\"\n→ Odpowiedź: OFERTA (użyj Ceny_Ogrodzenia × 7 w tym MATERIALS_GATES, oblicz z furtką, wyślij HTML z 3 opcjami o tym samym terminie)\n\nMail 5 Klient: \"Biorę standardową\"\n→ Odpowiedź: \"Świetnie! [potwierdź, ZAPISZ CRM jako Wysoki/W kontakcie z notatką o długości 45m i furtce, daj link do kalendarza]\"\n\nLUB\n\nMail 5 Klient: \"Za drogo\"\n→ Odpowiedź: \"Rozumiem! [ZAPISZ CRM jako Niski/Przegrany, powiedz że konsultant się skontaktuje]\"\n\u003c/PRZYKŁAD_FLOW\u003e\n\n\u003cNIE_RÓB\u003e\n Markdown (**, ##) → tylko HTML\n \"Dzień dobry\" w każdym mailu → tylko pierwszy\n Oferta bez Ceny_Ogrodzenia\n Oferta bez kosztu całkowitego\n Zapisywać do CRM przed reakcją na ofertę (opcjonalnie wcześniej, obowiązkowo po)\n Długie maile w fazie pytań\n WYMYŚLAĆ długości - zawsze pytaj klienta!\n Pomijać furtki/bramy w wycenie jeśli klient o nie pytał\n Różne terminy dla 3 opcji - ma być jeden termin dla wszystkich\n Pisać \"Pozdrawiam\" → ma być \"Pozdrawiamy\"\n\u003c/NIE_RÓB\u003e\n\n\u003c/SalesEmailAutomationAssistant\u003e"
+                                                     }
+                                     },
+                      "type":  "@n8n/n8n-nodes-langchain.agent",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       416,
+                                       0
+                                   ],
+                      "id":  "795fb8a1-d85f-4e37-8fc4-074a813e998a",
+                      "name":  "AI Agent"
+                  },
+                  {
+                      "parameters":  {
+                                         "model":  {
+                                                       "__rl":  true,
+                                                       "mode":  "list",
+                                                       "value":  "gpt-4.1-mini"
+                                                   },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+                      "typeVersion":  1.2,
+                      "position":  [
+                                       320,
+                                       288
+                                   ],
+                      "id":  "05ced8be-04c4-4218-bf87-8e64058bc72a",
+                      "name":  "OpenAI Chat Model",
+                      "credentials":  {
+                                          "openAiApi":  {
+                                                            "id":  "CevclqSiRa9VJGwm",
+                                                            "name":  "OpenAi Manufaktura"
+                                                        }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "documentId":  {
+                                                            "__rl":  true,
+                                                            "value":  "GOOGLE_FILE_a1c9c0e6c3cb",
+                                                            "mode":  "list",
+                                                            "cachedResultName":  "PRICEBOOK_OGRODZENIA_ENRICHED",
+                                                            "cachedResultUrl":  "https://docs.google.com/spreadsheets/d/GOOGLE_FILE_a1c9c0e6c3cb/edit?usp=drivesdk"
+                                                        },
+                                         "sheetName":  {
+                                                           "__rl":  true,
+                                                           "mode":  "name",
+                                                           "value":  "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI(\u0027Sheet\u0027, ``, \u0027string\u0027) }}"
+                                                       },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.googleSheetsTool",
+                      "typeVersion":  4.7,
+                      "position":  [
+                                       656,
+                                       288
+                                   ],
+                      "id":  "26719677-5d0f-4386-a4ac-091ae072aa6b",
+                      "name":  "Ceny_Ogrodzenia",
+                      "credentials":  {
+                                          "googleSheetsOAuth2Api":  {
+                                                                        "id":  "TdBbBvO1ekOyTrj4",
+                                                                        "name":  "Sheets ogrodzenia"
+                                                                    }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "pollTimes":  {
+                                                           "item":  [
+                                                                        {
+                                                                            "mode":  "everyMinute"
+                                                                        }
+                                                                    ]
+                                                       },
+                                         "filters":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.gmailTrigger",
+                      "typeVersion":  1.3,
+                      "position":  [
+                                       192,
+                                       0
+                                   ],
+                      "id":  "0101ade1-cd11-46b0-9dba-c176cd1095ea",
+                      "name":  "Odbierz_Maila",
+                      "credentials":  {
+                                          "gmailOAuth2":  {
+                                                              "id":  "QaEBC5SeQqoHZZ3i",
+                                                              "name":  "Gmail_Ogrodzenia"
+                                                          }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "operation":  "reply",
+                                         "messageId":  "={{ $(\u0027Odbierz_Maila\u0027).item.json.id }}",
+                                         "message":  "={{ $json.output }}",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.gmail",
+                      "typeVersion":  2.1,
+                      "position":  [
+                                       768,
+                                       0
+                                   ],
+                      "id":  "4edc4281-3ccb-456b-8d28-aa7a2588ae03",
+                      "name":  "Reply to a message",
+                      "webhookId":  "149e2b6e-38f3-4520-829f-5dd68d3c84b8",
+                      "credentials":  {
+                                          "gmailOAuth2":  {
+                                                              "id":  "QaEBC5SeQqoHZZ3i",
+                                                              "name":  "Gmail_Ogrodzenia"
+                                                          }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "sessionIdType":  "customKey",
+                                         "sessionKey":  "={{ $(\u0027Odbierz_Maila\u0027).item.json.threadId }}",
+                                         "contextWindowLength":  15
+                                     },
+                      "type":  "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+                      "typeVersion":  1.3,
+                      "position":  [
+                                       416,
+                                       272
+                                   ],
+                      "id":  "391b1b81-846e-4092-9750-3fac31ae9198",
+                      "name":  "Postgres Chat Memory",
+                      "credentials":  {
+                                          "postgres":  {
+                                                           "id":  "MLINqPwwywhCobTH",
+                                                           "name":  "Postgres RAG"
+                                                       }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "operation":  "create",
+                                         "base":  {
+                                                      "__rl":  true,
+                                                      "value":  "app61675ed8dc649e",
+                                                      "mode":  "list",
+                                                      "cachedResultName":  "Leady Ogrodzenia",
+                                                      "cachedResultUrl":  "https://airtable.com/app61675ed8dc649e"
+                                                  },
+                                         "table":  {
+                                                       "__rl":  true,
+                                                       "value":  "tblgdb1ULlqb89p0F",
+                                                       "mode":  "list",
+                                                       "cachedResultName":  "Leady",
+                                                       "cachedResultUrl":  "https://airtable.com/app61675ed8dc649e/tblgdb1ULlqb89p0F"
+                                                   },
+                                         "columns":  {
+                                                         "mappingMode":  "defineBelow",
+                                                         "value":  {
+                                                                       "Imię i nazwisko":  "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI(\u0027Imi__i_nazwisko\u0027, ``, \u0027string\u0027) }}",
+                                                                       "Telefon":  "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI(\u0027Telefon\u0027, ``, \u0027string\u0027) }}",
+                                                                       "E-mail":  "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI(\u0027E-mail\u0027, ``, \u0027string\u0027) }}",
+                                                                       "Data pozyskania":  "={{ $now }}",
+                                                                       "Notatki":  "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI(\u0027Notatki\u0027, ``, \u0027string\u0027) }}",
+                                                                       "Kontakt powiązany":  "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI(\u0027Kontakt_powi_zany\u0027, ``, \u0027string\u0027) }}",
+                                                                       "Podsumowanie notatki (AI)":  "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI(\u0027Podsumowanie_notatki__AI_\u0027, ``, \u0027string\u0027) }}",
+                                                                       "Priorytet leada (AI)":  "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI(\u0027Priorytet_leada__AI_\u0027, ``, \u0027string\u0027) }}"
+                                                                   },
+                                                         "matchingColumns":  [
+
+                                                                             ],
+                                                         "schema":  [
+                                                                        {
+                                                                            "id":  "Imię i nazwisko",
+                                                                            "displayName":  "Imię i nazwisko",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Telefon",
+                                                                            "displayName":  "Telefon",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "E-mail",
+                                                                            "displayName":  "E-mail",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Status",
+                                                                            "displayName":  "Status",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "options",
+                                                                            "options":  [
+                                                                                            {
+                                                                                                "name":  "Nowy",
+                                                                                                "value":  "Nowy"
+                                                                                            },
+                                                                                            {
+                                                                                                "name":  "W kontakcie",
+                                                                                                "value":  "W kontakcie"
+                                                                                            },
+                                                                                            {
+                                                                                                "name":  "Ofertowanie",
+                                                                                                "value":  "Ofertowanie"
+                                                                                            },
+                                                                                            {
+                                                                                                "name":  "Wygrany",
+                                                                                                "value":  "Wygrany"
+                                                                                            },
+                                                                                            {
+                                                                                                "name":  "Przegrany",
+                                                                                                "value":  "Przegrany"
+                                                                                            }
+                                                                                        ],
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Typ zapytania",
+                                                                            "displayName":  "Typ zapytania",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "options",
+                                                                            "options":  [
+                                                                                            {
+                                                                                                "name":  "Ogrodzenie panelowe",
+                                                                                                "value":  "Ogrodzenie panelowe"
+                                                                                            },
+                                                                                            {
+                                                                                                "name":  "Ogrodzenie betonowe",
+                                                                                                "value":  "Ogrodzenie betonowe"
+                                                                                            },
+                                                                                            {
+                                                                                                "name":  "Bramy",
+                                                                                                "value":  "Bramy"
+                                                                                            },
+                                                                                            {
+                                                                                                "name":  "Automatyka",
+                                                                                                "value":  "Automatyka"
+                                                                                            },
+                                                                                            {
+                                                                                                "name":  "Inne",
+                                                                                                "value":  "Inne"
+                                                                                            }
+                                                                                        ],
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Data pozyskania",
+                                                                            "displayName":  "Data pozyskania",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "dateTime",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Notatki",
+                                                                            "displayName":  "Notatki",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Kontakt powiązany",
+                                                                            "displayName":  "Kontakt powiązany",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Dni od pozyskania",
+                                                                            "displayName":  "Dni od pozyskania",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  true,
+                                                                            "removed":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "Podsumowanie notatki (AI)",
+                                                                            "displayName":  "Podsumowanie notatki (AI)",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Priorytet leada (AI)",
+                                                                            "displayName":  "Priorytet leada (AI)",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        }
+                                                                    ],
+                                                         "attemptToConvertTypes":  false,
+                                                         "convertFieldsToString":  false
+                                                     },
+                                         "options":  {
+                                                         "typecast":  true
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.airtableTool",
+                      "typeVersion":  2.1,
+                      "position":  [
+                                       528,
+                                       272
+                                   ],
+                      "id":  "70a4d031-84de-4d0d-a897-aed3722a7082",
+                      "name":  "CRM_LEAD",
+                      "credentials":  {
+                                          "airtableTokenApi":  {
+                                                                   "id":  "CKqm480yOnnd1a6q",
+                                                                   "name":  "Airtable_Ogrodzenia"
+                                                               }
+                                      }
+                  }
+              ],
+    "connections":  {
+                        "OpenAI Chat Model":  {
+                                                  "ai_languageModel":  [
+                                                                           [
+                                                                               {
+                                                                                   "node":  "AI Agent",
+                                                                                   "type":  "ai_languageModel",
+                                                                                   "index":  0
+                                                                               }
+                                                                           ]
+                                                                       ]
+                                              },
+                        "AI Agent":  {
+                                         "main":  [
+                                                      [
+                                                          {
+                                                              "node":  "Reply to a message",
+                                                              "type":  "main",
+                                                              "index":  0
+                                                          }
+                                                      ]
+                                                  ]
+                                     },
+                        "Ceny_Ogrodzenia":  {
+                                                "ai_tool":  [
+                                                                [
+                                                                    {
+                                                                        "node":  "AI Agent",
+                                                                        "type":  "ai_tool",
+                                                                        "index":  0
+                                                                    }
+                                                                ]
+                                                            ]
+                                            },
+                        "Odbierz_Maila":  {
+                                              "main":  [
+                                                           [
+                                                               {
+                                                                   "node":  "AI Agent",
+                                                                   "type":  "main",
+                                                                   "index":  0
+                                                               }
+                                                           ]
+                                                       ]
+                                          },
+                        "Reply to a message":  {
+                                                   "main":  [
+                                                                [
+
+                                                                ]
+                                                            ]
+                                               },
+                        "Postgres Chat Memory":  {
+                                                     "ai_memory":  [
+                                                                       [
+                                                                           {
+                                                                               "node":  "AI Agent",
+                                                                               "type":  "ai_memory",
+                                                                               "index":  0
+                                                                           }
+                                                                       ]
+                                                                   ]
+                                                 },
+                        "CRM_LEAD":  {
+                                         "ai_tool":  [
+                                                         [
+                                                             {
+                                                                 "node":  "AI Agent",
+                                                                 "type":  "ai_tool",
+                                                                 "index":  0
+                                                             }
+                                                         ]
+                                                     ]
+                                     }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1"
+                 },
+    "staticData":  {
+                       "node:Odbierz_Maila":  {
+                                                  "Odbierz_Maila":  {
+                                                                        "lastTimeChecked":  1761030262,
+                                                                        "possibleDuplicates":  [
+                                                                                                   "19a05957d645a3fd",
+                                                                                                   "19a0594938d08ba2",
+                                                                                                   "19a0592c4bb44d33"
+                                                                                               ]
+                                                                    }
+                                              }
+                   },
+    "meta":  {
+                 "templateCredsSetupCompleted":  true
+             },
+    "nodeGroups":  [
+
+                   ],
+    "versionId":  "c9819810-5cc6-434e-990f-ea420e366e10",
+    "activeVersionId":  null,
+    "versionCounter":  1,
+    "triggerCount":  1,
+    "sourceWorkflowId":  null,
+    "shared":  [
+                   {
+                       "updatedAt":  "2025-06-29T14:00:43.138Z",
+                       "createdAt":  "2025-06-29T14:00:43.138Z",
+                       "role":  "workflow:owner",
+                       "workflowId":  "q8Ryw3h57yFFe25n",
+                       "projectId":  "9rVJoULaKk30HdBB",
+                       "project":  {
+                                       "updatedAt":  "2025-06-26T00:18:14.615Z",
+                                       "createdAt":  "2025-06-25T23:37:35.363Z",
+                                       "id":  "9rVJoULaKk30HdBB",
+                                       "name":  "Nicolas Bednarz \u003cowner@example.com\u003e",
+                                       "type":  "personal",
+                                       "icon":  null,
+                                       "description":  null,
+                                       "customTelemetryTags":  [
+
+                                                               ],
+                                       "creatorId":  "af23e566-dd44-45a3-ac35-e15a8cdef3f2"
+                                   }
+                   }
+               ],
+    "tags":  [
+
+             ],
+    "activeVersion":  null
+}

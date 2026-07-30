@@ -1,0 +1,738 @@
+{
+    "updatedAt":  "2025-10-15T23:56:39.362Z",
+    "createdAt":  "2025-06-29T14:02:05.090Z",
+    "id":  "TqygtHLIy1PwBVAl",
+    "name":  "Agent AI - Centrum Dowodzenia",
+    "description":  null,
+    "active":  false,
+    "isArchived":  false,
+    "nodes":  [
+                  {
+                      "parameters":  {
+                                         "trigger":  [
+                                                         "message"
+                                                     ],
+                                         "channelId":  {
+                                                           "__rl":  true,
+                                                           "value":  "C08JPEMLF60",
+                                                           "mode":  "list",
+                                                           "cachedResultName":  "test-w-n8n"
+                                                       },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.slackTrigger",
+                      "typeVersion":  1,
+                      "position":  [
+                                       -864,
+                                       368
+                                   ],
+                      "id":  "b0ef198d-233c-4e6e-b91a-848d82d758ec",
+                      "name":  "Slack Trigger",
+                      "webhookId":  "d3d16a1f-1ccd-4ca9-82fa-c0f5e327ecd8"
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  true,
+                                                                            "leftValue":  "",
+                                                                            "typeValidation":  "strict",
+                                                                            "version":  2
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "id":  "a00b4232-e6f0-4769-ab9d-143316fd8f83",
+                                                                                   "leftValue":  "={{ $json.user }}",
+                                                                                   "rightValue":  "",
+                                                                                   "operator":  {
+                                                                                                    "type":  "string",
+                                                                                                    "operation":  "notEquals"
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       48,
+                                       336
+                                   ],
+                      "id":  "18112555-8443-4a94-9916-5850d4db7fdd",
+                      "name":  "If"
+                  },
+                  {
+                      "parameters":  {
+
+                                     },
+                      "type":  "n8n-nodes-base.noOp",
+                      "typeVersion":  1,
+                      "position":  [
+                                       48,
+                                       496
+                                   ],
+                      "id":  "1b2572f1-d056-4e0c-b701-af87bc003eed",
+                      "name":  "No Operation, do nothing"
+                  },
+                  {
+                      "parameters":  {
+                                         "rules":  {
+                                                       "values":  [
+                                                                      {
+                                                                          "conditions":  {
+                                                                                             "options":  {
+                                                                                                             "caseSensitive":  true,
+                                                                                                             "leftValue":  "",
+                                                                                                             "typeValidation":  "strict",
+                                                                                                             "version":  2
+                                                                                                         },
+                                                                                             "conditions":  [
+                                                                                                                {
+                                                                                                                    "leftValue":  "={{ $json.files[0].mimetype }}",
+                                                                                                                    "rightValue":  "text",
+                                                                                                                    "operator":  {
+                                                                                                                                     "type":  "string",
+                                                                                                                                     "operation":  "notExists",
+                                                                                                                                     "singleValue":  true
+                                                                                                                                 },
+                                                                                                                    "id":  "6cbdba35-9be0-4668-b3ee-47ba24cae379"
+                                                                                                                }
+                                                                                                            ],
+                                                                                             "combinator":  "and"
+                                                                                         }
+                                                                      },
+                                                                      {
+                                                                          "conditions":  {
+                                                                                             "options":  {
+                                                                                                             "caseSensitive":  true,
+                                                                                                             "leftValue":  "",
+                                                                                                             "typeValidation":  "strict",
+                                                                                                             "version":  2
+                                                                                                         },
+                                                                                             "conditions":  [
+                                                                                                                {
+                                                                                                                    "id":  "12067f8e-c660-4843-a563-a6ab82fbead5",
+                                                                                                                    "leftValue":  "={{ $json.files[0].mimetype }}",
+                                                                                                                    "rightValue":  "audio/mp4",
+                                                                                                                    "operator":  {
+                                                                                                                                     "type":  "string",
+                                                                                                                                     "operation":  "equals",
+                                                                                                                                     "name":  "filter.operator.equals"
+                                                                                                                                 }
+                                                                                                                }
+                                                                                                            ],
+                                                                                             "combinator":  "and"
+                                                                                         }
+                                                                      }
+                                                                  ]
+                                                   },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.switch",
+                      "typeVersion":  3.2,
+                      "position":  [
+                                       -352,
+                                       352
+                                   ],
+                      "id":  "43dc6a7e-baa0-4989-86fc-d8d8a8b042dd",
+                      "name":  "Tekst czy Audio"
+                  },
+                  {
+                      "parameters":  {
+                                         "resource":  "audio",
+                                         "operation":  "transcribe",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "@n8n/n8n-nodes-langchain.openAi",
+                      "typeVersion":  1.8,
+                      "position":  [
+                                       48,
+                                       128
+                                   ],
+                      "id":  "b7c19d76-dafd-48d3-b933-82e6a4d21eda",
+                      "name":  "Transkrypcja"
+                  },
+                  {
+                      "parameters":  {
+
+                                     },
+                      "type":  "n8n-nodes-base.noOp",
+                      "typeVersion":  1,
+                      "position":  [
+                                       -640,
+                                       528
+                                   ],
+                      "id":  "881b66be-0a19-410c-8c3e-657b9985b33e",
+                      "name":  "No Operation, do nothing1"
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  true,
+                                                                            "leftValue":  "",
+                                                                            "typeValidation":  "strict",
+                                                                            "version":  2
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "id":  "8198dd2d-3d5d-462d-b066-8a5db538fc9b",
+                                                                                   "leftValue":  "={{ $json.subtype }}",
+                                                                                   "rightValue":  "message_deleted",
+                                                                                   "operator":  {
+                                                                                                    "type":  "string",
+                                                                                                    "operation":  "notEquals"
+                                                                                                }
+                                                                               },
+                                                                               {
+                                                                                   "id":  "5caab4a9-8239-4670-ad0f-e1234237a30f",
+                                                                                   "leftValue":  "",
+                                                                                   "rightValue":  "",
+                                                                                   "operator":  {
+                                                                                                    "type":  "string",
+                                                                                                    "operation":  "equals",
+                                                                                                    "name":  "filter.operator.equals"
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       -640,
+                                       368
+                                   ],
+                      "id":  "1e8c8982-ab91-4504-8fbc-fc221e9b02f1",
+                      "name":  "Nieporządany event"
+                  },
+                  {
+                      "parameters":  {
+                                         "url":  "={{ $json.files[0].url_private_download }}",
+                                         "authentication":  "predefinedCredentialType",
+                                         "nodeCredentialType":  "slackApi",
+                                         "options":  {
+                                                         "response":  {
+                                                                          "response":  {
+                                                                                           "responseFormat":  "file"
+                                                                                       }
+                                                                      }
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       -176,
+                                       128
+                                   ],
+                      "id":  "fe20908d-1b4d-4b1b-b0a6-3b82ec3e2913",
+                      "name":  "Pobierz notatke głosową"
+                  },
+                  {
+                      "parameters":  {
+                                         "assignments":  {
+                                                             "assignments":  [
+                                                                                 {
+                                                                                     "id":  "153970be-9674-4f01-ac41-9782f5408f56",
+                                                                                     "name":  "id",
+                                                                                     "value":  "={{ $(\u0027Slack Trigger\u0027).item.json.thread_ts || $(\u0027Slack Trigger\u0027).item.json.ts }}",
+                                                                                     "type":  "string"
+                                                                                 }
+                                                                             ]
+                                                         },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "88551c46-6a30-488c-bfb8-d5c9406768a7",
+                      "name":  "Event ID",
+                      "type":  "n8n-nodes-base.set",
+                      "typeVersion":  3.4,
+                      "position":  [
+                                       304,
+                                       320
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "select":  "channel",
+                                         "channelId":  {
+                                                           "__rl":  true,
+                                                           "value":  "C08JPEMLF60",
+                                                           "mode":  "list",
+                                                           "cachedResultName":  "test-w-n8n"
+                                                       },
+                                         "text":  "={{ $json.output }}",
+                                         "otherOptions":  {
+                                                              "thread_ts":  {
+                                                                                "replyValues":  {
+                                                                                                    "thread_ts":  "={{ $(\u0027Slack Trigger\u0027).item.json.ts }}"
+                                                                                                }
+                                                                            },
+                                                              "mrkdwn":  true
+                                                          }
+                                     },
+                      "type":  "n8n-nodes-base.slack",
+                      "typeVersion":  2.3,
+                      "position":  [
+                                       944,
+                                       320
+                                   ],
+                      "id":  "dcae6b20-17f5-43ec-b6d9-0fb8d181ec7b",
+                      "name":  "Wiadomość - Odpowiedź AI Agenta",
+                      "webhookId":  "438612e2-9a99-4404-832a-23b646447eaa"
+                  },
+                  {
+                      "parameters":  {
+                                         "sessionIdType":  "customKey",
+                                         "sessionKey":  "={{ $json.id }}",
+                                         "contextWindowLength":  10
+                                     },
+                      "type":  "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+                      "typeVersion":  1.3,
+                      "position":  [
+                                       544,
+                                       560
+                                   ],
+                      "id":  "86f621c7-5e3e-4b89-88e6-a8e6ecb35c09",
+                      "name":  "Postgres Chat Memory"
+                  },
+                  {
+                      "parameters":  {
+                                         "name":  "kalendarzAgent",
+                                         "description":  "Zarządza kalendarzem i wydarzeniami.\nParametry:\n- user_msg (string) - obowiązkowe, sparafrazowane polecenie użytkownika w formie jasnej i czytelnej instrukcji",
+                                         "workflowId":  {
+                                                            "__rl":  true,
+                                                            "value":  "LNBHuZJA8A19oPCz",
+                                                            "mode":  "list",
+                                                            "cachedResultName":  "Agent AI - Kalendarz"
+                                                        },
+                                         "workflowInputs":  {
+                                                                "mappingMode":  "defineBelow",
+                                                                "value":  {
+                                                                              "msg":  "={{ $fromAI(\"user_msg\") }}"
+                                                                          },
+                                                                "matchingColumns":  [
+                                                                                        "msg"
+                                                                                    ],
+                                                                "schema":  [
+                                                                               {
+                                                                                   "id":  "msg",
+                                                                                   "displayName":  "msg",
+                                                                                   "required":  false,
+                                                                                   "defaultMatch":  false,
+                                                                                   "display":  true,
+                                                                                   "canBeUsedToMatch":  true,
+                                                                                   "type":  "string"
+                                                                               }
+                                                                           ],
+                                                                "attemptToConvertTypes":  false,
+                                                                "convertFieldsToString":  false
+                                                            }
+                                     },
+                      "type":  "@n8n/n8n-nodes-langchain.toolWorkflow",
+                      "typeVersion":  2.1,
+                      "position":  [
+                                       944,
+                                       688
+                                   ],
+                      "id":  "ea48f2ae-3ecf-46b5-aeae-d3b30c6bab0a",
+                      "name":  "kalendarzAgent"
+                  },
+                  {
+                      "parameters":  {
+                                         "name":  "bazaWiedzyAgent",
+                                         "description":  "Uzyskuje informacje z firmowej bazy wiedzy.\nParametry:\n- user_msg (string) - obowiązkowe, sparafrazowane pytanie użytkownika w formie jasnej i czytelnej instrukcji",
+                                         "workflowId":  {
+                                                            "__rl":  true,
+                                                            "value":  "tsK5kJ0BR5kVs8qd",
+                                                            "mode":  "list",
+                                                            "cachedResultName":  "Agent AI - Baza wiedzy firmowej"
+                                                        },
+                                         "workflowInputs":  {
+                                                                "mappingMode":  "defineBelow",
+                                                                "value":  {
+                                                                              "msg":  "={{ $fromAI(\"user_msg\") }}"
+                                                                          },
+                                                                "matchingColumns":  [
+                                                                                        "msg"
+                                                                                    ],
+                                                                "schema":  [
+                                                                               {
+                                                                                   "id":  "msg",
+                                                                                   "displayName":  "msg",
+                                                                                   "required":  false,
+                                                                                   "defaultMatch":  false,
+                                                                                   "display":  true,
+                                                                                   "canBeUsedToMatch":  true,
+                                                                                   "type":  "string",
+                                                                                   "removed":  false
+                                                                               }
+                                                                           ],
+                                                                "attemptToConvertTypes":  false,
+                                                                "convertFieldsToString":  false
+                                                            }
+                                     },
+                      "type":  "@n8n/n8n-nodes-langchain.toolWorkflow",
+                      "typeVersion":  2.1,
+                      "position":  [
+                                       784,
+                                       688
+                                   ],
+                      "id":  "59fcd348-1902-4f9a-b409-ba49a0dc7104",
+                      "name":  "bazaWiedzyAgent"
+                  },
+                  {
+                      "parameters":  {
+                                         "name":  "skrzynkaPocztowaAgent",
+                                         "description":  "Zarządza skrzynką pocztową.\nParametry:\n- user_msg (string) - obowiązkowe, sparafrazowane polecenie użytkownika w formie jasnej i czytelnej instrukcji",
+                                         "workflowId":  {
+                                                            "__rl":  true,
+                                                            "value":  "mUdW3aDTgN8nKbYj",
+                                                            "mode":  "list",
+                                                            "cachedResultName":  "Agent AI - Skrzynka pocztowa"
+                                                        },
+                                         "workflowInputs":  {
+                                                                "mappingMode":  "defineBelow",
+                                                                "value":  {
+                                                                              "msg":  "={{ $fromAI(\"user_msg\") }}"
+                                                                          },
+                                                                "matchingColumns":  [
+                                                                                        "msg"
+                                                                                    ],
+                                                                "schema":  [
+                                                                               {
+                                                                                   "id":  "msg",
+                                                                                   "displayName":  "msg",
+                                                                                   "required":  false,
+                                                                                   "defaultMatch":  false,
+                                                                                   "display":  true,
+                                                                                   "canBeUsedToMatch":  true,
+                                                                                   "type":  "string"
+                                                                               }
+                                                                           ],
+                                                                "attemptToConvertTypes":  false,
+                                                                "convertFieldsToString":  false
+                                                            }
+                                     },
+                      "type":  "@n8n/n8n-nodes-langchain.toolWorkflow",
+                      "typeVersion":  2.1,
+                      "position":  [
+                                       1136,
+                                       688
+                                   ],
+                      "id":  "c12d423d-a771-499e-89b2-7f95acddb588",
+                      "name":  "skrzynkaPocztowaAgent"
+                  },
+                  {
+                      "parameters":  {
+                                         "name":  "researchAgent",
+                                         "description":  "Agent do wyszukiwania informacji w sieci oraz tworzenia podsumowań materiałow YouTube.\nParametry:\n- user_msg (string) - obowiązkowe, sparafrazowane polecenie użytkownika w formie jasnej i czytelnej instrukcji",
+                                         "workflowId":  {
+                                                            "__rl":  true,
+                                                            "value":  "udNT07fWeM4p1Ml1",
+                                                            "mode":  "list",
+                                                            "cachedResultName":  "Agent AI - Research"
+                                                        },
+                                         "workflowInputs":  {
+                                                                "mappingMode":  "defineBelow",
+                                                                "value":  {
+                                                                              "msg":  "={{ $fromAI(\"user_msg\") }}"
+                                                                          },
+                                                                "matchingColumns":  [
+                                                                                        "msg"
+                                                                                    ],
+                                                                "schema":  [
+                                                                               {
+                                                                                   "id":  "msg",
+                                                                                   "displayName":  "msg",
+                                                                                   "required":  false,
+                                                                                   "defaultMatch":  false,
+                                                                                   "display":  true,
+                                                                                   "canBeUsedToMatch":  true,
+                                                                                   "type":  "string"
+                                                                               }
+                                                                           ],
+                                                                "attemptToConvertTypes":  false,
+                                                                "convertFieldsToString":  false
+                                                            }
+                                     },
+                      "type":  "@n8n/n8n-nodes-langchain.toolWorkflow",
+                      "typeVersion":  2.1,
+                      "position":  [
+                                       1296,
+                                       688
+                                   ],
+                      "id":  "fedc8579-578f-4898-83a2-9876748a4c37",
+                      "name":  "researchAgent"
+                  },
+                  {
+                      "parameters":  {
+                                         "promptType":  "define",
+                                         "text":  "={{ $(\u0027If\u0027).item.json.text || $json.msg }}",
+                                         "options":  {
+                                                         "systemMessage":  "=\u003cInstrukcjeAgenta\u003e\n    \u003cRola\u003e\n        \u003cNazwa\u003eAgent Centralny\u003c/Nazwa\u003e\n        \u003cOpis\u003eKoordynujesz pracę wyspecjalizowanych sub-agentów, aby realizować złożone zadania użytkownika. Analizujesz zapytania, delegujesz zadania do odpowiednich sub-agentów oraz integrujesz ich wyniki w spójną odpowiedź.\u003c/Opis\u003e\n        \u003cDataAktualna\u003e{{$now}}\u003c/DataAktualna\u003e\n    \u003c/Rola\u003e\n\n    \u003cCel\u003e\n        \u003cGlowny\u003eEfektywna koordynacja sub-agentów i prezentacja wyników użytkownikowi\u003c/Glowny\u003e\n    \u003c/Cel\u003e\n\n    \u003cInstrukcje\u003e\n        \u003cInstrukcja\u003e\n            \u003cNazwa\u003ekalendarzAgent\u003c/Nazwa\u003e\n            \u003cCel\u003eZarządzanie wszystkimi zadaniami związanymi z kalendarzem.\u003c/Cel\u003e\n            \u003cZastosowanie\u003e\n                - Sprawdzanie dostępnych terminów, dodawanie spotkań, przesuwanie wydarzeń, usuwanie spotkań.\n                - Gdy zapytanie zawiera słowa kluczowe: kalendarz, spotkanie, termin, wydarzenie, harmonogram, plan.\n                - Gdy użytkownik chce sprawdzić swoją dostępność w określonym czasie.\n                - Gdy użytkownik chce dodać, zmienić lub usunąć spotkanie.\n                - Gdy użytkownik pyta o nadchodzące wydarzenia.\n            \u003c/Zastosowanie\u003e\n            \u003cWymaganePola\u003e\n                - user_msg (string): zapytanie lub polecenie użytkownika dotyczące kalendarza.\n            \u003c/WymaganePola\u003e\n        \u003c/Instrukcja\u003e\n        \n        \u003cInstrukcja\u003e\n            \u003cNazwa\u003eskrzynkaPocztowaAgent\u003c/Nazwa\u003e\n            \u003cCel\u003eZarządzanie wszystkimi zadaniami związanymi ze skrzynką pocztową.\u003c/Cel\u003e\n            \u003cZastosowanie\u003e\n                - Wyszukiwanie, czytanie, pisanie i odpowiadanie na wiadomości email.\n                - Gdy zapytanie zawiera słowa kluczowe: email, wiadomość, poczta, skrzynka, odpisz, napisz.\n                - Gdy użytkownik chce znaleźć konkretną wiadomość.\n                - Gdy użytkownik chce napisać nową wiadomość lub odpowiedzieć na istniejącą.\n                - Gdy użytkownik chce sprawdzić nowe wiadomości.\n                - **Gdy użytkownik potwierdził szkic wiadomości email.**\n            \u003c/Zastosowanie\u003e\n            \u003cWymaganePola\u003e\n                - user_msg (string): zapytanie lub polecenie użytkownika dotyczące poczty.\n            \u003c/WymaganePola\u003e\n        \u003c/Instrukcja\u003e\n        \n        \u003cInstrukcja\u003e\n            \u003cNazwa\u003ebazaWiedzyAgent\u003c/Nazwa\u003e\n            \u003cCel\u003eDostęp do bazy wiedzy firmowej i wszystkich dokumentów firmowych.\u003c/Cel\u003e\n            \u003cZastosowanie\u003e\n                - Wyszukiwanie procedur, instrukcji, raportów i innych informacji firmowych.\n                - Gdy zapytanie dotyczy wewnętrznych informacji firmowych.\n                - Gdy użytkownik pyta o procedury, regulaminy, dokumentację.\n                - Gdy użytkownik szuka raportów, danych firmowych lub wewnętrznych wytycznych.\n                - Gdy zapytanie wymaga dostępu do zastrzeżonych informacji organizacji.\n            \u003c/Zastosowanie\u003e\n            \u003cWymaganePola\u003e\n                - user_msg (string): zapytanie użytkownika dotyczące wiedzy firmowej.\n            \u003c/WymaganePola\u003e\n        \u003c/Instrukcja\u003e\n        \n        \u003cInstrukcja\u003e\n            \u003cNazwa\u003eresearchAgent\u003c/Nazwa\u003e\n            \u003cCel\u003eWyszukiwanie informacji w Internecie, scrapowanie stron, streszczanie filmów YouTube.\u003c/Cel\u003e\n            \u003cZastosowanie\u003e\n                - Gdy zapytanie wymaga wyszukania informacji ogólnodostępnych w Internecie.\n                - Gdy użytkownik podaje link do strony z prośbą o analizę jej zawartości.\n                - Gdy użytkownik podaje link do filmu YouTube z prośbą o streszczenie.\n                - Gdy zapytanie dotyczy aktualnych wydarzeń, faktów lub ogólnej wiedzy.\n            \u003c/Zastosowanie\u003e\n            \u003cWymaganePola\u003e\n                - user_msg (string): zapytanie lub polecenie dotyczące wyszukania informacji.\n            \u003c/WymaganePola\u003e\n        \u003c/Instrukcja\u003e\n    \u003c/Instrukcje\u003e\n\n    \u003cPrzeplywInterakcjiZSubAgentami\u003e\n        \u003cEtap\u003eAnalizuj zapytanie użytkownika, aby określić, których sub-agentów należy użyć.\u003c/Etap\u003e\n        \u003cEtap\u003eZłożone zadania mogą wymagać uruchomienia kilku sub-agentów w odpowiedniej kolejności.\u003c/Etap\u003e\n        \u003cEtap\u003ePrzekazuj do sub-agenta pełne i jasne instrukcje w parametrze user_msg.\u003c/Etap\u003e\n        \u003cEtap\u003eZawsze najpierw prezentuj użytkownikowi informacje otrzymane od sub-agentów przed wykonaniem jakichkolwiek dalszych działań.\u003c/Etap\u003e\n        \u003cEtap\u003eNigdy nie wykonuj automatycznie operacji bez uprzedniego pokazania użytkownikowi pełnych informacji do akceptacji.\u003c/Etap\u003e\n        \u003cEtap\u003eW przypadku potwierdzonego szkicu wiadomości email, jasno poinformuj użytkownika o jego treści przed wysłaniem.\u003c/Etap\u003e\n    \u003c/PrzeplywInterakcjiZSubAgentami\u003e\n    \n    \u003cObsługaWyników\u003e\n        \u003cEtap\u003eWszystkie informacje i wiadomości otrzymane od sub-agentów należy starannie opracować i wyświetlić użytkownikowi w czytelnej formie.\u003c/Etap\u003e\n        \u003cEtap\u003ePo otrzymaniu wyników z kalendarzAgent, przedstaw użytkownikowi informacje o spotkaniach lub potwierdzenie wykonanych działań.\u003c/Etap\u003e\n        \u003cEtap\u003ePo otrzymaniu wyników z skrzynkaPocztowaAgent, wyświetl użytkownikowi wszystkie wiadomości, szkice lub potwierdzenia operacji.\u003c/Etap\u003e\n        \u003cEtap\u003ePo otrzymaniu wyników z bazaWiedzyAgent, przedstaw użytkownikowi znalezione informacje w uporządkowany sposób.\u003c/Etap\u003e\n        \u003cEtap\u003ePo otrzymaniu wyników z researchAgent, podsumuj znalezione informacje i podaj źródła.\u003c/Etap\u003e\n        \u003cEtap\u003eJeśli sub-agent przygotował jakąkolwiek wiadomość, dokument lub akcję do wykonania, zawsze najpierw pokaż to użytkownikowi do weryfikacji.\u003c/Etap\u003e\n    \u003c/ObsługaWyników\u003e\n\n    \u003cStylKomunikacji\u003e\n        \u003cZasada\u003eUżywaj mało formalnego języka, jak w rozmowie z kumplem\u003c/Zasada\u003e\n        \u003cZasada\u003eZawsze zwracaj się bezpośrednio na \"Ty\"\u003c/Zasada\u003e\n        \u003cZasada\u003eUnikaj sztywnych zwrotów i nadmiernie oficjalnego tonu\u003c/Zasada\u003e\n        \u003cZasada\u003eBądź naturalny i spontaniczny w komunikacji\u003c/Zasada\u003e\n        \u003cZasada\u003eMożesz używać popularnych skrótów i potocznych wyrażeń, gdy jest to na miejscu\u003c/Zasada\u003e\n        \u003cZasada\u003ePisz w sposób bezpośredni i przyjazny, jakbyś pisał wiadomość do znajomego\u003c/Zasada\u003e\n        \u003cZasada\u003eUnikaj nadmiernie złożonych konstrukcji zdaniowych i trudnych słów\u003c/Zasada\u003e\n    \u003c/StylKomunikacji\u003e\n\n    \u003cFormatowanieWyników\u003e\n        \u003cOpis\u003eInformacje prezentuj w uporządkowanej formie. Docelowe formatowanie powinno być zgodne z standardami przyjętymi na Slacku.\u003c/Opis\u003e\n        \u003cFormat\u003e\n            \u003cNazwa\u003ePogrubienie\u003c/Nazwa\u003e\n            \u003cOznaczenie\u003e*tekst*\u003c/Oznaczenie\u003e\n        \u003c/Format\u003e\n        \u003cFormat\u003e\n            \u003cNazwa\u003eKursywa\u003c/Nazwa\u003e\n            \u003cOznaczenie\u003e_tekst_\u003c/Oznaczenie\u003e\n        \u003c/Format\u003e\n        \u003cFormat\u003e\n            \u003cNazwa\u003ePrzekreślenie\u003c/Nazwa\u003e\n            \u003cOznaczenie\u003e~tekst~\u003c/Oznaczenie\u003e\n        \u003c/Format\u003e\n        \u003cFormat\u003e\n            \u003cNazwa\u003eKodInline\u003c/Nazwa\u003e\n            \u003cOznaczenie\u003e`tekst`\u003c/Oznaczenie\u003e\n        \u003c/Format\u003e\n        \u003cFormat\u003e\n            \u003cNazwa\u003eCytat\u003c/Nazwa\u003e\n            \u003cOznaczenie\u003e\u003etekst\u003c/Oznaczenie\u003e\n        \u003c/Format\u003e\n        \u003cFormat\u003e\n            \u003cNazwa\u003eBlokKodu\u003c/Nazwa\u003e\n            \u003cOznaczenie\u003e```tekst```\u003c/Oznaczenie\u003e\n        \u003c/Format\u003e\n        \u003cFormat\u003e\n            \u003cNazwa\u003eListaNumerowana\u003c/Nazwa\u003e\n            \u003cOznaczenie\u003e1. tekst\u003c/Oznaczenie\u003e\n        \u003c/Format\u003e\n        \u003cFormat\u003e\n            \u003cNazwa\u003eListaPunktowana\u003c/Nazwa\u003e\n            \u003cOznaczenie\u003e* tekst\u003c/Oznaczenie\u003e\n        \u003c/Format\u003e\n    \u003c/FormatowanieWyników\u003e\n\n    \u003cUwagiKoncowe\u003e\n        - **Wszystkie informacje otrzymane od sub-agentów zawsze przedstawiaj użytkownikowi w czytelnej formie przed podjęciem jakichkolwiek dalszych działań.**\n        - **Nigdy nie wykonuj automatycznie operacji bez uprzedniego pokazania użytkownikowi pełnych informacji do akceptacji.**\n        - Nigdy nie używaj formatowania markdown, tylko formatowanie Slack podane powyżej.\n        - Zawsze dwukrotnie sprawdzaj, czy używasz prawidłowego formatowania Slack przed wysłaniem odpowiedzi.\n        - Przy każdej odpowiedzi upewnij się, że stosujesz nieformalny, przyjazny ton, jakbyś rozmawiał z dobrym znajomym.\n    \u003c/UwagiKoncowe\u003e\n\u003c/InstrukcjeAgenta\u003e"
+                                                     }
+                                     },
+                      "type":  "@n8n/n8n-nodes-langchain.agent",
+                      "typeVersion":  1.8,
+                      "position":  [
+                                       528,
+                                       320
+                                   ],
+                      "id":  "fc906b8a-33cd-46a8-aff8-a9ab2fe70e7f",
+                      "name":  "AI Agent - Centrum Dowodzenia"
+                  },
+                  {
+                      "parameters":  {
+                                         "model":  {
+                                                       "__rl":  true,
+                                                       "mode":  "list",
+                                                       "value":  "claude-3-7-sonnet-20250219",
+                                                       "cachedResultName":  "Claude 3.7 Sonnet"
+                                                   },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+                      "typeVersion":  1.3,
+                      "position":  [
+                                       416,
+                                       560
+                                   ],
+                      "id":  "24be5acb-7879-4287-8db2-39c5a224e4b8",
+                      "name":  "Anthropic Chat Model"
+                  }
+              ],
+    "connections":  {
+                        "Slack Trigger":  {
+                                              "main":  [
+                                                           [
+                                                               {
+                                                                   "node":  "Nieporządany event",
+                                                                   "type":  "main",
+                                                                   "index":  0
+                                                               }
+                                                           ]
+                                                       ]
+                                          },
+                        "If":  {
+                                   "main":  [
+                                                [
+                                                    {
+                                                        "node":  "Event ID",
+                                                        "type":  "main",
+                                                        "index":  0
+                                                    }
+                                                ],
+                                                [
+                                                    {
+                                                        "node":  "No Operation, do nothing",
+                                                        "type":  "main",
+                                                        "index":  0
+                                                    }
+                                                ]
+                                            ]
+                               },
+                        "Tekst czy Audio":  {
+                                                "main":  [
+                                                             [
+                                                                 {
+                                                                     "node":  "If",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ],
+                                                             [
+                                                                 {
+                                                                     "node":  "Pobierz notatke głosową",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ]
+                                                         ]
+                                            },
+                        "Transkrypcja":  {
+                                             "main":  [
+                                                          [
+                                                              {
+                                                                  "node":  "Event ID",
+                                                                  "type":  "main",
+                                                                  "index":  0
+                                                              }
+                                                          ]
+                                                      ]
+                                         },
+                        "Nieporządany event":  {
+                                                   "main":  [
+                                                                [
+                                                                    {
+                                                                        "node":  "Tekst czy Audio",
+                                                                        "type":  "main",
+                                                                        "index":  0
+                                                                    }
+                                                                ],
+                                                                [
+                                                                    {
+                                                                        "node":  "No Operation, do nothing1",
+                                                                        "type":  "main",
+                                                                        "index":  0
+                                                                    }
+                                                                ]
+                                                            ]
+                                               },
+                        "Pobierz notatke głosową":  {
+                                                        "main":  [
+                                                                     [
+                                                                         {
+                                                                             "node":  "Transkrypcja",
+                                                                             "type":  "main",
+                                                                             "index":  0
+                                                                         }
+                                                                     ]
+                                                                 ]
+                                                    },
+                        "Event ID":  {
+                                         "main":  [
+                                                      [
+                                                          {
+                                                              "node":  "AI Agent - Centrum Dowodzenia",
+                                                              "type":  "main",
+                                                              "index":  0
+                                                          }
+                                                      ]
+                                                  ]
+                                     },
+                        "Postgres Chat Memory":  {
+                                                     "ai_memory":  [
+                                                                       [
+                                                                           {
+                                                                               "node":  "AI Agent - Centrum Dowodzenia",
+                                                                               "type":  "ai_memory",
+                                                                               "index":  0
+                                                                           }
+                                                                       ]
+                                                                   ]
+                                                 },
+                        "kalendarzAgent":  {
+                                               "ai_tool":  [
+                                                               [
+                                                                   {
+                                                                       "node":  "AI Agent - Centrum Dowodzenia",
+                                                                       "type":  "ai_tool",
+                                                                       "index":  0
+                                                                   }
+                                                               ]
+                                                           ]
+                                           },
+                        "bazaWiedzyAgent":  {
+                                                "ai_tool":  [
+                                                                [
+                                                                    {
+                                                                        "node":  "AI Agent - Centrum Dowodzenia",
+                                                                        "type":  "ai_tool",
+                                                                        "index":  0
+                                                                    }
+                                                                ]
+                                                            ]
+                                            },
+                        "skrzynkaPocztowaAgent":  {
+                                                      "ai_tool":  [
+                                                                      [
+                                                                          {
+                                                                              "node":  "AI Agent - Centrum Dowodzenia",
+                                                                              "type":  "ai_tool",
+                                                                              "index":  0
+                                                                          }
+                                                                      ]
+                                                                  ]
+                                                  },
+                        "researchAgent":  {
+                                              "ai_tool":  [
+                                                              [
+                                                                  {
+                                                                      "node":  "AI Agent - Centrum Dowodzenia",
+                                                                      "type":  "ai_tool",
+                                                                      "index":  0
+                                                                  }
+                                                              ]
+                                                          ]
+                                          },
+                        "AI Agent - Centrum Dowodzenia":  {
+                                                              "main":  [
+                                                                           [
+                                                                               {
+                                                                                   "node":  "Wiadomość - Odpowiedź AI Agenta",
+                                                                                   "type":  "main",
+                                                                                   "index":  0
+                                                                               }
+                                                                           ]
+                                                                       ]
+                                                          },
+                        "Anthropic Chat Model":  {
+                                                     "ai_languageModel":  [
+                                                                              [
+                                                                                  {
+                                                                                      "node":  "AI Agent - Centrum Dowodzenia",
+                                                                                      "type":  "ai_languageModel",
+                                                                                      "index":  0
+                                                                                  }
+                                                                              ]
+                                                                          ]
+                                                 }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1"
+                 },
+    "staticData":  null,
+    "meta":  null,
+    "nodeGroups":  [
+
+                   ],
+    "versionId":  "0be48871-d1e4-4764-84bd-dde527ac4987",
+    "activeVersionId":  null,
+    "versionCounter":  1,
+    "triggerCount":  0,
+    "sourceWorkflowId":  null,
+    "shared":  [
+                   {
+                       "updatedAt":  "2025-06-29T14:02:05.090Z",
+                       "createdAt":  "2025-06-29T14:02:05.090Z",
+                       "role":  "workflow:owner",
+                       "workflowId":  "TqygtHLIy1PwBVAl",
+                       "projectId":  "9rVJoULaKk30HdBB",
+                       "project":  {
+                                       "updatedAt":  "2025-06-26T00:18:14.615Z",
+                                       "createdAt":  "2025-06-25T23:37:35.363Z",
+                                       "id":  "9rVJoULaKk30HdBB",
+                                       "name":  "Nicolas Bednarz \u003cowner@example.com\u003e",
+                                       "type":  "personal",
+                                       "icon":  null,
+                                       "description":  null,
+                                       "customTelemetryTags":  [
+
+                                                               ],
+                                       "creatorId":  "af23e566-dd44-45a3-ac35-e15a8cdef3f2"
+                                   }
+                   }
+               ],
+    "tags":  [
+
+             ],
+    "activeVersion":  null
+}

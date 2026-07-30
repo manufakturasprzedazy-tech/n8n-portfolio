@@ -1,0 +1,508 @@
+{
+    "updatedAt":  "2025-10-05T16:01:06.325Z",
+    "createdAt":  "2025-06-29T19:44:33.295Z",
+    "id":  "RH76UmyZQ6aEk2PW",
+    "name":  "Sekretrarka AI",
+    "description":  null,
+    "active":  false,
+    "isArchived":  false,
+    "nodes":  [
+                  {
+                      "parameters":  {
+                                         "promptType":  "define",
+                                         "text":  "={{ $json.body.text }}",
+                                         "options":  {
+                                                         "systemMessage":  "=Gdy rozmowa dobiegnie końca zrób krótką notatkę z jej przebiegu i uzupełnij opis w notion\n\nCzas i dzień jaki mamy to: {{ $now }}",
+                                                         "returnIntermediateSteps":  true
+                                                     }
+                                     },
+                      "id":  "2a81ffc8-3950-4920-84b0-4089186d271f",
+                      "name":  "RAG AI Agent",
+                      "type":  "@n8n/n8n-nodes-langchain.agent",
+                      "typeVersion":  1.6,
+                      "position":  [
+                                       240,
+                                       80
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "model":  {
+                                                       "__rl":  true,
+                                                       "value":  "gpt-4o-2024-11-20",
+                                                       "mode":  "list",
+                                                       "cachedResultName":  "gpt-4o-2024-11-20"
+                                                   },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+                      "typeVersion":  1.2,
+                      "position":  [
+                                       -144,
+                                       544
+                                   ],
+                      "id":  "33d65168-7ede-4b7e-a5cf-2a238deb35c1",
+                      "name":  "OpenAI Chat Model",
+                      "credentials":  {
+                                          "openAiApi":  {
+                                                            "id":  "CevclqSiRa9VJGwm",
+                                                            "name":  "OpenAi Manufaktura"
+                                                        }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "httpMethod":  "POST",
+                                         "path":  "7b6fa880-1407-4fa5-8136-6c164d45bd4b",
+                                         "responseMode":  "responseNode",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.webhook",
+                      "typeVersion":  2,
+                      "position":  [
+                                       64,
+                                       80
+                                   ],
+                      "id":  "066bc943-4148-4fc9-9cdc-639624446b36",
+                      "name":  "Odbierz wiadomość z 11labs",
+                      "webhookId":  "4d356649-0e54-44c9-8e75-e1cfedb806eb"
+                  },
+                  {
+                      "parameters":  {
+                                         "respondWith":  "allIncomingItems",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.respondToWebhook",
+                      "typeVersion":  1.1,
+                      "position":  [
+                                       608,
+                                       80
+                                   ],
+                      "id":  "a9220fce-187b-47bd-84ed-b5cd358ee986",
+                      "name":  "Wyślij odpowiedź do 11labs"
+                  },
+                  {
+                      "parameters":  {
+                                         "descriptionType":  "manual",
+                                         "toolDescription":  "=Użyj tego narzędzia do edytowanie wydarzenia w kalendarzu. W zależności od kontekstu, możesz skorzystać z poniższych zmiennych:\n- eventId - unikalna wartość reprezentujący pojedyncze wydarzenie w kalendarzu\n  type: string\n  Obowiązkowe\n- attendees - mail klienta\n  type: string\n  Nieobowiązkowe\n- eventTitle - nazwa wydarzenia, którą należy samodzielnie określić na podstawie kontekstu wiadomości użytkownika\n  type: string\n  Obowiązkowe\n- eventDesc - opis wydarzenia wynikający z kontekstu wiadomości użytkownika\n  type: string\n  Nieobowiązkowe\n- startTime - data i godzina rozpoczęcia wydarzenia\n  type: date\n  Obowiązkowe\n- endTime - data i godzina zakończenia wydarzenia\n  type: date\n  Nieobowiązkowe\n  Wartość domyślna: startTime + 60 minut",
+                                         "operation":  "update",
+                                         "calendar":  {
+                                                          "__rl":  true,
+                                                          "value":  "test@example.com",
+                                                          "mode":  "list",
+                                                          "cachedResultName":  "test@example.com"
+                                                      },
+                                         "eventId":  "={{ $fromAI(\"eventId\") }}",
+                                         "updateFields":  {
+                                                              "attendeesUi":  {
+                                                                                  "values":  {
+                                                                                                 "mode":  "replace",
+                                                                                                 "attendees":  [
+                                                                                                                   "={{ $fromAI(\"attendees\") }}"
+                                                                                                               ]
+                                                                                             }
+                                                                              },
+                                                              "description":  "={{ $fromAI(\"eventDesc\") }}",
+                                                              "end":  "={{ $fromAI(\"endTime\") }}",
+                                                              "start":  "={{ $fromAI(\"startTime\") }}",
+                                                              "summary":  "={{ $fromAI(\"eventTitle\") }}"
+                                                          }
+                                     },
+                      "type":  "n8n-nodes-base.googleCalendarTool",
+                      "typeVersion":  1.3,
+                      "position":  [
+                                       864,
+                                       512
+                                   ],
+                      "id":  "8d48a2a0-56c4-4fc0-b064-5ceb86b528d3",
+                      "name":  "EdytujWizyte",
+                      "credentials":  {
+                                          "googleCalendarOAuth2Api":  {
+                                                                          "id":  "w1wfFqW1WZeOSC2o",
+                                                                          "name":  "Kalendarz Testowe"
+                                                                      }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "descriptionType":  "manual",
+                                         "toolDescription":  "Użyj tego narzędzia do sprawdzania informacji z kalendarza google. Możesz używać poniższych zmiennych do pozyskania informacji:\nstartTime: data początkowa od której są wyszukiwane wydarzenia w kalendarzu.\nendTime: data końcowa do której są wyszukiwane wydarzenia w kalendarzu.\nemail",
+                                         "operation":  "getAll",
+                                         "calendar":  {
+                                                          "__rl":  true,
+                                                          "value":  "test@example.com",
+                                                          "mode":  "list",
+                                                          "cachedResultName":  "test@example.com"
+                                                      },
+                                         "limit":  5,
+                                         "timeMin":  "={{ $fromAI(\"startTime\") }}",
+                                         "timeMax":  "={{ $fromAI(\"endTime\") }}",
+                                         "options":  {
+                                                         "orderBy":  "startTime",
+                                                         "query":  ""
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.googleCalendarTool",
+                      "typeVersion":  1.3,
+                      "position":  [
+                                       432,
+                                       496
+                                   ],
+                      "id":  "ec790b85-b4ac-4196-9330-8b8e94b4c8b4",
+                      "name":  "SprawdzanieTerminowWizyt",
+                      "credentials":  {
+                                          "googleCalendarOAuth2Api":  {
+                                                                          "id":  "w1wfFqW1WZeOSC2o",
+                                                                          "name":  "Kalendarz Testowe"
+                                                                      }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "descriptionType":  "manual",
+                                         "toolDescription":  "Użyj tego narzędzia do wykasowania wydarzenia w kalendarzu. Musisz skorzystać z poniższej zmiennej:\n- eventId - unikalna wartość reprezentujący pojedyncze wydarzenie w kalendarzu\n  type: string\n  Obowiązkowe",
+                                         "operation":  "delete",
+                                         "calendar":  {
+                                                          "__rl":  true,
+                                                          "value":  "test@example.com",
+                                                          "mode":  "list",
+                                                          "cachedResultName":  "test@example.com"
+                                                      },
+                                         "eventId":  "={{ $fromAI(\"eventId\") }}",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.googleCalendarTool",
+                      "typeVersion":  1.3,
+                      "position":  [
+                                       704,
+                                       512
+                                   ],
+                      "id":  "36ce2d63-28bb-4b19-bc77-ab637c7b38c4",
+                      "name":  "UsuwanieWizyt",
+                      "credentials":  {
+                                          "googleCalendarOAuth2Api":  {
+                                                                          "id":  "w1wfFqW1WZeOSC2o",
+                                                                          "name":  "Kalendarz Testowe"
+                                                                      }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "descriptionType":  "manual",
+                                         "toolDescription":  "Użyj tego narzędzia do stworzenia nowego wydarzenia stacjonarnego w kalendarzu. W zależności od kontekstu, możesz skorzystać z poniższych zmiennych:\n- attendees - mail klienta\n  type: string\n  Obowiązkowe\n- eventTitle - nazwa wydarzenia, którą należy samodzielnie określić na podstawie kontekstu wiadomości użytkownika\n  type: string\n  Obowiązkowe\n- eventDesc - opis wydarzenia wynikający z kontekstu wiadomości użytkownika\n  type: string\n  Nieobowiązkowe\n- startTime - data i godzina rozpoczęcia wydarzenia\n  type: date\n  Obowiązkowe\n- endTime - data i godzina zakończenia wydarzenia\n  type: date\n  Nieobowiązkowe\n  Wartość domyślna: startTime + 60 minut",
+                                         "calendar":  {
+                                                          "__rl":  true,
+                                                          "value":  "test@example.com",
+                                                          "mode":  "list",
+                                                          "cachedResultName":  "test@example.com"
+                                                      },
+                                         "start":  "={{ $fromAI(\"startTime\") }}",
+                                         "end":  "={{ $fromAI(\"endTime\") }}",
+                                         "additionalFields":  {
+                                                                  "attendees":  [
+                                                                                    "={{ $fromAI(\"attendees\") }}"
+                                                                                ],
+                                                                  "description":  "={{ $fromAI(\"eventDesc\") }}",
+                                                                  "summary":  "={{ $fromAI(\"eventTitle\") }}"
+                                                              }
+                                     },
+                      "type":  "n8n-nodes-base.googleCalendarTool",
+                      "typeVersion":  1.3,
+                      "position":  [
+                                       576,
+                                       512
+                                   ],
+                      "id":  "f6c639f5-7421-48d8-a2d7-ce6b79e75fbf",
+                      "name":  "TworzenieWizyt",
+                      "credentials":  {
+                                          "googleCalendarOAuth2Api":  {
+                                                                          "id":  "w1wfFqW1WZeOSC2o",
+                                                                          "name":  "Kalendarz Testowe"
+                                                                      }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "resource":  "databasePage",
+                                         "databaseId":  {
+                                                            "__rl":  true,
+                                                            "value":  "207cff6f-451d-8035-a1b9-d534ee6238fe",
+                                                            "mode":  "list",
+                                                            "cachedResultName":  "Dane Klienta",
+                                                            "cachedResultUrl":  "https://www.notion.so/207cff6f451d8035a1b9d534ee6238fe"
+                                                        },
+                                         "propertiesUi":  {
+                                                              "propertyValues":  [
+                                                                                     {
+                                                                                         "key":  "ID rozmowy|title",
+                                                                                         "title":  "={{ $(\u0027Odbierz wiadomość z 11labs\u0027).item.json.body.id }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "Contact Email|email",
+                                                                                         "emailValue":  "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI(\u0027propertyValues1_Email\u0027, ``, \u0027string\u0027) }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "Contact Phone|phone_number",
+                                                                                         "phoneValue":  "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI(\u0027propertyValues2_Phone_Number\u0027, ``, \u0027string\u0027) }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "Description|rich_text",
+                                                                                         "textContent":  "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI(\u0027propertyValues3_Text\u0027, ``, \u0027string\u0027) }}"
+                                                                                     }
+                                                                                 ]
+                                                          },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.notionTool",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       400,
+                                       -208
+                                   ],
+                      "id":  "28aa740b-50c0-431d-8d38-58d1e451fff8",
+                      "name":  "Create a database page in Notion",
+                      "credentials":  {
+                                          "notionApi":  {
+                                                            "id":  "QuOPwwbBbtZemzmM",
+                                                            "name":  "Notion account"
+                                                        }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "sessionIdType":  "customKey",
+                                         "sessionKey":  "={{ $(\u0027Odbierz wiadomość z 11labs\u0027).item.json.body.id }}"
+                                     },
+                      "type":  "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+                      "typeVersion":  1.3,
+                      "position":  [
+                                       128,
+                                       528
+                                   ],
+                      "id":  "fafb9604-1d9e-4d10-a790-f2a1a7b3931f",
+                      "name":  "Postgres Chat Memory",
+                      "credentials":  {
+                                          "postgres":  {
+                                                           "id":  "MLINqPwwywhCobTH",
+                                                           "name":  "Postgres RAG"
+                                                       }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "content":  "## Receiving messages from 11Lbs",
+                                         "height":  320,
+                                         "width":  260
+                                     },
+                      "type":  "n8n-nodes-base.stickyNote",
+                      "position":  [
+                                       -48,
+                                       -16
+                                   ],
+                      "typeVersion":  1,
+                      "id":  "6fe3c60c-81c9-4128-be44-a0e16d1a8f1f",
+                      "name":  "Sticky Note"
+                  },
+                  {
+                      "parameters":  {
+                                         "content":  "## Entering customer data into the database\n\n**Airtable, GHL, Excel, Google Sheet etc. can be connected here just as well.",
+                                         "height":  460,
+                                         "width":  380,
+                                         "color":  3
+                                     },
+                      "type":  "n8n-nodes-base.stickyNote",
+                      "position":  [
+                                       272,
+                                       -480
+                                   ],
+                      "typeVersion":  1,
+                      "id":  "44e4168b-9cf4-4dc3-9235-b863fa860cfb",
+                      "name":  "Sticky Note1"
+                  },
+                  {
+                      "parameters":  {
+                                         "content":  "## Sending replies to 11labs",
+                                         "height":  280
+                                     },
+                      "type":  "n8n-nodes-base.stickyNote",
+                      "position":  [
+                                       544,
+                                       -16
+                                   ],
+                      "typeVersion":  1,
+                      "id":  "5eaafa33-17de-4b76-ad18-e8c3f89020b9",
+                      "name":  "Sticky Note2"
+                  },
+                  {
+                      "parameters":  {
+                                         "content":  "## Checking Appointments, Making an Appointment, Editing an Appointment, Cancelling an Appointment",
+                                         "height":  280,
+                                         "width":  640,
+                                         "color":  5
+                                     },
+                      "type":  "n8n-nodes-base.stickyNote",
+                      "position":  [
+                                       384,
+                                       384
+                                   ],
+                      "typeVersion":  1,
+                      "id":  "cc53ba66-2593-4ec0-9410-29a431f44b06",
+                      "name":  "Sticky Note3"
+                  }
+              ],
+    "connections":  {
+                        "RAG AI Agent":  {
+                                             "main":  [
+                                                          [
+                                                              {
+                                                                  "node":  "Wyślij odpowiedź do 11labs",
+                                                                  "type":  "main",
+                                                                  "index":  0
+                                                              }
+                                                          ]
+                                                      ]
+                                         },
+                        "OpenAI Chat Model":  {
+                                                  "ai_languageModel":  [
+                                                                           [
+                                                                               {
+                                                                                   "node":  "RAG AI Agent",
+                                                                                   "type":  "ai_languageModel",
+                                                                                   "index":  0
+                                                                               }
+                                                                           ]
+                                                                       ]
+                                              },
+                        "Odbierz wiadomość z 11labs":  {
+                                                           "main":  [
+                                                                        [
+                                                                            {
+                                                                                "node":  "RAG AI Agent",
+                                                                                "type":  "main",
+                                                                                "index":  0
+                                                                            }
+                                                                        ]
+                                                                    ]
+                                                       },
+                        "Wyślij odpowiedź do 11labs":  {
+                                                           "main":  [
+                                                                        [
+
+                                                                        ]
+                                                                    ]
+                                                       },
+                        "EdytujWizyte":  {
+                                             "ai_tool":  [
+                                                             [
+                                                                 {
+                                                                     "node":  "RAG AI Agent",
+                                                                     "type":  "ai_tool",
+                                                                     "index":  0
+                                                                 }
+                                                             ]
+                                                         ]
+                                         },
+                        "SprawdzanieTerminowWizyt":  {
+                                                         "ai_tool":  [
+                                                                         [
+                                                                             {
+                                                                                 "node":  "RAG AI Agent",
+                                                                                 "type":  "ai_tool",
+                                                                                 "index":  0
+                                                                             }
+                                                                         ]
+                                                                     ]
+                                                     },
+                        "UsuwanieWizyt":  {
+                                              "ai_tool":  [
+                                                              [
+                                                                  {
+                                                                      "node":  "RAG AI Agent",
+                                                                      "type":  "ai_tool",
+                                                                      "index":  0
+                                                                  }
+                                                              ]
+                                                          ]
+                                          },
+                        "TworzenieWizyt":  {
+                                               "ai_tool":  [
+                                                               [
+                                                                   {
+                                                                       "node":  "RAG AI Agent",
+                                                                       "type":  "ai_tool",
+                                                                       "index":  0
+                                                                   }
+                                                               ]
+                                                           ]
+                                           },
+                        "Create a database page in Notion":  {
+                                                                 "ai_tool":  [
+                                                                                 [
+                                                                                     {
+                                                                                         "node":  "RAG AI Agent",
+                                                                                         "type":  "ai_tool",
+                                                                                         "index":  0
+                                                                                     }
+                                                                                 ]
+                                                                             ]
+                                                             },
+                        "Postgres Chat Memory":  {
+                                                     "ai_memory":  [
+                                                                       [
+
+                                                                       ]
+                                                                   ]
+                                                 }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1"
+                 },
+    "staticData":  null,
+    "meta":  {
+                 "templateCredsSetupCompleted":  true
+             },
+    "nodeGroups":  [
+
+                   ],
+    "versionId":  "828ac319-15ff-4a2f-9047-61406fb1ebac",
+    "activeVersionId":  null,
+    "versionCounter":  76,
+    "triggerCount":  1,
+    "sourceWorkflowId":  null,
+    "shared":  [
+                   {
+                       "updatedAt":  "2025-06-29T19:44:33.295Z",
+                       "createdAt":  "2025-06-29T19:44:33.295Z",
+                       "role":  "workflow:owner",
+                       "workflowId":  "RH76UmyZQ6aEk2PW",
+                       "projectId":  "9rVJoULaKk30HdBB",
+                       "project":  {
+                                       "updatedAt":  "2025-06-26T00:18:14.615Z",
+                                       "createdAt":  "2025-06-25T23:37:35.363Z",
+                                       "id":  "9rVJoULaKk30HdBB",
+                                       "name":  "Nicolas Bednarz \u003cowner@example.com\u003e",
+                                       "type":  "personal",
+                                       "icon":  null,
+                                       "description":  null,
+                                       "customTelemetryTags":  [
+
+                                                               ],
+                                       "creatorId":  "af23e566-dd44-45a3-ac35-e15a8cdef3f2"
+                                   }
+                   }
+               ],
+    "tags":  [
+
+             ],
+    "activeVersion":  null
+}

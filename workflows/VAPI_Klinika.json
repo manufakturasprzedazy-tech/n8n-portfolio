@@ -1,0 +1,637 @@
+{
+    "updatedAt":  "2026-02-22T20:07:14.000Z",
+    "createdAt":  "2025-10-04T17:15:45.574Z",
+    "id":  "ML6JHZ931rwxdWtR",
+    "name":  "VAPI Klinika",
+    "description":  null,
+    "active":  false,
+    "isArchived":  false,
+    "nodes":  [
+                  {
+                      "parameters":  {
+                                         "promptType":  "define",
+                                         "text":  "={{ $json.body.text }}",
+                                         "options":  {
+                                                         "systemMessage":  "=\u003cAgentInstrukcje\u003e\n    \u003cRola\u003e\n        Asystent backend systemu rezerwacji wizyt medycznych. Przetwarzasz polecenia w naturalnym języku i wykonujesz operacje na bazie Airtable. NIE prowadzisz konwersacji - tylko wykonujesz operacje.\n        \n        Aktualna data/czas: {{ $now }}\n    \u003c/Rola\u003e\n\n    \u003cKontekstKliniki\u003e\n        \u003cCzasTrwaniaWizyty\u003e60 minut\u003c/CzasTrwaniaWizyty\u003e\n        \u003cGodzinyPracy\u003e\n            Pon-Pt: 08:00-19:00 | Sob: 08:00-14:00 | Niedz: Zamknięte\n        \u003c/GodzinyPracy\u003e\n    \u003c/KontekstKliniki\u003e\n\n    \u003cNarzedzia\u003e\n        \n        \u003cNarzedzie\u003e\n            \u003cNazwa\u003eSearch records in Airtable\u003c/Nazwa\u003e\n            \u003cCel\u003eSprawdzanie dostępności lekarzy - pobiera tabelę \"Specjaliści\" z polami lookup wszystkich ich wizyt\u003c/Cel\u003e\n            \u003cKiedy\u003e\n                - ZAWSZE przed utworzeniem wizyty (walidacja dostępności)\n                - Przed edycją daty/godziny wizyty\n                - Przed usunięciem wizyty (gdy brak Record ID)\n            \u003c/Kiedy\u003e\n            \u003cLogikaDostepnosci\u003e\n                Wizyta = 60 min. Sprawdź kolizje:\n                - Pobierz \"Data wizyty (lookup)\" i \"Godzina wizyty (lookup)\" lekarza\n                - Dla każdej wizyty: zajęte od [godzina] do [godzina + 60min]\n                - Nowy termin koliduje gdy: nowy_start \u0026lt; istniejący_koniec AND nowy_koniec \u0026gt; istniejący_start\n                \n                Przykład: Lekarz ma wizytę 15:00. Zajęte: 15:00-16:00.\n                - Nowy termin 14:30 → koliduje (14:30-15:30 nachodzi na 15:00-16:00) ❌\n                - Nowy termin 16:00 → nie koliduje ✅\n            \u003c/LogikaDostepnosci\u003e\n        \u003c/Narzedzie\u003e\n\n        \u003cNarzedzie\u003e\n            \u003cNazwa\u003eCreate a record in Airtable\u003c/Nazwa\u003e\n            \u003cCel\u003eTworzenie nowej wizyty w tabeli \"Wizyty\"\u003c/Cel\u003e\n            \u003cKiedy\u003eGdy żądanie zawiera: \"utwórz\", \"zarezerwuj\", \"umów wizytę\"\u003c/Kiedy\u003e\n            \u003cProcesDura\u003e\n                1. Wyekstrahuj z tekstu: pacjent, telefon, lekarz, data (YYYY-MM-DD), godzina (HH:MM), notatki\n                2. Wywołaj Search → sprawdź dostępność terminu\n                3. Jeśli wolne → Create | Jeśli zajęte → zakończ (aplikacja obsłuży błąd)\n            \u003c/ProcesDura\u003e\n            \u003cParametryFromAI\u003e\n                - Imi__i_nazwisko_pacjenta (string)\n                - Telefon_do_kontaktu (string)\n                - Specjalista (string) - TYLKO imię nazwisko, BEZ \"dr\", \"doktor\"\n                - Data_wizyty (string, format YYYY-MM-DD)\n                - Godzina_wizyty (string, format HH:MM)\n                - Notatki (string, opcjonalne)\n            \u003c/ParametryFromAI\u003e\n            \u003cWazneZasady\u003e\n                - Usuń tytuły z imienia lekarza: \"dr Kuba Nowak\" → \"Kuba Nowak\"\n                - Data: preferuj YYYY-MM-DD, typecast obsłuży inne formaty\n                - ZAWSZE waliduj dostępność przed utworzeniem\n            \u003c/WazneZasady\u003e\n        \u003c/Narzedzie\u003e\n\n        \u003cNarzedzie\u003e\n            \u003cNazwa\u003eDelete a record in Airtable\u003c/Nazwa\u003e\n            \u003cCel\u003eUsuwanie wizyty z tabeli \"Wizyty\"\u003c/Cel\u003e\n            \u003cKiedy\u003eGdy żądanie zawiera: \"usuń\", \"anuluj\", \"odwołaj wizytę\"\u003c/Kiedy\u003e\n            \u003cParametryFromAI\u003e\n                - Record_ID (string, format: rec + 14 znaków)\n            \u003c/ParametryFromAI\u003e\n            \u003cSkadWziacRecordID\u003e\n                \u003cOpcja1\u003eJeśli w tekście jest Record ID (rec...) → użyj bezpośrednio\u003c/Opcja1\u003e\n                \u003cOpcja2\u003e\n                    Jeśli podano parametry (pacjent/data/godzina):\n                    1. Search records → znajdź lekarza\n                    2. Porównaj lookup pola (data/godzina/pacjent)\n                    3. Pobierz Record ID z \"Record ID Wizyty\" na tym samym indeksie\n                \u003c/Opcja2\u003e\n            \u003c/SkadWziacRecordID\u003e\n        \u003c/Narzedzie\u003e\n\n        \u003cNarzedzie\u003e\n            \u003cNazwa\u003eUpdate record in Airtable\u003c/Nazwa\u003e\n            \u003cCel\u003eEdycja istniejącej wizyty (data/godzina/telefon/notatki)\u003c/Cel\u003e\n            \u003cKiedy\u003eGdy żądanie zawiera: \"zmień\", \"przenieś\", \"zaktualizuj wizytę\"\u003c/Kiedy\u003e\n            \u003cMożliweAktualizacje\u003e\n                - Godzina wizyty, Data wizyty, Telefon, Notatki, Imię pacjenta\n                - NIE MOŻNA zmienić: Specjalista (usuń + utwórz nową wizytę)\n            \u003c/MożliweAktualizacje\u003e\n            \u003cProcesDura\u003e\n                1. Znajdź Record ID (tak samo jak w Delete)\n                2. Jeśli zmieniasz datę/godzinę → Search → waliduj dostępność\n                3. Update z TYLKO tymi polami które się zmieniają\n            \u003c/ProcesDura\u003e\n        \u003c/Narzedzie\u003e\n\n    \u003c/Narzedzia\u003e\n\n    \u003cFormatOdpowiedzi\u003e\n        NIE piszesz odpowiedzi do użytkownika - to robi aplikacja.\n        \n        Twoja rola:\n        1. Parsuj tekst\n        2. Wykonaj operacje na Airtable\n        3. Zwróć wynik (sukces/błąd)\n        \n        Odpowiadaj KRÓTKO i KONKRETNIE.\n    \u003c/FormatOdpowiedzi\u003e\n\n    \u003cPrzykladyEkstrakcji\u003e\n        Tekst: \"Rezerwacja dla Nicolas Bednarz, tel 123456789, u doktora Kuba Nowaka, dermatologa, 2025-10-20 o 17:00. Pierwsza wizyta.\"\n        \n        Ekstrakcja:\n        - Pacjent: \"Nicolas Bednarz\"\n        - Telefon: \"123456789\"\n        - Lekarz: \"Kuba Nowak\" (usunięto \"doktora\")\n        - Data: \"2025-10-20\"\n        - Godzina: \"17:00\"\n        - Notatki: \"Pierwsza wizyta\"\n    \u003c/PrzykladyEkstrakcji\u003e\n\n\u003c/AgentInstrukcje\u003e"
+                                                     }
+                                     },
+                      "type":  "@n8n/n8n-nodes-langchain.agent",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       288,
+                                       -80
+                                   ],
+                      "id":  "97b37f69-a991-4bee-b2b8-a09d2ff785cc",
+                      "name":  "AI Agent"
+                  },
+                  {
+                      "parameters":  {
+                                         "model":  {
+                                                       "__rl":  true,
+                                                       "mode":  "list",
+                                                       "value":  "gpt-4.1-mini"
+                                                   },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+                      "typeVersion":  1.2,
+                      "position":  [
+                                       128,
+                                       128
+                                   ],
+                      "id":  "17bd644e-671e-46f0-a70c-56ca4a9b17cf",
+                      "name":  "OpenAI Chat Model",
+                      "credentials":  {
+                                          "openAiApi":  {
+                                                            "id":  "CevclqSiRa9VJGwm",
+                                                            "name":  "OpenAi Manufaktura"
+                                                        }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+
+                                     },
+                      "type":  "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+                      "typeVersion":  1.3,
+                      "position":  [
+                                       272,
+                                       128
+                                   ],
+                      "id":  "7727e31d-6c09-4c83-9272-05ebc1aa2b75",
+                      "name":  "Postgres Chat Memory",
+                      "credentials":  {
+                                          "postgres":  {
+                                                           "id":  "MLINqPwwywhCobTH",
+                                                           "name":  "Postgres RAG"
+                                                       }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "descriptionType":  "manual",
+                                         "toolDescription":  "Tworzysz rezerwacje wizyt u danego lekarza",
+                                         "operation":  "create",
+                                         "base":  {
+                                                      "__rl":  true,
+                                                      "value":  "app7f1abdb58fe456",
+                                                      "mode":  "list",
+                                                      "cachedResultName":  "Klinika Medyczna",
+                                                      "cachedResultUrl":  "https://airtable.com/app7f1abdb58fe456"
+                                                  },
+                                         "table":  {
+                                                       "__rl":  true,
+                                                       "value":  "tblRnr2KUp7nTJMmc",
+                                                       "mode":  "list",
+                                                       "cachedResultName":  "Wizyty",
+                                                       "cachedResultUrl":  "https://airtable.com/app7f1abdb58fe456/tblRnr2KUp7nTJMmc"
+                                                   },
+                                         "columns":  {
+                                                         "mappingMode":  "defineBelow",
+                                                         "value":  {
+                                                                       "Imię i nazwisko pacjenta":  "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI(\u0027Imi__i_nazwisko_pacjenta\u0027, ``, \u0027string\u0027) }}",
+                                                                       "Specjalista":  "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI(\u0027Specjalista\u0027, ``, \u0027string\u0027) }}",
+                                                                       "Notatki":  "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI(\u0027Notatki\u0027, ``, \u0027string\u0027) }}",
+                                                                       "Godzina wizyty":  "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI(\u0027Godzina_wizyty\u0027, ``, \u0027string\u0027) }}",
+                                                                       "Data wizyty":  "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI(\u0027Data_wizyty\u0027, ``, \u0027string\u0027) }}",
+                                                                       "Telefon do kontaktu":  "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI(\u0027Telefon_do_kontaktu\u0027, ``, \u0027string\u0027) }}"
+                                                                   },
+                                                         "matchingColumns":  [
+
+                                                                             ],
+                                                         "schema":  [
+                                                                        {
+                                                                            "id":  "Godzina wizyty",
+                                                                            "displayName":  "Godzina wizyty",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Data wizyty",
+                                                                            "displayName":  "Data wizyty",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "dateTime",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Telefon do kontaktu",
+                                                                            "displayName":  "Telefon do kontaktu",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Specjalista",
+                                                                            "displayName":  "Specjalista",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "array",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Imię i nazwisko pacjenta",
+                                                                            "displayName":  "Imię i nazwisko pacjenta",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Notatki",
+                                                                            "displayName":  "Notatki",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Dzień tygodnia",
+                                                                            "displayName":  "Dzień tygodnia",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  true,
+                                                                            "removed":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "Specjalizacja lekarza",
+                                                                            "displayName":  "Specjalizacja lekarza",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  true,
+                                                                            "removed":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "Calculation",
+                                                                            "displayName":  "Calculation",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  true,
+                                                                            "removed":  false
+                                                                        }
+                                                                    ],
+                                                         "attemptToConvertTypes":  false,
+                                                         "convertFieldsToString":  false
+                                                     },
+                                         "options":  {
+                                                         "typecast":  true
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.airtableTool",
+                      "typeVersion":  2.1,
+                      "position":  [
+                                       800,
+                                       128
+                                   ],
+                      "id":  "4b963b04-a6b6-46b8-aa2a-b149fc9b62a6",
+                      "name":  "Create a record in Airtable",
+                      "credentials":  {
+                                          "airtableTokenApi":  {
+                                                                   "id":  "mzozvqul9kFM5x3k",
+                                                                   "name":  "Airtable Rekrutacyjne"
+                                                               }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "descriptionType":  "manual",
+                                         "toolDescription":  "Szukasz najbliższych wolnych terminów do lekarza",
+                                         "operation":  "search",
+                                         "base":  {
+                                                      "__rl":  true,
+                                                      "value":  "app7f1abdb58fe456",
+                                                      "mode":  "list",
+                                                      "cachedResultName":  "Klinika Medyczna",
+                                                      "cachedResultUrl":  "https://airtable.com/app7f1abdb58fe456"
+                                                  },
+                                         "table":  {
+                                                       "__rl":  true,
+                                                       "value":  "tblZYh1NRfdGDvHTr",
+                                                       "mode":  "list",
+                                                       "cachedResultName":  "Specjaliści",
+                                                       "cachedResultUrl":  "https://airtable.com/app7f1abdb58fe456/tblZYh1NRfdGDvHTr"
+                                                   },
+                                         "options":  {
+                                                         "fields":  [
+                                                                        "Imię i nazwisko",
+                                                                        "Specjalizacja",
+                                                                        "Data wizyty (lookup)",
+                                                                        "Godzina wizyty (lookup)",
+                                                                        "Liczba wizyt",
+                                                                        "Imię i nazwisko pacjenta (from Wizyty)",
+                                                                        "Telefon do kontaktu (from Wizyty)",
+                                                                        "Record ID Wizyty"
+                                                                    ]
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.airtableTool",
+                      "typeVersion":  2.1,
+                      "position":  [
+                                       400,
+                                       144
+                                   ],
+                      "id":  "415ee512-b170-47d5-829f-99c1dfc7d017",
+                      "name":  "Search records in Airtable",
+                      "credentials":  {
+                                          "airtableTokenApi":  {
+                                                                   "id":  "mzozvqul9kFM5x3k",
+                                                                   "name":  "Airtable Rekrutacyjne"
+                                                               }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "httpMethod":  "POST",
+                                         "path":  "Kliniki",
+                                         "responseMode":  "responseNode",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.webhook",
+                      "typeVersion":  2.1,
+                      "position":  [
+                                       112,
+                                       -80
+                                   ],
+                      "id":  "0bae560c-e7de-46da-9593-1f1a01e319af",
+                      "name":  "Webhook",
+                      "webhookId":  "9c270ecb-e9dd-4737-88ba-c687091a8372"
+                  },
+                  {
+                      "parameters":  {
+                                         "respondWith":  "allIncomingItems",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.respondToWebhook",
+                      "typeVersion":  1.4,
+                      "position":  [
+                                       640,
+                                       -80
+                                   ],
+                      "id":  "15c785a7-c11e-41c3-9929-0e9fd8f45ba6",
+                      "name":  "Respond to Webhook"
+                  },
+                  {
+                      "parameters":  {
+                                         "descriptionType":  "manual",
+                                         "toolDescription":  "Usuwasz wizyty na bazie podanych ci informacji",
+                                         "operation":  "deleteRecord",
+                                         "base":  {
+                                                      "__rl":  true,
+                                                      "value":  "app7f1abdb58fe456",
+                                                      "mode":  "list",
+                                                      "cachedResultName":  "Klinika Medyczna",
+                                                      "cachedResultUrl":  "https://airtable.com/app7f1abdb58fe456"
+                                                  },
+                                         "table":  {
+                                                       "__rl":  true,
+                                                       "value":  "tblRnr2KUp7nTJMmc",
+                                                       "mode":  "list",
+                                                       "cachedResultName":  "Wizyty",
+                                                       "cachedResultUrl":  "https://airtable.com/app7f1abdb58fe456/tblRnr2KUp7nTJMmc"
+                                                   },
+                                         "id":  "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI(\u0027Record_ID\u0027, ``, \u0027string\u0027) }}"
+                                     },
+                      "type":  "n8n-nodes-base.airtableTool",
+                      "typeVersion":  2.1,
+                      "position":  [
+                                       528,
+                                       144
+                                   ],
+                      "id":  "7437bf6a-54ab-474a-b6a7-40160a1a7288",
+                      "name":  "Delete a record in Airtable",
+                      "credentials":  {
+                                          "airtableTokenApi":  {
+                                                                   "id":  "mzozvqul9kFM5x3k",
+                                                                   "name":  "Airtable Rekrutacyjne"
+                                                               }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "descriptionType":  "manual",
+                                         "toolDescription":  "Używasz tego node do edycji wizyty",
+                                         "operation":  "update",
+                                         "base":  {
+                                                      "__rl":  true,
+                                                      "value":  "app7f1abdb58fe456",
+                                                      "mode":  "list",
+                                                      "cachedResultName":  "Klinika Medyczna",
+                                                      "cachedResultUrl":  "https://airtable.com/app7f1abdb58fe456"
+                                                  },
+                                         "table":  {
+                                                       "__rl":  true,
+                                                       "value":  "tblRnr2KUp7nTJMmc",
+                                                       "mode":  "list",
+                                                       "cachedResultName":  "Wizyty",
+                                                       "cachedResultUrl":  "https://airtable.com/app7f1abdb58fe456/tblRnr2KUp7nTJMmc"
+                                                   },
+                                         "columns":  {
+                                                         "mappingMode":  "defineBelow",
+                                                         "value":  {
+
+                                                                   },
+                                                         "matchingColumns":  [
+
+                                                                             ],
+                                                         "schema":  [
+                                                                        {
+                                                                            "id":  "id",
+                                                                            "displayName":  "id",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Godzina wizyty",
+                                                                            "displayName":  "Godzina wizyty",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Data wizyty",
+                                                                            "displayName":  "Data wizyty",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "dateTime",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Telefon do kontaktu",
+                                                                            "displayName":  "Telefon do kontaktu",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Specjalista",
+                                                                            "displayName":  "Specjalista",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "array",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Imię i nazwisko pacjenta",
+                                                                            "displayName":  "Imię i nazwisko pacjenta",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Notatki",
+                                                                            "displayName":  "Notatki",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Dzień tygodnia",
+                                                                            "displayName":  "Dzień tygodnia",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Specjalizacja lekarza",
+                                                                            "displayName":  "Specjalizacja lekarza",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Calculation",
+                                                                            "displayName":  "Calculation",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  true,
+                                                                            "removed":  false
+                                                                        }
+                                                                    ],
+                                                         "attemptToConvertTypes":  false,
+                                                         "convertFieldsToString":  false
+                                                     },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.airtableTool",
+                      "typeVersion":  2.1,
+                      "position":  [
+                                       656,
+                                       144
+                                   ],
+                      "id":  "67001c14-2aa3-4000-ad4d-e640c0608256",
+                      "name":  "Update record in Airtable",
+                      "credentials":  {
+                                          "airtableTokenApi":  {
+                                                                   "id":  "mzozvqul9kFM5x3k",
+                                                                   "name":  "Airtable Rekrutacyjne"
+                                                               }
+                                      }
+                  }
+              ],
+    "connections":  {
+                        "AI Agent":  {
+                                         "main":  [
+                                                      [
+                                                          {
+                                                              "node":  "Respond to Webhook",
+                                                              "type":  "main",
+                                                              "index":  0
+                                                          }
+                                                      ]
+                                                  ]
+                                     },
+                        "OpenAI Chat Model":  {
+                                                  "ai_languageModel":  [
+                                                                           [
+                                                                               {
+                                                                                   "node":  "AI Agent",
+                                                                                   "type":  "ai_languageModel",
+                                                                                   "index":  0
+                                                                               }
+                                                                           ]
+                                                                       ]
+                                              },
+                        "Postgres Chat Memory":  {
+                                                     "ai_memory":  [
+                                                                       [
+                                                                           {
+                                                                               "node":  "AI Agent",
+                                                                               "type":  "ai_memory",
+                                                                               "index":  0
+                                                                           }
+                                                                       ]
+                                                                   ]
+                                                 },
+                        "Create a record in Airtable":  {
+                                                            "ai_tool":  [
+                                                                            [
+                                                                                {
+                                                                                    "node":  "AI Agent",
+                                                                                    "type":  "ai_tool",
+                                                                                    "index":  0
+                                                                                }
+                                                                            ]
+                                                                        ]
+                                                        },
+                        "Search records in Airtable":  {
+                                                           "ai_tool":  [
+                                                                           [
+                                                                               {
+                                                                                   "node":  "AI Agent",
+                                                                                   "type":  "ai_tool",
+                                                                                   "index":  0
+                                                                               }
+                                                                           ]
+                                                                       ]
+                                                       },
+                        "Webhook":  {
+                                        "main":  [
+                                                     [
+                                                         {
+                                                             "node":  "AI Agent",
+                                                             "type":  "main",
+                                                             "index":  0
+                                                         }
+                                                     ]
+                                                 ]
+                                    },
+                        "Delete a record in Airtable":  {
+                                                            "ai_tool":  [
+                                                                            [
+                                                                                {
+                                                                                    "node":  "AI Agent",
+                                                                                    "type":  "ai_tool",
+                                                                                    "index":  0
+                                                                                }
+                                                                            ]
+                                                                        ]
+                                                        },
+                        "Update record in Airtable":  {
+                                                          "ai_tool":  [
+                                                                          [
+                                                                              {
+                                                                                  "node":  "AI Agent",
+                                                                                  "type":  "ai_tool",
+                                                                                  "index":  0
+                                                                              }
+                                                                          ]
+                                                                      ]
+                                                      }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1"
+                 },
+    "staticData":  null,
+    "meta":  {
+                 "templateCredsSetupCompleted":  true
+             },
+    "nodeGroups":  [
+
+                   ],
+    "versionId":  "4b079c6f-e68d-4418-8387-6611399aabf1",
+    "activeVersionId":  null,
+    "versionCounter":  71,
+    "triggerCount":  1,
+    "sourceWorkflowId":  null,
+    "shared":  [
+                   {
+                       "updatedAt":  "2025-10-04T17:15:45.574Z",
+                       "createdAt":  "2025-10-04T17:15:45.574Z",
+                       "role":  "workflow:owner",
+                       "workflowId":  "ML6JHZ931rwxdWtR",
+                       "projectId":  "9rVJoULaKk30HdBB",
+                       "project":  {
+                                       "updatedAt":  "2025-06-26T00:18:14.615Z",
+                                       "createdAt":  "2025-06-25T23:37:35.363Z",
+                                       "id":  "9rVJoULaKk30HdBB",
+                                       "name":  "Nicolas Bednarz \u003cowner@example.com\u003e",
+                                       "type":  "personal",
+                                       "icon":  null,
+                                       "description":  null,
+                                       "customTelemetryTags":  [
+
+                                                               ],
+                                       "creatorId":  "af23e566-dd44-45a3-ac35-e15a8cdef3f2"
+                                   }
+                   }
+               ],
+    "tags":  [
+
+             ],
+    "activeVersion":  null
+}

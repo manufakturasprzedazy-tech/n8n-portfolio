@@ -1,0 +1,1435 @@
+{
+    "updatedAt":  "2026-01-12T19:35:15.912Z",
+    "createdAt":  "2026-01-12T04:37:58.019Z",
+    "id":  "1ENraaqC4Jj4tAW6",
+    "name":  "MDZ_INVEST_Test_FV",
+    "description":  null,
+    "active":  false,
+    "isArchived":  false,
+    "nodes":  [
+                  {
+                      "parameters":  {
+                                         "pollTimes":  {
+                                                           "item":  [
+                                                                        {
+                                                                            "mode":  "everyMonth"
+                                                                        }
+                                                                    ]
+                                                       },
+                                         "documentId":  {
+                                                            "__rl":  true,
+                                                            "value":  "GOOGLE_FILE_4c193b8735be",
+                                                            "mode":  "list",
+                                                            "cachedResultName":  "zamówienia"
+                                                        },
+                                         "sheetName":  {
+                                                           "__rl":  true,
+                                                           "value":  1632587374,
+                                                           "mode":  "list",
+                                                           "cachedResultName":  "Do księgowania"
+                                                       },
+                                         "event":  "rowAdded",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "trigger-sheets",
+                      "name":  "UzupelnioneDane",
+                      "type":  "n8n-nodes-base.googleSheetsTrigger",
+                      "typeVersion":  1,
+                      "position":  [
+                                       -1344,
+                                       336
+                                   ],
+                      "credentials":  {
+                                          "googleSheetsTriggerOAuth2Api":  {
+                                                                               "id":  "FZyPTvnzkTamacvv",
+                                                                               "name":  "Google Sheets Trigger account 2"
+                                                                           }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "batchSize":  40,
+                                         "options":  {
+                                                         "reset":  false
+                                                     }
+                                     },
+                      "id":  "loop-1",
+                      "name":  "Loop Over Items",
+                      "type":  "n8n-nodes-base.splitInBatches",
+                      "typeVersion":  3,
+                      "position":  [
+                                       -1120,
+                                       336
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "amount":  2
+                                     },
+                      "id":  "wait-1",
+                      "name":  "Wait",
+                      "type":  "n8n-nodes-base.wait",
+                      "typeVersion":  1.1,
+                      "position":  [
+                                       -896,
+                                       336
+                                   ],
+                      "webhookId":  "ec5d9430-b199-4412-89b3-dc2d2bdfee67"
+                  },
+                  {
+                      "parameters":  {
+                                         "documentId":  {
+                                                            "__rl":  true,
+                                                            "value":  "GOOGLE_FILE_4c193b8735be",
+                                                            "mode":  "list",
+                                                            "cachedResultName":  "zamówienia"
+                                                        },
+                                         "sheetName":  {
+                                                           "__rl":  true,
+                                                           "value":  1813490264,
+                                                           "mode":  "list",
+                                                           "cachedResultName":  "Wszystko"
+                                                       },
+                                         "filtersUI":  {
+                                                           "values":  [
+                                                                          {
+                                                                              "lookupColumn":  "ID",
+                                                                              "lookupValue":  "={{ $json.ID }}"
+                                                                          }
+                                                                      ]
+                                                       },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "get-wszystko",
+                      "name":  "Pobranie z Wszystko",
+                      "type":  "n8n-nodes-base.googleSheets",
+                      "typeVersion":  4.6,
+                      "position":  [
+                                       -672,
+                                       336
+                                   ],
+                      "credentials":  {
+                                          "googleSheetsOAuth2Api":  {
+                                                                        "id":  "FfT3LYm36A1vke3A",
+                                                                        "name":  "Google Sheets account"
+                                                                    }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "batchSize":  40,
+                                         "options":  {
+                                                         "reset":  false
+                                                     }
+                                     },
+                      "id":  "loop-2",
+                      "name":  "Loop Over Items2",
+                      "type":  "n8n-nodes-base.splitInBatches",
+                      "typeVersion":  3,
+                      "position":  [
+                                       -448,
+                                       336
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "amount":  2
+                                     },
+                      "id":  "wait-2",
+                      "name":  "Wait2",
+                      "type":  "n8n-nodes-base.wait",
+                      "typeVersion":  1.1,
+                      "position":  [
+                                       -224,
+                                       336
+                                   ],
+                      "webhookId":  "f0bc23c7-5276-40e3-8bd2-5ab96cb9bd03"
+                  },
+                  {
+                      "parameters":  {
+                                         "operation":  "update",
+                                         "documentId":  {
+                                                            "__rl":  true,
+                                                            "value":  "GOOGLE_FILE_4c193b8735be",
+                                                            "mode":  "list",
+                                                            "cachedResultName":  "zamówienia"
+                                                        },
+                                         "sheetName":  {
+                                                           "__rl":  true,
+                                                           "value":  1632587374,
+                                                           "mode":  "list",
+                                                           "cachedResultName":  "Do księgowania"
+                                                       },
+                                         "columns":  {
+                                                         "mappingMode":  "defineBelow",
+                                                         "value":  {
+                                                                       "row_number":  0,
+                                                                       "ID":  "={{ $(\u0027UzupelnioneDane\u0027).item.json.ID }}",
+                                                                       "Przedmiot":  "={{ $(\u0027UzupelnioneDane\u0027).item.json.Przedmiot }}",
+                                                                       "waluta obca [CZK, EUR, RON, HUF]":  "={{ $json.Waluta }}",
+                                                                       "wpłata [PLN]":  "={{ $json[\u0027Wpłata [PLN]\u0027] }}",
+                                                                       "Kupujący":  "={{ $json[\"Kupujący\"] }}",
+                                                                       "Market":  "={{ $json.Market }}",
+                                                                       "koszt wysyłki":  "={{ $json[\u0027Koszt Wysyłki\u0027] }}",
+                                                                       "prowizja":  "={{ $(\u0027UzupelnioneDane\u0027).item.json.prowizja }}",
+                                                                       "Ulica numer":  "={{ $json[\u0027Ulica i Numer\u0027] }}",
+                                                                       "Kod pocztowy":  "={{ $json[\u0027Kod Pocztowy\u0027] }}",
+                                                                       "Miejscowość":  "={{ $json[\u0027Miejscowość\u0027] }}",
+                                                                       "Kraj":  "={{ $json[\u0027Kraj kupującego\u0027] }}",
+                                                                       "Nazwa towaru lub usługi":  "Pośrednictwo w sprzedaży",
+                                                                       "Cena jedn. brutto":  "={{ $(\u0027UzupelnioneDane\u0027).item.json.prowizja }}",
+                                                                       "Po rabacie":  "={{ $(\u0027UzupelnioneDane\u0027).item.json.prowizja }}",
+                                                                       "Płatności":  "={{ $(\u0027UzupelnioneDane\u0027).item.json.prowizja }}",
+                                                                       "nazwa użytkownika":  "={{ $json[\u0027nazwa użytkownika\u0027] }}"
+                                                                   },
+                                                         "matchingColumns":  [
+                                                                                 "ID"
+                                                                             ],
+                                                         "schema":  [
+                                                                        {
+                                                                            "id":  "Przedmiot",
+                                                                            "displayName":  "Przedmiot",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "ID",
+                                                                            "displayName":  "ID",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Data sprzedaży1",
+                                                                            "displayName":  "Data sprzedaży1",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "kwota waluty",
+                                                                            "displayName":  "kwota waluty",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "waluta obca [CZK, EUR, RON, HUF]",
+                                                                            "displayName":  "waluta obca [CZK, EUR, RON, HUF]",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Kurs",
+                                                                            "displayName":  "Kurs",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "faktura",
+                                                                            "displayName":  "faktura",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "wpłata [PLN]",
+                                                                            "displayName":  "wpłata [PLN]",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Kupujący",
+                                                                            "displayName":  "Kupujący",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Market",
+                                                                            "displayName":  "Market",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "koszt wysyłki",
+                                                                            "displayName":  "koszt wysyłki",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "prowizja",
+                                                                            "displayName":  "prowizja",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Ulica numer",
+                                                                            "displayName":  "Ulica numer",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Kod pocztowy",
+                                                                            "displayName":  "Kod pocztowy",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Miejscowość",
+                                                                            "displayName":  "Miejscowość",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Kraj",
+                                                                            "displayName":  "Kraj",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Nazwa towaru lub usługi",
+                                                                            "displayName":  "Nazwa towaru lub usługi",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Cena jedn. brutto",
+                                                                            "displayName":  "Cena jedn. brutto",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Po rabacie",
+                                                                            "displayName":  "Po rabacie",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Płatności",
+                                                                            "displayName":  "Płatności",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "nazwa użytkownika",
+                                                                            "displayName":  "nazwa użytkownika",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "UWAGI",
+                                                                            "displayName":  "UWAGI",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "row_number",
+                                                                            "displayName":  "row_number",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "number",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "readOnly":  true,
+                                                                            "removed":  false
+                                                                        }
+                                                                    ],
+                                                         "attemptToConvertTypes":  false,
+                                                         "convertFieldsToString":  false
+                                                     },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "update-ksiegowanie",
+                      "name":  "Uzupełnienie Do Księgowania",
+                      "type":  "n8n-nodes-base.googleSheets",
+                      "typeVersion":  4.6,
+                      "position":  [
+                                       0,
+                                       336
+                                   ],
+                      "credentials":  {
+                                          "googleSheetsOAuth2Api":  {
+                                                                        "id":  "FfT3LYm36A1vke3A",
+                                                                        "name":  "Google Sheets account"
+                                                                    }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "batchSize":  40,
+                                         "options":  {
+                                                         "reset":  false
+                                                     }
+                                     },
+                      "id":  "loop-3",
+                      "name":  "Loop Over Items3",
+                      "type":  "n8n-nodes-base.splitInBatches",
+                      "typeVersion":  3,
+                      "position":  [
+                                       224,
+                                       336
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "amount":  2
+                                     },
+                      "id":  "wait-3",
+                      "name":  "Wait3",
+                      "type":  "n8n-nodes-base.wait",
+                      "typeVersion":  1.1,
+                      "position":  [
+                                       448,
+                                       336
+                                   ],
+                      "webhookId":  "602b9208-6bbf-4575-8c2f-b47a0a0cf9a4"
+                  },
+                  {
+                      "parameters":  {
+                                         "documentId":  {
+                                                            "__rl":  true,
+                                                            "value":  "GOOGLE_FILE_4c193b8735be",
+                                                            "mode":  "list",
+                                                            "cachedResultName":  "zamówienia"
+                                                        },
+                                         "sheetName":  {
+                                                           "__rl":  true,
+                                                           "value":  1632587374,
+                                                           "mode":  "list",
+                                                           "cachedResultName":  "Do księgowania"
+                                                       },
+                                         "filtersUI":  {
+                                                           "values":  [
+                                                                          {
+                                                                              "lookupColumn":  "ID",
+                                                                              "lookupValue":  "={{ $json.ID }}"
+                                                                          }
+                                                                      ]
+                                                       },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "get-uzupelnione",
+                      "name":  "Pobranie Uzupełnionych",
+                      "type":  "n8n-nodes-base.googleSheets",
+                      "typeVersion":  4.6,
+                      "position":  [
+                                       672,
+                                       336
+                                   ],
+                      "credentials":  {
+                                          "googleSheetsOAuth2Api":  {
+                                                                        "id":  "TdBbBvO1ekOyTrj4",
+                                                                        "name":  "Sheets ogrodzenia"
+                                                                    }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// Mapowanie symboli kraju na pełne nazwy (case-insensitive)\nconst countryCodeToName = {\n  CZ: \u0027Czechy\u0027,\n  SK: \u0027Słowacja\u0027,\n  HU: \u0027Węgry\u0027,\n  RO: \u0027Rumunia\u0027,\n  BG: \u0027Bułgaria\u0027,\n  PL: \u0027Polska\u0027,\n};\n\n// Fallback: waluta -\u003e kraj (tylko dla walut jednoznacznych, NIE EUR)\nconst currencyToCountry = {\n  CZK: \u0027Czechy\u0027,\n  HUF: \u0027Węgry\u0027,\n  RON: \u0027Rumunia\u0027,\n};\n\nconst data = $json;\nconst waluta = (data[\u0027waluta obca [CZK, EUR, RON, HUF]\u0027] || \u0027PLN\u0027).toString().toUpperCase();\nconst isPLN = waluta === \u0027PLN\u0027;\n\n// 1. Sprawdź kolumnę Kraj (zawiera symbol: CZ, SK, BG, etc.)\nconst krajSymbol = (data[\u0027Kraj\u0027] || data[\u0027Kraj kupującego\u0027] || data[\u0027Symbol kraju kupującego\u0027] || \u0027\u0027).toString().toUpperCase().trim();\n\n// 2. Mapuj symbol na pełną nazwę\nlet kraj = countryCodeToName[krajSymbol] || \u0027\u0027;\n\n// 3. Fallback: waluta -\u003e kraj (tylko dla walut jednoznacznych, NIE EUR)\nif (!kraj) {\n  kraj = currencyToCountry[waluta] || (waluta === \u0027EUR\u0027 ? \u0027Słowacja\u0027 : \u0027Polska\u0027);\n}\n\n// Data wystawienia = ostatni dzień BIEŻĄCEGO miesiąca\nconst now = new Date();\nconst lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);\nconst dataWystawienia = lastDayOfMonth.toISOString().split(\u0027T\u0027)[0];\n\n// Data sprzedaży\nconst dataSprzedazy = (data[\u0027Data sprzedaży1\u0027] || \u0027\u0027).split(\u0027T\u0027)[0];\n\n// Kwoty\nconst prowizja = parseFloat(data.prowizja) || 0;\nconst kurs = parseFloat(data.Kurs) || 1;\nconst kwotaWaluty = isPLN ? prowizja : (prowizja / kurs);\n\n// Wspólna struktura faktury\nconst fakturaData = {\n  Zaplacono: isPLN ? prowizja.toString() : kwotaWaluty.toFixed(2),\n  LiczOd: \u0027BRT\u0027,\n  DataWystawienia: dataWystawienia,\n  MiejsceWystawienia: \u0027Chorowice\u0027,\n  DataSprzedazy: dataSprzedazy,\n  FormatDatySprzedazy: \u0027DZN\u0027,\n  SposobZaplaty: \u0027PRZ\u0027,\n  NazwaSeriiNumeracji: \u0027default\u0027,\n  RodzajPodpisuOdbiorcy: \u0027OUP\u0027,\n  PodpisOdbiorcy: \u0027Odbiorca\u0027,\n  PodpisWystawcy: \u0027Wystawca\u0027,\n  Pozycje: [{\n    StawkaVat: 0.23,\n    Ilosc: 1,\n    CenaJednostkowa: isPLN ? prowizja.toString() : kwotaWaluty.toFixed(2),\n    NazwaPelna: `${data[\u0027Nazwa towaru lub usługi\u0027] || \u0027Pośrednictwo w sprzedaży\u0027}-${data.Przedmiot || \u0027\u0027}`,\n    Jednostka: \u0027sztuk\u0027,\n    TypStawkiVat: \u0027PRC\u0027\n  }],\n  Kontrahent: {\n    Nazwa: data[\u0027Kupujący\u0027] || \u0027\u0027,\n    Ulica: data[\u0027Ulica numer\u0027] || \u0027\u0027,\n    KodPocztowy: data[\u0027Kod pocztowy\u0027] || \u0027\u0027,\n    Kraj: kraj,\n    Miejscowosc: data[\u0027Miejscowość\u0027] || \u0027\u0027,\n    OsobaFizyczna: true\n  }\n};\n\n// Dodatkowe pola dla faktur walutowych\nif (!isPLN) {\n  fakturaData.TypSprzedazy = \u0027WYSYLKOWA\u0027;\n  fakturaData.Jezyk = \u0027en\u0027;\n  fakturaData.Waluta = waluta;\n  fakturaData.KursWalutyWidoczny = true;\n  fakturaData.KursWalutyZDniaPoprzedzajacegoDzienWystawieniaFaktury = kurs.toString();\n  fakturaData.WidocznyNumerGios = false;\n  fakturaData.WidocznyNumerBdo = false;\n  fakturaData.Numer = null;\n}\n\nreturn [{\n  json: {\n    isPLN: isPLN,\n    orderId: data.ID,\n    nazwaUsera: \u0027mdz-invest1\u0027,\n    nazwaKlucza: \u0027faktura\u0027,\n    kluczAPI: \u002714A91FBA6257DC4A\u0027,\n    url: isPLN ? \u0027https://www.ifirma.pl/iapi/fakturakraj.json\u0027 : \u0027https://www.ifirma.pl/iapi/fakturawaluta.json\u0027,\n    fakturaData: fakturaData,\n    originalData: data\n  }\n}];"
+                                     },
+                      "id":  "prepare-data",
+                      "name":  "Przygotowanie Danych",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       896,
+                                       336
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const crypto = require(\u0027crypto\u0027);\n\nconst input = $json;\n\nif (!input.kluczAPI || !input.fakturaData || !input.url) {\n  return [{ json: { error: \u0027Missing required fields\u0027, input: input } }];\n}\n\ntry {\n  const kluczAPI = input.kluczAPI.trim();\n  const fakturaData = input.fakturaData;\n  const url = input.url;\n  const nazwaUsera = input.nazwaUsera;\n  const nazwaKlucza = input.nazwaKlucza;\n\n  const hexKey = Buffer.from(kluczAPI, \u0027hex\u0027);\n  const requestContent = JSON.stringify(fakturaData);\n  const message = url + nazwaUsera + nazwaKlucza + requestContent;\n  const hash = crypto.createHmac(\u0027sha1\u0027, hexKey).update(message).digest(\u0027hex\u0027);\n  const authHeader = `IAPIS user=${nazwaUsera}, hmac-sha1=${hash}`;\n\n  return [{\n    json: {\n      authentication: authHeader,\n      requestData: fakturaData,\n      url: url,\n      isPLN: input.isPLN,\n      orderId: input.orderId\n    }\n  }];\n} catch (error) {\n  return [{ json: { error: error.message, input: input } }];\n}"
+                                     },
+                      "id":  "auth-code",
+                      "name":  "Generowanie Auth",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       1120,
+                                       336
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "={{ $json.url }}",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "Authentication",
+                                                                                         "value":  "={{ $json.authentication }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "name":  "Content-Type",
+                                                                                         "value":  "application/json; charset=UTF-8"
+                                                                                     },
+                                                                                     {
+                                                                                         "name":  "Accept",
+                                                                                         "value":  "application/json"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "sendBody":  true,
+                                         "specifyBody":  "json",
+                                         "jsonBody":  "={{ $json.requestData }}",
+                                         "options":  {
+                                                         "batching":  {
+                                                                          "batch":  {
+                                                                                        "batchSize":  1
+                                                                                    }
+                                                                      }
+                                                     }
+                                     },
+                      "id":  "http-ifirma",
+                      "name":  "Wystawienie Faktury",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       1344,
+                                       336
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "version":  2,
+                                                                            "leftValue":  "",
+                                                                            "caseSensitive":  true,
+                                                                            "typeValidation":  "strict"
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "id":  "check-info",
+                                                                                   "leftValue":  "={{ $json.response.Informacja }}",
+                                                                                   "rightValue":  "Faktura została pomyślnie dodana.",
+                                                                                   "operator":  {
+                                                                                                    "type":  "string",
+                                                                                                    "operation":  "equals"
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "check-success",
+                      "name":  "Sprawdź Sukces",
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       1568,
+                                       336
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "operation":  "update",
+                                         "documentId":  {
+                                                            "__rl":  true,
+                                                            "value":  "GOOGLE_FILE_4c193b8735be",
+                                                            "mode":  "list",
+                                                            "cachedResultName":  "zamówienia"
+                                                        },
+                                         "sheetName":  {
+                                                           "__rl":  true,
+                                                           "value":  1632587374,
+                                                           "mode":  "list",
+                                                           "cachedResultName":  "Do księgowania"
+                                                       },
+                                         "columns":  {
+                                                         "mappingMode":  "defineBelow",
+                                                         "value":  {
+                                                                       "ID":  "={{ $(\u0027Przygotowanie Danych\u0027).item.json.orderId }}",
+                                                                       "faktura":  "o",
+                                                                       "row_number":  0
+                                                                   },
+                                                         "matchingColumns":  [
+                                                                                 "ID"
+                                                                             ],
+                                                         "schema":  [
+                                                                        {
+                                                                            "id":  "Przedmiot",
+                                                                            "displayName":  "Przedmiot",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "ID",
+                                                                            "displayName":  "ID",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "Data sprzedaży1",
+                                                                            "displayName":  "Data sprzedaży1",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "kwota waluty",
+                                                                            "displayName":  "kwota waluty",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "waluta obca [CZK, EUR, RON, HUF]",
+                                                                            "displayName":  "waluta obca [CZK, EUR, RON, HUF]",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Kurs",
+                                                                            "displayName":  "Kurs",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "faktura",
+                                                                            "displayName":  "faktura",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "wpłata [PLN]",
+                                                                            "displayName":  "wpłata [PLN]",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Kupujący",
+                                                                            "displayName":  "Kupujący",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Market",
+                                                                            "displayName":  "Market",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "koszt wysyłki",
+                                                                            "displayName":  "koszt wysyłki",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "prowizja",
+                                                                            "displayName":  "prowizja",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Ulica numer",
+                                                                            "displayName":  "Ulica numer",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Kod pocztowy",
+                                                                            "displayName":  "Kod pocztowy",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Miejscowość",
+                                                                            "displayName":  "Miejscowość",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Kraj",
+                                                                            "displayName":  "Kraj",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Nazwa towaru lub usługi",
+                                                                            "displayName":  "Nazwa towaru lub usługi",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Cena jedn. brutto",
+                                                                            "displayName":  "Cena jedn. brutto",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Po rabacie",
+                                                                            "displayName":  "Po rabacie",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Płatności",
+                                                                            "displayName":  "Płatności",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "nazwa użytkownika",
+                                                                            "displayName":  "nazwa użytkownika",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "UWAGI",
+                                                                            "displayName":  "UWAGI",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "row_number",
+                                                                            "displayName":  "row_number",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "number",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "readOnly":  true,
+                                                                            "removed":  false
+                                                                        }
+                                                                    ],
+                                                         "attemptToConvertTypes":  false,
+                                                         "convertFieldsToString":  false
+                                                     },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "mark-success",
+                      "name":  "Oznacz Wystawioną",
+                      "type":  "n8n-nodes-base.googleSheets",
+                      "typeVersion":  4.6,
+                      "position":  [
+                                       1792,
+                                       240
+                                   ],
+                      "credentials":  {
+                                          "googleSheetsOAuth2Api":  {
+                                                                        "id":  "FfT3LYm36A1vke3A",
+                                                                        "name":  "Google Sheets account"
+                                                                    }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "operation":  "update",
+                                         "documentId":  {
+                                                            "__rl":  true,
+                                                            "value":  "GOOGLE_FILE_4c193b8735be",
+                                                            "mode":  "list",
+                                                            "cachedResultName":  "zamówienia"
+                                                        },
+                                         "sheetName":  {
+                                                           "__rl":  true,
+                                                           "value":  1632587374,
+                                                           "mode":  "list",
+                                                           "cachedResultName":  "Do księgowania"
+                                                       },
+                                         "columns":  {
+                                                         "mappingMode":  "defineBelow",
+                                                         "value":  {
+                                                                       "ID":  "={{ $(\u0027Przygotowanie Danych\u0027).item.json.orderId }}",
+                                                                       "faktura":  "X",
+                                                                       "row_number":  0
+                                                                   },
+                                                         "matchingColumns":  [
+                                                                                 "ID"
+                                                                             ],
+                                                         "schema":  [
+                                                                        {
+                                                                            "id":  "Przedmiot",
+                                                                            "displayName":  "Przedmiot",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "ID",
+                                                                            "displayName":  "ID",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "Data sprzedaży1",
+                                                                            "displayName":  "Data sprzedaży1",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "kwota waluty",
+                                                                            "displayName":  "kwota waluty",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "waluta obca [CZK, EUR, RON, HUF]",
+                                                                            "displayName":  "waluta obca [CZK, EUR, RON, HUF]",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Kurs",
+                                                                            "displayName":  "Kurs",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "faktura",
+                                                                            "displayName":  "faktura",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "wpłata [PLN]",
+                                                                            "displayName":  "wpłata [PLN]",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Kupujący",
+                                                                            "displayName":  "Kupujący",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Market",
+                                                                            "displayName":  "Market",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "koszt wysyłki",
+                                                                            "displayName":  "koszt wysyłki",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "prowizja",
+                                                                            "displayName":  "prowizja",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Ulica numer",
+                                                                            "displayName":  "Ulica numer",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Kod pocztowy",
+                                                                            "displayName":  "Kod pocztowy",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Miejscowość",
+                                                                            "displayName":  "Miejscowość",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Kraj",
+                                                                            "displayName":  "Kraj",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Nazwa towaru lub usługi",
+                                                                            "displayName":  "Nazwa towaru lub usługi",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Cena jedn. brutto",
+                                                                            "displayName":  "Cena jedn. brutto",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Po rabacie",
+                                                                            "displayName":  "Po rabacie",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Płatności",
+                                                                            "displayName":  "Płatności",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "nazwa użytkownika",
+                                                                            "displayName":  "nazwa użytkownika",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "UWAGI",
+                                                                            "displayName":  "UWAGI",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "row_number",
+                                                                            "displayName":  "row_number",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "number",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "readOnly":  true,
+                                                                            "removed":  false
+                                                                        }
+                                                                    ],
+                                                         "attemptToConvertTypes":  false,
+                                                         "convertFieldsToString":  false
+                                                     },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "mark-fail",
+                      "name":  "Oznacz Błąd",
+                      "type":  "n8n-nodes-base.googleSheets",
+                      "typeVersion":  4.6,
+                      "position":  [
+                                       1792,
+                                       432
+                                   ],
+                      "credentials":  {
+                                          "googleSheetsOAuth2Api":  {
+                                                                        "id":  "FfT3LYm36A1vke3A",
+                                                                        "name":  "Google Sheets account"
+                                                                    }
+                                      }
+                  }
+              ],
+    "connections":  {
+                        "UzupelnioneDane":  {
+                                                "main":  [
+                                                             [
+                                                                 {
+                                                                     "node":  "Loop Over Items",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ]
+                                                         ]
+                                            },
+                        "Loop Over Items":  {
+                                                "main":  [
+                                                             [
+
+                                                             ],
+                                                             [
+                                                                 {
+                                                                     "node":  "Wait",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ]
+                                                         ]
+                                            },
+                        "Wait":  {
+                                     "main":  [
+                                                  [
+                                                      {
+                                                          "node":  "Pobranie z Wszystko",
+                                                          "type":  "main",
+                                                          "index":  0
+                                                      },
+                                                      {
+                                                          "node":  "Loop Over Items",
+                                                          "type":  "main",
+                                                          "index":  0
+                                                      }
+                                                  ]
+                                              ]
+                                 },
+                        "Pobranie z Wszystko":  {
+                                                    "main":  [
+                                                                 [
+                                                                     {
+                                                                         "node":  "Loop Over Items2",
+                                                                         "type":  "main",
+                                                                         "index":  0
+                                                                     }
+                                                                 ]
+                                                             ]
+                                                },
+                        "Loop Over Items2":  {
+                                                 "main":  [
+                                                              [
+
+                                                              ],
+                                                              [
+                                                                  {
+                                                                      "node":  "Wait2",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ]
+                                                          ]
+                                             },
+                        "Wait2":  {
+                                      "main":  [
+                                                   [
+                                                       {
+                                                           "node":  "Uzupełnienie Do Księgowania",
+                                                           "type":  "main",
+                                                           "index":  0
+                                                       },
+                                                       {
+                                                           "node":  "Loop Over Items2",
+                                                           "type":  "main",
+                                                           "index":  0
+                                                       }
+                                                   ]
+                                               ]
+                                  },
+                        "Uzupełnienie Do Księgowania":  {
+                                                            "main":  [
+                                                                         [
+                                                                             {
+                                                                                 "node":  "Loop Over Items3",
+                                                                                 "type":  "main",
+                                                                                 "index":  0
+                                                                             }
+                                                                         ]
+                                                                     ]
+                                                        },
+                        "Loop Over Items3":  {
+                                                 "main":  [
+                                                              [
+
+                                                              ],
+                                                              [
+                                                                  {
+                                                                      "node":  "Wait3",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ]
+                                                          ]
+                                             },
+                        "Wait3":  {
+                                      "main":  [
+                                                   [
+                                                       {
+                                                           "node":  "Pobranie Uzupełnionych",
+                                                           "type":  "main",
+                                                           "index":  0
+                                                       },
+                                                       {
+                                                           "node":  "Loop Over Items3",
+                                                           "type":  "main",
+                                                           "index":  0
+                                                       }
+                                                   ]
+                                               ]
+                                  },
+                        "Pobranie Uzupełnionych":  {
+                                                       "main":  [
+                                                                    [
+                                                                        {
+                                                                            "node":  "Przygotowanie Danych",
+                                                                            "type":  "main",
+                                                                            "index":  0
+                                                                        }
+                                                                    ]
+                                                                ]
+                                                   },
+                        "Przygotowanie Danych":  {
+                                                     "main":  [
+                                                                  [
+                                                                      {
+                                                                          "node":  "Generowanie Auth",
+                                                                          "type":  "main",
+                                                                          "index":  0
+                                                                      }
+                                                                  ]
+                                                              ]
+                                                 },
+                        "Generowanie Auth":  {
+                                                 "main":  [
+                                                              [
+                                                                  {
+                                                                      "node":  "Wystawienie Faktury",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ]
+                                                          ]
+                                             },
+                        "Wystawienie Faktury":  {
+                                                    "main":  [
+                                                                 [
+                                                                     {
+                                                                         "node":  "Sprawdź Sukces",
+                                                                         "type":  "main",
+                                                                         "index":  0
+                                                                     }
+                                                                 ]
+                                                             ]
+                                                },
+                        "Sprawdź Sukces":  {
+                                               "main":  [
+                                                            [
+                                                                {
+                                                                    "node":  "Oznacz Wystawioną",
+                                                                    "type":  "main",
+                                                                    "index":  0
+                                                                }
+                                                            ],
+                                                            [
+                                                                {
+                                                                    "node":  "Oznacz Błąd",
+                                                                    "type":  "main",
+                                                                    "index":  0
+                                                                }
+                                                            ]
+                                                        ]
+                                           }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1",
+                     "callerPolicy":  "workflowsFromSameOwner",
+                     "availableInMCP":  false
+                 },
+    "staticData":  null,
+    "meta":  {
+                 "templateCredsSetupCompleted":  true
+             },
+    "versionId":  "67c671d9-a0bf-4107-ba0c-3aaba4d4ef21",
+    "activeVersionId":  null,
+    "versionCounter":  7,
+    "triggerCount":  0,
+    "shared":  [
+                   {
+                       "updatedAt":  "2026-01-12T04:37:58.019Z",
+                       "createdAt":  "2026-01-12T04:37:58.019Z",
+                       "role":  "workflow:owner",
+                       "workflowId":  "1ENraaqC4Jj4tAW6",
+                       "projectId":  "9rVJoULaKk30HdBB",
+                       "project":  {
+                                       "updatedAt":  "2025-06-26T00:18:14.615Z",
+                                       "createdAt":  "2025-06-25T23:37:35.363Z",
+                                       "id":  "9rVJoULaKk30HdBB",
+                                       "name":  "Nicolas Bednarz \u003cowner@example.com\u003e",
+                                       "type":  "personal",
+                                       "icon":  null,
+                                       "description":  null,
+                                       "creatorId":  "af23e566-dd44-45a3-ac35-e15a8cdef3f2",
+                                       "projectRelations":  [
+                                                                {
+                                                                    "updatedAt":  "2025-06-25T23:37:35.363Z",
+                                                                    "createdAt":  "2025-06-25T23:37:35.363Z",
+                                                                    "userId":  "af23e566-dd44-45a3-ac35-e15a8cdef3f2",
+                                                                    "projectId":  "9rVJoULaKk30HdBB",
+                                                                    "user":  {
+                                                                                 "updatedAt":  "2026-01-23T02:00:02.849Z",
+                                                                                 "createdAt":  "2025-06-25T23:37:27.580Z",
+                                                                                 "id":  "af23e566-dd44-45a3-ac35-e15a8cdef3f2",
+                                                                                 "email":  "owner@example.com",
+                                                                                 "firstName":  "Nicolas",
+                                                                                 "lastName":  "Bednarz",
+                                                                                 "personalizationAnswers":  {
+                                                                                                                "version":  "v4",
+                                                                                                                "personalization_survey_submitted_at":  "2025-06-26T00:18:17.730Z",
+                                                                                                                "personalization_survey_n8n_version":  "1.99.1"
+                                                                                                            },
+                                                                                 "settings":  {
+                                                                                                  "userActivated":  true,
+                                                                                                  "easyAIWorkflowOnboarded":  true,
+                                                                                                  "firstSuccessfulWorkflowId":  "6iszznmIcyE5RdYm",
+                                                                                                  "userActivatedAt":  1750958857418,
+                                                                                                  "npsSurvey":  {
+                                                                                                                    "responded":  true,
+                                                                                                                    "lastShownAt":  1768102509278
+                                                                                                                }
+                                                                                              },
+                                                                                 "disabled":  false,
+                                                                                 "mfaEnabled":  false,
+                                                                                 "lastActiveAt":  "2026-01-23",
+                                                                                 "isPending":  false
+                                                                             }
+                                                                }
+                                                            ]
+                                   }
+                   }
+               ],
+    "tags":  [
+
+             ],
+    "activeVersion":  null
+}

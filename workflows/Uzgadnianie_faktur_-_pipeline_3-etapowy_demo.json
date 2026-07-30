@@ -1,0 +1,312 @@
+{
+    "updatedAt":  "2026-06-08T06:54:47.919Z",
+    "createdAt":  "2026-05-12T19:12:06.069Z",
+    "id":  "geMC21BzGax401zf",
+    "name":  "Uzgadnianie faktur - pipeline 3-etapowy (demo)",
+    "description":  null,
+    "active":  false,
+    "isArchived":  false,
+    "nodes":  [
+                  {
+                      "parameters":  {
+
+                                     },
+                      "id":  "1f24cf25-215a-4658-9f48-7fe765208f6f",
+                      "name":  "Uruchom recznie",
+                      "type":  "n8n-nodes-base.manualTrigger",
+                      "typeVersion":  1,
+                      "position":  [
+                                       -2080,
+                                       -48
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// \u003e\u003e\u003e USTAW SWOJE: wklej klucz OpenRouter i wybierz model \u003c\u003c\u003c\nconst apiKey = \"sk-or-REPLACE_WITH_YOUR_KEY\";\nconst model  = \"minimax/minimax-m2.1\";   // tani zwyciezca naszych testow (mozesz dac inny slug z openrouter.ai/models)\n\n// REJESTR FAKTUR (ksiegi firmy, po polsku)\nconst rejestr = [\n  {id:\"F01\", numer:\"FV 0001/2026\", kontrahent:\"Mueller GmbH\",        kwota:\"1 234,56\",  waluta:\"EUR\", data:\"12.03.2026\"},\n  {id:\"F02\", numer:\"FV 0002/2026\", kontrahent:\"Northwind Ltd\",       kwota:\"980,00\",    waluta:\"EUR\", data:\"14.03.2026\"},\n  {id:\"F03\", numer:\"FV 0003/2026\", kontrahent:\"Stalmex Sp. z o.o.\",  kwota:\"2 500,00\",  waluta:\"PLN\", data:\"15.03.2026\"},\n  {id:\"F04\", numer:\"FV 0004/2026\", kontrahent:\"Stalmex Sp. z o.o.\",  kwota:\"2 500,00\",  waluta:\"PLN\", data:\"16.03.2026\"}, // BLIZNIACZA kwota z F03\n  {id:\"F05\", numer:\"FV 0005/2026\", kontrahent:\"Drewno-Pol S.A.\",     kwota:\"12 300,00\", waluta:\"PLN\", data:\"18.03.2026\"},\n  {id:\"F06\", numer:\"FV 0006/2026\", kontrahent:\"Shenzhen Yongtai\",    kwota:\"4 500,00\",  waluta:\"USD\", data:\"20.03.2026\"},\n];\n\n// WYCIAG BANKOWY (przelewy w formacie jezyka platnika - pulapki formatow/jezykow)\nconst przelewy = [\n  {id:\"T1\", data:\"12.04.2026\", kwota:\"1.234,56\", waluta:\"EUR\", nadawca:\"Mueller GmbH\",       tytul:\"Zahlung Rechnung 1/2026\"},      // DE -\u003e F01\n  {id:\"T2\", data:\"04/15/2026\", kwota:\"980.00\",   waluta:\"EUR\", nadawca:\"Northwind Ltd\",      tytul:\"payment inv 2\"},                // EN -\u003e F02\n  {id:\"T3\", data:\"16.04.2026\", kwota:\"2 500,00\", waluta:\"PLN\", nadawca:\"Stalmex Sp. z o.o.\", tytul:\"FV 0004/2026\"},                 // bliznacza kwota -\u003e F04 (po numerze!)\n  {id:\"T4\", data:\"18.04.2026\", kwota:\"4,500.00\", waluta:\"USD\", nadawca:\"Shenzhen Yongtai\",   tytul:\"发票付款 6/2026\"}, // CN -\u003e F06\n  {id:\"T5\", data:\"20.04.2026\", kwota:\"500,00\",   waluta:\"PLN\", nadawca:\"Jan Kowalski\",       tytul:\"zwrot kaucji\"},                 // SZUM -\u003e brak dopasowania\n];\n\nconst registerText = rejestr.map(f =\u003e\n  `${f.id} | ${f.numer} | ${f.kontrahent} | ${f.kwota} ${f.waluta} | ${f.data}`).join(\"\\n\");\n\nreturn przelewy.map(tr =\u003e {\n  const transferLine = `ID ${tr.id} | Data ${tr.data} | Kwota ${tr.kwota} ${tr.waluta} | Nadawca ${tr.nadawca} | Tytul: ${tr.tytul}`;\n  const body1 = {\n    model, temperature: 0, response_format: { type: \"json_object\" },\n    messages: [{ role: \"user\", content:\n`Znormalizuj ten wiersz wyciagu bankowego (NIE dopasowuj jeszcze faktury).\n- Kwote zamien na liczbe z kropka: 1.234,56 (DE) i 1,234.56 (EN) i 1 234,56 (PL) -\u003e 1234.56\n- Date na YYYY-MM-DD (uwaga MM/DD vs DD.MM)\n- Z tytulu wyciagnij numer faktury (lub null)\nZwroc TYLKO JSON:\n{\"przelew_id\":\"${tr.id}\",\"kwota\":0.00,\"waluta\":\"...\",\"data\":\"YYYY-MM-DD\",\"numer_z_tytulu\":\"...\",\"nadawca\":\"...\"}\n\nWIERSZ:\n${transferLine}` }]\n  };\n  return { json: { apiKey, model, registerText, transfer: tr, transferLine, body1 } };\n});\n"
+                                     },
+                      "id":  "c341a9cf-9220-4a7b-8dc8-ea05a0cc9c08",
+                      "name":  "Dane demo + rozbij na przelewy",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       -1856,
+                                       -48
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "https://openrouter.ai/api/v1/chat/completions",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "Authorization",
+                                                                                         "value":  "=Bearer {{ $(\u0027Dane demo + rozbij na przelewy\u0027).first().json.apiKey }}"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "sendBody":  true,
+                                         "specifyBody":  "json",
+                                         "jsonBody":  "={{ JSON.stringify($json.body1) }}",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "689dfbd1-6fe8-4233-9854-ac595b638f62",
+                      "name":  "Etap 1: Normalizacja",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       -1648,
+                                       -48
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "mode":  "runOnceForEachItem",
+                                         "jsCode":  "let norm = {};\ntry { norm = JSON.parse($json.choices[0].message.content); } catch (e) { norm = { _blad: \"parse\" }; }\nconst base = $(\u0027Dane demo + rozbij na przelewy\u0027).item.json;\nconst body2 = {\n  model: base.model, temperature: 0, response_format: { type: \"json_object\" },\n  messages: [{ role: \"user\", content:\n`Jestes ksiegowym. Masz REJESTR FAKTUR i jeden ZNORMALIZOWANY przelew.\nDopasuj go do faktury (lub faktur), albo oznacz brak dopasowania.\n- Dopasowuj po numerze, kwocie, kontrahencie i WALUCIE (waluty musza sie zgadzac).\n- Status: exact / czesciowa / zbiorcza / nadplata.\n- Bliznacze kwoty rozrozniaj po NUMERZE, nie po kwocie.\nZwroc TYLKO JSON:\n{\"przelew_id\":\"...\",\"dopasowany\":true,\"status\":\"exact\",\"przypisania\":[{\"faktura_id\":\"...\",\"kwota\":0.00}]}\nalbo: {\"przelew_id\":\"...\",\"dopasowany\":false,\"przypisania\":[]}\n\nREJESTR FAKTUR:\n${base.registerText}\n\nPRZELEW (znormalizowany):\n${JSON.stringify(norm)}` }]\n};\nreturn { json: { ...base, norm, body2 } };\n"
+                                     },
+                      "id":  "c1d0588d-e659-4a4c-91c7-f2b66d73d5ef",
+                      "name":  "Etap 1: Normalizacja - parsuj",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       -1424,
+                                       -48
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "https://openrouter.ai/api/v1/chat/completions",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "Authorization",
+                                                                                         "value":  "=Bearer {{ $(\u0027Dane demo + rozbij na przelewy\u0027).first().json.apiKey }}"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "sendBody":  true,
+                                         "specifyBody":  "json",
+                                         "jsonBody":  "={{ JSON.stringify($json.body2) }}",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "6cade9c2-5454-43ab-9b5c-b78a44496b55",
+                      "name":  "Etap 2: Dopasowanie",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       -1200,
+                                       -48
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "mode":  "runOnceForEachItem",
+                                         "jsCode":  "let match = {};\ntry { match = JSON.parse($json.choices[0].message.content); } catch (e) { match = { dopasowany: false }; }\nconst base = $(\u0027Etap 1: Normalizacja - parsuj\u0027).item.json;\nconst body3 = {\n  model: base.model, temperature: 0, response_format: { type: \"json_object\" },\n  messages: [{ role: \"user\", content:\n`Sprawdz krytycznie ponizsze dopasowanie przelewu do faktury.\nMasz rejestr, znormalizowany przelew i PROPOZYCJE. Jesli poprawna - zwroc ja 1:1.\nJesli blad - zwroc POPRAWIONA. Uwaga: zgodnosc waluty, kwota co do grosza,\nbliznacze kwoty (rozroznij po numerze), czy aby nie powinno byc \"dopasowany\": false.\nZwroc TYLKO JSON w tym samym formacie.\n\nREJESTR FAKTUR:\n${base.registerText}\n\nPRZELEW (znormalizowany):\n${JSON.stringify(base.norm)}\n\nPROPOZYCJA DOPASOWANIA:\n${JSON.stringify(match)}` }]\n};\nreturn { json: { ...base, match, body3 } };\n"
+                                     },
+                      "id":  "7323d2e0-df16-471d-8030-822cc538874f",
+                      "name":  "Etap 2: Dopasowanie - parsuj",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       -976,
+                                       -48
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "https://openrouter.ai/api/v1/chat/completions",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "Authorization",
+                                                                                         "value":  "=Bearer {{ $(\u0027Dane demo + rozbij na przelewy\u0027).first().json.apiKey }}"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "sendBody":  true,
+                                         "specifyBody":  "json",
+                                         "jsonBody":  "={{ JSON.stringify($json.body3) }}",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "2b5ab80b-c07a-4e6f-b084-32fb29a1f517",
+                      "name":  "Etap 3: Weryfikacja",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       -768,
+                                       -48
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "mode":  "runOnceForEachItem",
+                                         "jsCode":  "let wynik = {};\ntry { wynik = JSON.parse($json.choices[0].message.content); } catch (e) { wynik = { dopasowany: false }; }\nconst base = $(\u0027Etap 2: Dopasowanie - parsuj\u0027).item.json;\nreturn { json: { ...base, wynik } };\n"
+                                     },
+                      "id":  "151a7acc-9be9-42e8-964a-0f15c862ecd9",
+                      "name":  "Etap 3: Weryfikacja - parsuj",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       -544,
+                                       -48
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const rozliczenia = [];\nconst niedopasowane = [];\nfor (const it of $input.all()) {\n  const w = it.json.wynik || {};\n  const tid = it.json.transfer.id;\n  if (w.dopasowany \u0026\u0026 (w.przypisania || []).length) {\n    rozliczenia.push({ przelew_id: tid, status: w.status || \"exact\", przypisania: w.przypisania });\n  } else {\n    niedopasowane.push(tid);\n  }\n}\nreturn [{ json: { rozliczenia, niedopasowane, liczba_przelewow: $input.all().length } }];\n"
+                                     },
+                      "id":  "32251ba1-2076-4c27-942c-b6793ee950ba",
+                      "name":  "Agreguj wynik",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       -320,
+                                       -48
+                                   ]
+                  }
+              ],
+    "connections":  {
+                        "Uruchom recznie":  {
+                                                "main":  [
+                                                             [
+                                                                 {
+                                                                     "node":  "Dane demo + rozbij na przelewy",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ]
+                                                         ]
+                                            },
+                        "Dane demo + rozbij na przelewy":  {
+                                                               "main":  [
+                                                                            [
+                                                                                {
+                                                                                    "node":  "Etap 1: Normalizacja",
+                                                                                    "type":  "main",
+                                                                                    "index":  0
+                                                                                }
+                                                                            ]
+                                                                        ]
+                                                           },
+                        "Etap 1: Normalizacja":  {
+                                                     "main":  [
+                                                                  [
+                                                                      {
+                                                                          "node":  "Etap 1: Normalizacja - parsuj",
+                                                                          "type":  "main",
+                                                                          "index":  0
+                                                                      }
+                                                                  ]
+                                                              ]
+                                                 },
+                        "Etap 1: Normalizacja - parsuj":  {
+                                                              "main":  [
+                                                                           [
+                                                                               {
+                                                                                   "node":  "Etap 2: Dopasowanie",
+                                                                                   "type":  "main",
+                                                                                   "index":  0
+                                                                               }
+                                                                           ]
+                                                                       ]
+                                                          },
+                        "Etap 2: Dopasowanie":  {
+                                                    "main":  [
+                                                                 [
+                                                                     {
+                                                                         "node":  "Etap 2: Dopasowanie - parsuj",
+                                                                         "type":  "main",
+                                                                         "index":  0
+                                                                     }
+                                                                 ]
+                                                             ]
+                                                },
+                        "Etap 2: Dopasowanie - parsuj":  {
+                                                             "main":  [
+                                                                          [
+                                                                              {
+                                                                                  "node":  "Etap 3: Weryfikacja",
+                                                                                  "type":  "main",
+                                                                                  "index":  0
+                                                                              }
+                                                                          ]
+                                                                      ]
+                                                         },
+                        "Etap 3: Weryfikacja":  {
+                                                    "main":  [
+                                                                 [
+                                                                     {
+                                                                         "node":  "Etap 3: Weryfikacja - parsuj",
+                                                                         "type":  "main",
+                                                                         "index":  0
+                                                                     }
+                                                                 ]
+                                                             ]
+                                                },
+                        "Etap 3: Weryfikacja - parsuj":  {
+                                                             "main":  [
+                                                                          [
+                                                                              {
+                                                                                  "node":  "Agreguj wynik",
+                                                                                  "type":  "main",
+                                                                                  "index":  0
+                                                                              }
+                                                                          ]
+                                                                      ]
+                                                         }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1",
+                     "timezone":  "Europe/Warsaw",
+                     "binaryMode":  "separate"
+                 },
+    "staticData":  null,
+    "meta":  {
+                 "templateCredsSetupCompleted":  true
+             },
+    "nodeGroups":  [
+
+                   ],
+    "versionId":  "44cf0744-e8d2-42eb-9cd1-c4e8bd101dc6",
+    "activeVersionId":  null,
+    "versionCounter":  6,
+    "triggerCount":  0,
+    "sourceWorkflowId":  null,
+    "shared":  [
+                   {
+                       "updatedAt":  "2026-05-12T19:12:06.069Z",
+                       "createdAt":  "2026-05-12T19:12:06.069Z",
+                       "role":  "workflow:owner",
+                       "workflowId":  "geMC21BzGax401zf",
+                       "projectId":  "9rVJoULaKk30HdBB",
+                       "project":  {
+                                       "updatedAt":  "2025-06-26T00:18:14.615Z",
+                                       "createdAt":  "2025-06-25T23:37:35.363Z",
+                                       "id":  "9rVJoULaKk30HdBB",
+                                       "name":  "Nicolas Bednarz \u003cowner@example.com\u003e",
+                                       "type":  "personal",
+                                       "icon":  null,
+                                       "description":  null,
+                                       "customTelemetryTags":  [
+
+                                                               ],
+                                       "creatorId":  "af23e566-dd44-45a3-ac35-e15a8cdef3f2"
+                                   }
+                   }
+               ],
+    "tags":  [
+
+             ],
+    "activeVersion":  null
+}

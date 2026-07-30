@@ -1,0 +1,1432 @@
+{
+    "updatedAt":  "2025-07-05T08:27:36.135Z",
+    "createdAt":  "2025-06-29T13:56:39.590Z",
+    "id":  "vuPXUQcHGIZQGiEy",
+    "name":  "Extract \u0026 Enrich LinkedIn Comments to Leads with Apify → Google Sheets/CSV",
+    "description":  null,
+    "active":  false,
+    "isArchived":  true,
+    "nodes":  [
+                  {
+                      "parameters":  {
+
+                                     },
+                      "id":  "2ded31a9-3557-481a-b250-46a3e728c187",
+                      "name":  "Trigger manually",
+                      "type":  "n8n-nodes-base.manualTrigger",
+                      "position":  [
+                                       1040,
+                                       1200
+                                   ],
+                      "typeVersion":  1,
+                      "disabled":  true
+                  },
+                  {
+                      "parameters":  {
+                                         "content":  "# 🚀 LinkedIn Comments to Leads Extractor \u0026 Enricher (Apify) → Google Sheets / CSV\n\n## Overview\n\n**Automate LinkedIn lead generation by scraping comments from targeted posts and enriching profiles with detailed data**\n\nThis n8n workflow automatically extracts leads from LinkedIn post comments using Apify\u0027s powerful scrapers (no LinkedIn login required), enriches the data with additional profile information, and exports everything to Google Sheets or CSV format.\n\n---\n\n## ✨ Key Features\n\n- 🔍 **No Login Required**: Scrape LinkedIn data without sharing credentials\n- 💰 **Cost-Effective**: First 1,000 comments are free with Apify\n- 📊 **Data Enrichment**: Enhance basic comment data with full profile details\n- 📈 **Export Options**: Choose between Google Sheets or CSV output\n- 🎯 **Targeted Scraping**: Focus on specific posts for quality leads\n\n---\n\n## 🛠️ Apify Scrapers Used\n\n### 1. LinkedIn Post Comments Scraper\n- **Tool**: [LinkedIn Post Comments, Replies, Engagements Scraper | No Cookies](https://apify.com/apimaestro/linkedin-post-comments-replies-engagements-scraper-no-cookies/api/python)\n- **Pricing**: $5.00 per 1,000 results\n- **Function**: Extracts all comments and engagement data from specified LinkedIn posts\n\n### 2. LinkedIn Profile Batch Scraper\n- **Tool**: [LinkedIn Profile Details Batch Scraper (No Cookies Required)](https://apify.com/apimaestro/linkedin-profile-batch-scraper-no-cookies-required)\n- **Pricing**: $5.00 per 1,000 results\n- **Function**: Enriches scraped profiles with detailed information\n\n\u003e 💡 **Free Tier**: Apify provides 1,000 free scraped comments to get you started!\n\n---\n",
+                                         "height":  1000,
+                                         "width":  1620,
+                                         "color":  5
+                                     },
+                      "id":  "a3d6a247-302a-4859-a080-3f717bf7fd90",
+                      "name":  "Sticky Note1",
+                      "type":  "n8n-nodes-base.stickyNote",
+                      "position":  [
+                                       180,
+                                       80
+                                   ],
+                      "typeVersion":  1
+                  },
+                  {
+                      "parameters":  {
+                                         "formTitle":  "Linkedin Posts Comments Leads Scraper",
+                                         "formDescription":  "=\u003cdiv style=\"font-family: Arial, sans-serif; line-height: 1.8; color: #333; word-wrap: break-word; overflow-wrap: break-word;\"\u003e\n\n\u003cp style=\"margin-bottom: 20px;\"\u003e\u003cstrong style=\"color: #0077b5;\"\u003e🔸 Step 1: Add Posts URLs\u003c/strong\u003e\u003c/p\u003e\n\u003cp style=\"margin-bottom: 20px;\"\u003eThe workflow accepts various LinkedIn post identifier formats:\u003c/p\u003e\n\n\u003cp style=\"margin-bottom: 18px;\"\u003e\u003cstrong\u003e📊 Numeric post IDs:\u003c/strong\u003e\u003cbr\u003e\n\u003cspan style=\"font-family: monospace; background: #f5f5f5; padding: 4px 6px; word-break: break-all; margin-top: 8px; display: inline-block;\"\u003e7334385757769416704\u003c/span\u003e\u003c/p\u003e\n\n\u003cp style=\"margin-bottom: 18px;\"\u003e\u003cstrong\u003e🔗 Activity URLs:\u003c/strong\u003e\u003cbr\u003e\n\u003cspan style=\"font-family: monospace; background: #f5f5f5; padding: 4px 6px; word-break: break-all; display: block; margin-top: 8px;\"\u003ehttps://www.linkedin.com/feed/update/urn:li:activity:273437/\u003c/span\u003e\u003c/p\u003e\n\n\u003cp style=\"margin-bottom: 25px;\"\u003e\u003cstrong\u003e🌐 Full post URLs:\u003c/strong\u003e\u003cbr\u003e\n\u003cspan style=\"font-family: monospace; background: #f5f5f5; padding: 4px 6px; word-break: break-all; display: block; margin-top: 8px;\"\u003ehttps://www.linkedin.com/posts/username_title-activity-7334385757769416704-dMnz\u003c/span\u003e\u003c/p\u003e\n\n\u003chr style=\"margin: 30px 0; border: 1px solid #ddd;\"\u003e-------------------\n\n\u003cp style=\"margin-bottom: 20px;\"\u003e\u003cstrong style=\"color: #28a745;\"\u003e✅ Step 2: Results\u003c/strong\u003e\u003c/p\u003e\n\u003cp style=\"margin-bottom: 20px;\"\u003eOnce finished, you\u0027ll be redirected to Google Sheets where you can find your result with the name:\u003c/p\u003e\n\u003cp style=\"background: #f0f8ff; padding: 15px; border-left: 4px solid #0077b5; margin: 20px 0;\"\u003e\n\u003cstrong\u003e\"LinkedIn-Posts-Comments-Leads-{{ $now.format(\u0027yyyy-MM-dd\u0027) }}\"\u003c/strong\u003e\n\u003c/p\u003e\n\n\u003chr style=\"margin: 30px 0; border: 1px solid #ddd;\"\u003e-------------------\n\n\n\u003cp style=\"color: #666; font-size: 14px; margin-top: 25px;\"\u003e\u003cem\u003e💡 Tip: Make sure your LinkedIn URLs are publicly accessible for the best results.\u003c/em\u003e\u003c/p\u003e\n\n\u003c/div\u003e",
+                                         "formFields":  {
+                                                            "values":  [
+                                                                           {
+                                                                               "fieldLabel":  "Post IDs/URLs",
+                                                                               "fieldType":  "textarea",
+                                                                               "placeholder":  "e.g. 7334385757769416704, https://www.linkedin.com/feed/update/urn:li:activity:7334385757769416704/",
+                                                                               "requiredField":  true
+                                                                           },
+                                                                           {
+                                                                               "fieldLabel":  "How many comments you want to scrape?",
+                                                                               "fieldType":  "number",
+                                                                               "placeholder":  "Default: 100"
+                                                                           }
+                                                                       ]
+                                                        },
+                                         "responseMode":  "lastNode",
+                                         "options":  {
+                                                         "appendAttribution":  false,
+                                                         "buttonLabel":  "Submit",
+                                                         "respondWithOptions":  {
+                                                                                    "values":  {
+                                                                                                   "respondWith":  "redirect",
+                                                                                                   "redirectUrl":  "=https://docs.google.com/spreadsheets/u/0/"
+                                                                                               }
+                                                                                },
+                                                         "ignoreBots":  true
+                                                     }
+                                     },
+                      "id":  "2fd6057f-7463-4869-9421-8b2e9201755c",
+                      "name":  "On form submission",
+                      "type":  "n8n-nodes-base.formTrigger",
+                      "position":  [
+                                       1100,
+                                       1600
+                                   ],
+                      "webhookId":  "a03dfb05-04c9-4923-8cdc-d1be4a73e1aa",
+                      "typeVersion":  2.2
+                  },
+                  {
+                      "parameters":  {
+                                         "assignments":  {
+                                                             "assignments":  [
+                                                                                 {
+                                                                                     "id":  "20febbcc-0a59-4a89-8932-9bbb34b0e9f9",
+                                                                                     "name":  "APIFY_TOKEN",
+                                                                                     "type":  "string",
+                                                                                     "value":  ""
+                                                                                 },
+                                                                                 {
+                                                                                     "id":  "291758a3-c73f-4db5-a2b3-5f88664a8b53",
+                                                                                     "name":  "limit",
+                                                                                     "type":  "number",
+                                                                                     "value":  "={{ $json.limit }}"
+                                                                                 },
+                                                                                 {
+                                                                                     "id":  "921b72d5-3688-4324-9d36-50668548344e",
+                                                                                     "name":  "postIds",
+                                                                                     "type":  "array",
+                                                                                     "value":  "={{ $json.postIds }}"
+                                                                                 }
+                                                                             ]
+                                                         },
+                                         "includeOtherFields":  true,
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "dd35d16c-2a6a-41c5-b761-c4186e1bd539",
+                      "name":  "Set APIFY Token",
+                      "type":  "n8n-nodes-base.set",
+                      "position":  [
+                                       1620,
+                                       1300
+                                   ],
+                      "notesInFlow":  true,
+                      "typeVersion":  3.4
+                  },
+                  {
+                      "parameters":  {
+                                         "content":  "## 1. Set APIFY TOKEN\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n### _(CLICK ME)_",
+                                         "height":  300,
+                                         "width":  260,
+                                         "color":  3
+                                     },
+                      "id":  "df8c32cc-9dad-45b4-81ef-2f7bdd3b9814",
+                      "name":  "Sticky Note2",
+                      "type":  "n8n-nodes-base.stickyNote",
+                      "position":  [
+                                       1540,
+                                       1200
+                                   ],
+                      "typeVersion":  1
+                  },
+                  {
+                      "parameters":  {
+                                         "content":  "_(or if run manually ENABLE this)_  \n### 4. Set Post ID/URL\n\n\n\n\n\n\n\n\n\n\n\n\n\n### _(CLICK ME)_ and Connect\n",
+                                         "height":  300,
+                                         "color":  2
+                                     },
+                      "id":  "936db581-f368-4087-80cc-a21424d3edfe",
+                      "name":  "Sticky Note3",
+                      "type":  "n8n-nodes-base.stickyNote",
+                      "position":  [
+                                       1220,
+                                       1120
+                                   ],
+                      "typeVersion":  1
+                  },
+                  {
+                      "parameters":  {
+                                         "content":  "## 3. You can run through the form (check Form URL)\n\n\n\n\n\n\n\n\n\n\n\n\n\n### _(CLICK ME)_ \nIf run manually DISABLE this node",
+                                         "height":  380,
+                                         "width":  400,
+                                         "color":  3
+                                     },
+                      "id":  "d5f927e6-adda-489e-b775-f4958c797798",
+                      "name":  "Sticky Note4",
+                      "type":  "n8n-nodes-base.stickyNote",
+                      "position":  [
+                                       960,
+                                       1460
+                                   ],
+                      "typeVersion":  1
+                  },
+                  {
+                      "parameters":  {
+                                         "assignments":  {
+                                                             "assignments":  [
+                                                                                 {
+                                                                                     "id":  "916bb8f7-34c5-4f2f-b13d-f60d228abc1f",
+                                                                                     "name":  "postIds",
+                                                                                     "type":  "array",
+                                                                                     "value":  "={{ $json[\u0027Post IDs/URLs\u0027].replaceAll(\u0027\\n\u0027,\u0027\u0027).replaceAll(\u0027\\r\u0027, \u0027\u0027).split(\u0027,\u0027).filter(item =\u003e $ifEmpty(item, false))  }}"
+                                                                                 },
+                                                                                 {
+                                                                                     "id":  "7ff3d2f4-ab8a-444f-9747-f95166a950bd",
+                                                                                     "name":  "limit",
+                                                                                     "type":  "number",
+                                                                                     "value":  "={{ $json[\u0027How many comments you want to scrape?\u0027] || 100 }}"
+                                                                                 }
+                                                                             ]
+                                                         },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "a30d6aff-d6d8-4fb7-8acb-d146a896970d",
+                      "name":  "Set fields from the form",
+                      "type":  "n8n-nodes-base.set",
+                      "position":  [
+                                       1420,
+                                       1600
+                                   ],
+                      "notesInFlow":  true,
+                      "typeVersion":  3.4
+                  },
+                  {
+                      "parameters":  {
+                                         "assignments":  {
+                                                             "assignments":  [
+                                                                                 {
+                                                                                     "id":  "af09ad86-b3dd-45b7-b17d-cb810e4b48d6",
+                                                                                     "name":  "postIds",
+                                                                                     "type":  "array",
+                                                                                     "value":  "[\u0027https://www.linkedin.com/feed/update/urn:li:activity:7334385757769416704/\u0027, \u0027https://www.linkedin.com/feed/update/urn:li:activity:7318557377971023872/\u0027]"
+                                                                                 },
+                                                                                 {
+                                                                                     "id":  "b2f9412e-4c81-454f-ad84-a1d5f6547a26",
+                                                                                     "name":  "limit",
+                                                                                     "type":  "number",
+                                                                                     "value":  100
+                                                                                 }
+                                                                             ]
+                                                         },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "58fa62fb-7f27-4e25-81a9-c203ad230e1d",
+                      "name":  "Set manual fields",
+                      "type":  "n8n-nodes-base.set",
+                      "position":  [
+                                       1280,
+                                       1200
+                                   ],
+                      "notesInFlow":  true,
+                      "typeVersion":  3.4,
+                      "disabled":  true
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "version":  2,
+                                                                            "leftValue":  "",
+                                                                            "caseSensitive":  true,
+                                                                            "typeValidation":  "strict"
+                                                                        },
+                                                            "combinator":  "and",
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "id":  "19224073-c84d-456f-b694-318df4223d2a",
+                                                                                   "operator":  {
+                                                                                                    "type":  "number",
+                                                                                                    "operation":  "gt"
+                                                                                                },
+                                                                                   "leftValue":  "={{ $json.summary.totalComments }}",
+                                                                                   "rightValue":  100
+                                                                               },
+                                                                               {
+                                                                                   "id":  "8156447e-75dd-4cad-8fc8-17366667d165",
+                                                                                   "operator":  {
+                                                                                                    "type":  "number",
+                                                                                                    "operation":  "gt"
+                                                                                                },
+                                                                                   "leftValue":  "={{ $(\u0027Set APIFY Token\u0027).first().json.limit }}",
+                                                                                   "rightValue":  100
+                                                                               }
+                                                                           ]
+                                                        },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "ca56625f-631e-4859-9516-d19021a5b251",
+                      "name":  "More runs needed?",
+                      "type":  "n8n-nodes-base.if",
+                      "position":  [
+                                       2420,
+                                       1300
+                                   ],
+                      "notesInFlow":  true,
+                      "typeVersion":  2.2,
+                      "notes":  "Per run it\u0027s only 100 comments"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const limitPages = Math.ceil($(\u0027Set APIFY Token\u0027).first().json.limit / 100)\nconst totalComments = $(\u0027Run Apify Comments Scraper\u0027).last().json.summary.totalComments \nconst availablePages = Math.ceil(totalComments / 100)\n\nconst totalRuns = availablePages \u003c= limitPages ? availablePages : limitPages\n\nlet currentPage = 2\n\n\nreturn {\n  json: {\n    items:\n      Array.from({ length: totalRuns }, (_, i) =\u003e {\n        return { currentPage: currentPage + i }\n      })\n  }\n};"
+                                     },
+                      "id":  "5b1a71bf-8b29-4fbc-a7a6-2676ca5ef13a",
+                      "name":  "Set pagination",
+                      "type":  "n8n-nodes-base.code",
+                      "position":  [
+                                       2640,
+                                       1160
+                                   ],
+                      "typeVersion":  2
+                  },
+                  {
+                      "parameters":  {
+                                         "fieldToSplitOut":  "items",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "4abd2ce5-4b12-43d7-84fd-902343d456af",
+                      "name":  "Split Out",
+                      "type":  "n8n-nodes-base.splitOut",
+                      "position":  [
+                                       2860,
+                                       1160
+                                   ],
+                      "typeVersion":  1
+                  },
+                  {
+                      "parameters":  {
+                                         "aggregate":  "aggregateAllItemData",
+                                         "destinationFieldName":  "items",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "190685a3-19e7-4f05-9997-768deaea1a45",
+                      "name":  "Aggregate",
+                      "type":  "n8n-nodes-base.aggregate",
+                      "position":  [
+                                       2200,
+                                       1300
+                                   ],
+                      "typeVersion":  1
+                  },
+                  {
+                      "parameters":  {
+                                         "assignments":  {
+                                                             "assignments":  [
+                                                                                 {
+                                                                                     "id":  "b4280f11-a50b-4065-8742-9f994c6ee84d",
+                                                                                     "name":  "items",
+                                                                                     "type":  "array",
+                                                                                     "value":  "={{ $json.items.concat($(\u0027Aggregate\u0027).item.json.items) }}"
+                                                                                 }
+                                                                             ]
+                                                         },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "0986b880-e3d0-44a6-9f82-e9a3cfdf5b3c",
+                      "name":  "Gather All Comments",
+                      "type":  "n8n-nodes-base.set",
+                      "position":  [
+                                       3520,
+                                       960
+                                   ],
+                      "typeVersion":  3.4
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// Get all input items\nconst items = $input.first().json.items;\n\n// Use reduce to filter unique profile_url values\nconst uniqueProfiles = items.reduce((acc, item) =\u003e {\n  // Check if this profile_url is already in the accumulator\n  console.log(item)\n  if (item.author \u0026\u0026 !acc.some(i =\u003e i.profile_url === item.author.profile_url)) {\n    acc.push(item.author);\n  }\n  return acc;\n}, []);\n\nreturn uniqueProfiles"
+                                     },
+                      "id":  "95175f60-bd19-4476-8f0c-13759245c295",
+                      "name":  "Create Unique List of Leads",
+                      "type":  "n8n-nodes-base.code",
+                      "position":  [
+                                       3980,
+                                       1320
+                                   ],
+                      "typeVersion":  2
+                  },
+                  {
+                      "parameters":  {
+                                         "content":  "## 🛠 Running Apify LinkedIn Comments Scrapers and processing data\nWe want to run an Apify scraper once to validate the number of available comments and then run it multiple times if necessary.",
+                                         "height":  840,
+                                         "width":  2040,
+                                         "color":  7
+                                     },
+                      "id":  "555f8555-ca32-40f5-ba67-5ac5b4d96ef4",
+                      "name":  "Sticky Note",
+                      "type":  "n8n-nodes-base.stickyNote",
+                      "position":  [
+                                       1800,
+                                       880
+                                   ],
+                      "typeVersion":  1
+                  },
+                  {
+                      "parameters":  {
+                                         "content":  "## Create a unique list of Leads, ✨ enrich ✨ it with more data\nOnce we have all of the comment authors, we need to enrich them with more information from LinkedIn\n",
+                                         "height":  840,
+                                         "width":  1700
+                                     },
+                      "id":  "ef42841b-44b1-4803-938a-8aab7c4bc6c3",
+                      "name":  "Sticky Note5",
+                      "type":  "n8n-nodes-base.stickyNote",
+                      "position":  [
+                                       3840,
+                                       880
+                                   ],
+                      "typeVersion":  1
+                  },
+                  {
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "={{ \u0027https://api.apify.com/v2/acts/apimaestro~linkedin-post-comments-replies-engagements-scraper-no-cookies/run-sync-get-dataset-items?token=\u0027 +$json.APIFY_TOKEN}}",
+                                         "sendBody":  true,
+                                         "bodyParameters":  {
+                                                                "parameters":  [
+                                                                                   {
+                                                                                       "name":  "postIds",
+                                                                                       "value":  "={{ $json.postIds }}"
+                                                                                   },
+                                                                                   {
+                                                                                       "name":  "page_number",
+                                                                                       "value":  "={{ 1 }}"
+                                                                                   },
+                                                                                   {
+                                                                                       "name":  "sortOrder",
+                                                                                       "value":  "most recent"
+                                                                                   },
+                                                                                   {
+                                                                                       "name":  "limit",
+                                                                                       "value":  "={{ $json.limit }}"
+                                                                                   }
+                                                                               ]
+                                                            },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "2cd180b2-432f-456b-8538-e5aa759e880c",
+                      "name":  "Run Apify Comments Scraper",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "position":  [
+                                       1980,
+                                       1300
+                                   ],
+                      "typeVersion":  4.2
+                  },
+                  {
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "={{ \u0027https://api.apify.com/v2/acts/apimaestro~linkedin-post-comments-replies-engagements-scraper-no-cookies/run-sync-get-dataset-items?token=\u0027 + $(\u0027Set APIFY Token\u0027).first().json.APIFY_TOKEN}}",
+                                         "sendBody":  true,
+                                         "bodyParameters":  {
+                                                                "parameters":  [
+                                                                                   {
+                                                                                       "name":  "postIds",
+                                                                                       "value":  "={{ $(\u0027Set APIFY Token\u0027).first().json.postIds }}"
+                                                                                   },
+                                                                                   {
+                                                                                       "name":  "page_number",
+                                                                                       "value":  "={{ $json.currentPage }}"
+                                                                                   },
+                                                                                   {
+                                                                                       "name":  "sortOrder",
+                                                                                       "value":  "most recent"
+                                                                                   },
+                                                                                   {
+                                                                                       "name":  "limit",
+                                                                                       "value":  "={{ $(\u0027Set APIFY Token\u0027).first().json.limit }}"
+                                                                                   }
+                                                                               ]
+                                                            },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "b0a35cb7-b95f-4ffe-9e01-2f2dad5fa60e",
+                      "name":  "Run Apify Comments Scraper Loop",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "position":  [
+                                       3300,
+                                       1180
+                                   ],
+                      "typeVersion":  4.2
+                  },
+                  {
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "={{ \u0027https://api.apify.com/v2/acts/apimaestro~linkedin-profile-batch-scraper-no-cookies-required/run-sync-get-dataset-items?token=\u0027 + $(\u0027Set APIFY Token\u0027).first().json.APIFY_TOKEN}}",
+                                         "sendBody":  true,
+                                         "bodyParameters":  {
+                                                                "parameters":  [
+                                                                                   {
+                                                                                       "name":  "usernames",
+                                                                                       "value":  "={{ $json.batches }}"
+                                                                                   }
+                                                                               ]
+                                                            },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "71eafacd-402e-4142-a922-a6a586571406",
+                      "name":  "Run Apify Profile Enrichment",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "position":  [
+                                       5020,
+                                       1340
+                                   ],
+                      "typeVersion":  4.2
+                  },
+                  {
+                      "parameters":  {
+                                         "fieldToSplitOut":  "batches",
+                                         "include":  "allOtherFields",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "c87fa081-153a-4786-bc4e-43cc4258dcda",
+                      "name":  "Split Out Batches",
+                      "type":  "n8n-nodes-base.splitOut",
+                      "position":  [
+                                       4440,
+                                       1320
+                                   ],
+                      "typeVersion":  1
+                  },
+                  {
+                      "parameters":  {
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "7f24c836-8e63-4a03-9eb8-7d006f33b22f",
+                      "name":  "Loop Over Comments",
+                      "type":  "n8n-nodes-base.splitInBatches",
+                      "position":  [
+                                       3080,
+                                       1160
+                                   ],
+                      "typeVersion":  3
+                  },
+                  {
+                      "parameters":  {
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "17016255-e169-49a8-a802-635e5b51ad04",
+                      "name":  "Loop Over Profiles",
+                      "type":  "n8n-nodes-base.splitInBatches",
+                      "position":  [
+                                       4740,
+                                       1320
+                                   ],
+                      "typeVersion":  3
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const uniqueProfiles = $input.all().map(item =\u003e item.json.profile_url)\n\n// Split the uniqueProfiles in batches of 500 for the Apify\nconst chunkSize = 500;\nconst batches = [];\n\nfor (let i = 0; i \u003c uniqueProfiles.length; i += chunkSize) {\n  batches.push(uniqueProfiles.slice(i, i + chunkSize));\n}\n\n\nreturn { batches };"
+                                     },
+                      "id":  "529dd78f-7244-4115-a7b5-a94bcd19ba8f",
+                      "name":  "Split in batches",
+                      "type":  "n8n-nodes-base.code",
+                      "position":  [
+                                       4200,
+                                       1320
+                                   ],
+                      "typeVersion":  2
+                  },
+                  {
+                      "parameters":  {
+                                         "aggregate":  "aggregateAllItemData",
+                                         "destinationFieldName":  "items",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "e271a798-b793-4ef0-b92e-31427b365817",
+                      "name":  "Aggregate Comments",
+                      "type":  "n8n-nodes-base.aggregate",
+                      "position":  [
+                                       3580,
+                                       1180
+                                   ],
+                      "typeVersion":  1
+                  },
+                  {
+                      "parameters":  {
+                                         "aggregate":  "aggregateAllItemData",
+                                         "destinationFieldName":  "items",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "4f9ea81d-4bfd-410d-a948-608cadfc938e",
+                      "name":  "Aggregate Profiles",
+                      "type":  "n8n-nodes-base.aggregate",
+                      "position":  [
+                                       5240,
+                                       1340
+                                   ],
+                      "typeVersion":  1
+                  },
+                  {
+                      "parameters":  {
+                                         "fieldsToAggregate":  {
+                                                                   "fieldToAggregate":  [
+                                                                                            {
+                                                                                                "fieldToAggregate":  "items"
+                                                                                            }
+                                                                                        ]
+                                                               },
+                                         "options":  {
+                                                         "mergeLists":  true
+                                                     }
+                                     },
+                      "id":  "b035f262-6587-43fa-83d4-c335ec4e050d",
+                      "name":  "Aggregate All Profiles",
+                      "type":  "n8n-nodes-base.aggregate",
+                      "position":  [
+                                       5020,
+                                       1160
+                                   ],
+                      "typeVersion":  1
+                  },
+                  {
+                      "parameters":  {
+                                         "fieldsToAggregate":  {
+                                                                   "fieldToAggregate":  [
+                                                                                            {
+                                                                                                "fieldToAggregate":  "items"
+                                                                                            }
+                                                                                        ]
+                                                               },
+                                         "options":  {
+                                                         "mergeLists":  true
+                                                     }
+                                     },
+                      "id":  "4224ff12-5cc7-4a17-bdc1-f3bd4336a3c1",
+                      "name":  "Aggregate All Comments",
+                      "type":  "n8n-nodes-base.aggregate",
+                      "position":  [
+                                       3300,
+                                       960
+                                   ],
+                      "typeVersion":  1
+                  },
+                  {
+                      "parameters":  {
+                                         "options":  {
+                                                         "headerRow":  true
+                                                     }
+                                     },
+                      "id":  "9c4a1dd0-3c5a-4ab2-9543-2fd9cdfbc679",
+                      "name":  "Convert to File",
+                      "type":  "n8n-nodes-base.convertToFile",
+                      "position":  [
+                                       5900,
+                                       980
+                                   ],
+                      "executeOnce":  true,
+                      "typeVersion":  1.1,
+                      "disabled":  true
+                  },
+                  {
+                      "parameters":  {
+                                         "content":  "## You can either run it manually (not through form) and download the CSV\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nYou need to activate \"Trigger manual\" nodes first\n\n### _(CLICK ME) and Connect_",
+                                         "height":  380,
+                                         "width":  660,
+                                         "color":  2
+                                     },
+                      "id":  "a274245c-6a54-478b-8a20-87eece230327",
+                      "name":  "Sticky Note6",
+                      "type":  "n8n-nodes-base.stickyNote",
+                      "position":  [
+                                       5640,
+                                       880
+                                   ],
+                      "typeVersion":  1
+                  },
+                  {
+                      "parameters":  {
+                                         "content":  "## 2. Add credentials to Google Sheets\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n### _(CLICK ME)_",
+                                         "height":  380,
+                                         "width":  660,
+                                         "color":  3
+                                     },
+                      "id":  "16ffbc64-adb6-4e70-a9ba-5b6ceda638c8",
+                      "name":  "Sticky Note7",
+                      "type":  "n8n-nodes-base.stickyNote",
+                      "position":  [
+                                       5640,
+                                       1340
+                                   ],
+                      "typeVersion":  1
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "function flatten(obj, prefix = \u0027\u0027, res = {}) {\n  for (const key in obj) {\n    const value = obj[key];\n    const prefixedKey = prefix ? `${prefix}_${key}` : key;\n    if (typeof value === \u0027object\u0027 \u0026\u0026 value !== null \u0026\u0026 !Array.isArray(value)) {\n      flatten(value, prefixedKey, res);\n    } else {\n      res[prefixedKey] = value;\n    }\n  }\n  return res;\n}\n\nreturn $input.first().json.items.map(item =\u003e ({\n  json: flatten(item)\n}));"
+                                     },
+                      "id":  "23a6872e-438a-491a-975a-141ade870989",
+                      "name":  "Prepare the list for export",
+                      "type":  "n8n-nodes-base.code",
+                      "position":  [
+                                       5240,
+                                       1160
+                                   ],
+                      "typeVersion":  2
+                  },
+                  {
+                      "parameters":  {
+                                         "resource":  "spreadsheet",
+                                         "title":  "=LinkedIn-Posts-Comments-Leads-{{ $now.format(\u0027yyyy-MM-dd+T\u0027) }}",
+                                         "sheetsUi":  {
+                                                          "sheetValues":  [
+                                                                              {
+                                                                                  "title":  "Leads"
+                                                                              }
+                                                                          ]
+                                                      },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "54b7d79b-b32c-411a-8a9a-dfc68faf5461",
+                      "name":  "Create Google Sheet",
+                      "type":  "n8n-nodes-base.googleSheets",
+                      "position":  [
+                                       5720,
+                                       1480
+                                   ],
+                      "executeOnce":  true,
+                      "typeVersion":  4.5
+                  },
+                  {
+                      "parameters":  {
+                                         "operation":  "append",
+                                         "documentId":  {
+                                                            "__rl":  true,
+                                                            "mode":  "id",
+                                                            "value":  "={{ $(\u0027Create Google Sheet\u0027).first().json.spreadsheetId }}"
+                                                        },
+                                         "sheetName":  {
+                                                           "__rl":  true,
+                                                           "mode":  "id",
+                                                           "value":  "={{ $(\u0027Create Google Sheet\u0027).first().json.sheets[0].properties.sheetId }}"
+                                                       },
+                                         "columns":  {
+                                                         "value":  {
+
+                                                                   },
+                                                         "schema":  [
+                                                                        {
+                                                                            "id":  "profileUrl",
+                                                                            "type":  "string",
+                                                                            "display":  true,
+                                                                            "required":  false,
+                                                                            "displayName":  "profileUrl",
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "basic_info_fullname",
+                                                                            "type":  "string",
+                                                                            "display":  true,
+                                                                            "required":  false,
+                                                                            "displayName":  "basic_info_fullname",
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "basic_info_first_name",
+                                                                            "type":  "string",
+                                                                            "display":  true,
+                                                                            "required":  false,
+                                                                            "displayName":  "basic_info_first_name",
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "basic_info_last_name",
+                                                                            "type":  "string",
+                                                                            "display":  true,
+                                                                            "required":  false,
+                                                                            "displayName":  "basic_info_last_name",
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "basic_info_headline",
+                                                                            "type":  "string",
+                                                                            "display":  true,
+                                                                            "required":  false,
+                                                                            "displayName":  "basic_info_headline",
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "basic_info_public_identifier",
+                                                                            "type":  "string",
+                                                                            "display":  true,
+                                                                            "required":  false,
+                                                                            "displayName":  "basic_info_public_identifier",
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "basic_info_profile_picture_url",
+                                                                            "type":  "string",
+                                                                            "display":  true,
+                                                                            "required":  false,
+                                                                            "displayName":  "basic_info_profile_picture_url",
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "basic_info_about",
+                                                                            "type":  "string",
+                                                                            "display":  true,
+                                                                            "required":  false,
+                                                                            "displayName":  "basic_info_about",
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "basic_info_location_country",
+                                                                            "type":  "string",
+                                                                            "display":  true,
+                                                                            "required":  false,
+                                                                            "displayName":  "basic_info_location_country",
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "basic_info_location_city",
+                                                                            "type":  "string",
+                                                                            "display":  true,
+                                                                            "required":  false,
+                                                                            "displayName":  "basic_info_location_city",
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "basic_info_location_full",
+                                                                            "type":  "string",
+                                                                            "display":  true,
+                                                                            "required":  false,
+                                                                            "displayName":  "basic_info_location_full",
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "basic_info_location_country_code",
+                                                                            "type":  "string",
+                                                                            "display":  true,
+                                                                            "required":  false,
+                                                                            "displayName":  "basic_info_location_country_code",
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "basic_info_creator_hashtags",
+                                                                            "type":  "string",
+                                                                            "display":  true,
+                                                                            "required":  false,
+                                                                            "displayName":  "basic_info_creator_hashtags",
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "basic_info_is_creator",
+                                                                            "type":  "string",
+                                                                            "display":  true,
+                                                                            "required":  false,
+                                                                            "displayName":  "basic_info_is_creator",
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "basic_info_is_influencer",
+                                                                            "type":  "string",
+                                                                            "display":  true,
+                                                                            "required":  false,
+                                                                            "displayName":  "basic_info_is_influencer",
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "basic_info_is_premium",
+                                                                            "type":  "string",
+                                                                            "display":  true,
+                                                                            "required":  false,
+                                                                            "displayName":  "basic_info_is_premium",
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "basic_info_created_timestamp",
+                                                                            "type":  "string",
+                                                                            "display":  true,
+                                                                            "required":  false,
+                                                                            "displayName":  "basic_info_created_timestamp",
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "basic_info_show_follower_count",
+                                                                            "type":  "string",
+                                                                            "display":  true,
+                                                                            "required":  false,
+                                                                            "displayName":  "basic_info_show_follower_count",
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "basic_info_background_picture_url",
+                                                                            "type":  "string",
+                                                                            "display":  true,
+                                                                            "required":  false,
+                                                                            "displayName":  "basic_info_background_picture_url",
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "basic_info_urn",
+                                                                            "type":  "string",
+                                                                            "display":  true,
+                                                                            "required":  false,
+                                                                            "displayName":  "basic_info_urn",
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "basic_info_follower_count",
+                                                                            "type":  "string",
+                                                                            "display":  true,
+                                                                            "required":  false,
+                                                                            "displayName":  "basic_info_follower_count",
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "basic_info_connection_count",
+                                                                            "type":  "string",
+                                                                            "display":  true,
+                                                                            "required":  false,
+                                                                            "displayName":  "basic_info_connection_count",
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "basic_info_current_company",
+                                                                            "type":  "string",
+                                                                            "display":  true,
+                                                                            "required":  false,
+                                                                            "displayName":  "basic_info_current_company",
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "basic_info_current_company_urn",
+                                                                            "type":  "string",
+                                                                            "display":  true,
+                                                                            "required":  false,
+                                                                            "displayName":  "basic_info_current_company_urn",
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "basic_info_current_company_url",
+                                                                            "type":  "string",
+                                                                            "display":  true,
+                                                                            "required":  false,
+                                                                            "displayName":  "basic_info_current_company_url",
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "experience",
+                                                                            "type":  "string",
+                                                                            "display":  true,
+                                                                            "required":  false,
+                                                                            "displayName":  "experience",
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "education",
+                                                                            "type":  "string",
+                                                                            "display":  true,
+                                                                            "required":  false,
+                                                                            "displayName":  "education",
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "certifications",
+                                                                            "type":  "string",
+                                                                            "display":  true,
+                                                                            "required":  false,
+                                                                            "displayName":  "certifications",
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true
+                                                                        }
+                                                                    ],
+                                                         "mappingMode":  "autoMapInputData",
+                                                         "matchingColumns":  [
+
+                                                                             ],
+                                                         "attemptToConvertTypes":  false,
+                                                         "convertFieldsToString":  false
+                                                     },
+                                         "options":  {
+                                                         "cellFormat":  "USER_ENTERED",
+                                                         "useAppend":  true
+                                                     }
+                                     },
+                      "id":  "49d455f0-3e66-4f7e-9ea1-a6258f4d8897",
+                      "name":  "Add Leads",
+                      "type":  "n8n-nodes-base.googleSheets",
+                      "position":  [
+                                       6140,
+                                       1480
+                                   ],
+                      "executeOnce":  false,
+                      "typeVersion":  4.5
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "\nreturn $(\u0027Prepare the list for export\u0027).all();"
+                                     },
+                      "id":  "f41616ac-38ac-46e9-adc5-2931c8e9316a",
+                      "name":  "Set the list for sheets",
+                      "type":  "n8n-nodes-base.code",
+                      "position":  [
+                                       5940,
+                                       1480
+                                   ],
+                      "typeVersion":  2
+                  },
+                  {
+                      "parameters":  {
+                                         "content":  "\n---\n\n## 📊 Output Data Structure\n\nYour exported data will include:\n\n- **Basic Info**: Name, headline, location\n- **Profile Details**: Company, position, industry\n- **Engagement Data**: Comment content, engagement metrics\n- **Contact Info**: Available profile links and connections\n- **Enriched Data**: Additional profile insights from Apify\n\n",
+                                         "height":  280,
+                                         "width":  1180,
+                                         "color":  5
+                                     },
+                      "id":  "64da7fe5-2cd9-4ba6-b673-cbafa6cdef6a",
+                      "name":  "Sticky Note8",
+                      "type":  "n8n-nodes-base.stickyNote",
+                      "position":  [
+                                       180,
+                                       2040
+                                   ],
+                      "typeVersion":  1
+                  },
+                  {
+                      "parameters":  {
+                                         "content":  "---\n\n## 💡 Pro Tips\n\n- **Quality over Quantity**: Target posts with high-quality, relevant engagement\n- **Monitor Costs**: Track your Apify usage to stay within budget\n- **Data Hygiene**: Regularly clean and deduplicate your lead lists\n- **Compliance**: Ensure your scraping activities comply with LinkedIn\u0027s terms of service\n\n---\n\n## 🆘 Troubleshooting\n\n**Common Issues:**\n- **Authentication Errors**: Verify your Apify token is correctly configured\n- **Empty Results**: Check that your LinkedIn post URLs are valid and public\n- **Export Failures**: Ensure Google Sheets credentials are properly set up\n\n**Need Help?** Contact [Saverflow.ai](https://saverflow.ai) for support and custom workflow development.\n\n---\n\n*Powered by Saverflow.ai | Streamline your lead generation with intelligent automation*",
+                                         "height":  540,
+                                         "width":  760
+                                     },
+                      "id":  "8d0b4b71-3efb-48b6-8211-3ca2f75db913",
+                      "name":  "Sticky Note9",
+                      "type":  "n8n-nodes-base.stickyNote",
+                      "position":  [
+                                       1360,
+                                       2040
+                                   ],
+                      "typeVersion":  1
+                  },
+                  {
+                      "parameters":  {
+                                         "content":  "\n## 📋 Prerequisites\n\n### Required API Credentials\n\n1. **Apify Token**\n   - Add your `APIFY_TOKEN` to the workflow credentials\n   - [Get your token from Apify Console](https://apify.com/account#/integrations)\n\n2. **Google Sheets Credentials** *(if using Sheets export)*\n   - Configure OAuth credentials for Google Sheets integration\n   - [Follow n8n\u0027s Google Sheets setup guide](https://docs.n8n.io/integrations/builtin/credentials/google/oauth-single-service/?utm_source=n8n_app\u0026utm_medium=credential_settings\u0026utm_campaign=create_new_credentials_modal)\n\n---\n\n## 🔄 Workflow Process\n\n### Default Mode: Form-Based Execution\n\n1. **Manual Trigger** → Launches the workflow\n2. **Form Submission** → User-friendly form for inputting LinkedIn post URLs\n3. **Comment Scraping** → Apify extracts all comments from specified posts\n4. **Profile Enrichment** → Additional profile data gathered for each commenter\n5. **Data Processing** → Creates unique, enriched lead list\n6. **Google Sheets Export** → Automatically populates your spreadsheet\n\n**Result**: You\u0027ll be redirected to a Google Sheets document containing all enriched leads\n\n### Alternative Mode: CSV Export\n\nFor users preferring CSV output:\n\n1. **Disable**: Form trigger nodes\n2. **Enable**: Manual trigger node\n3. **Disable**: Google Sheets export nodes\n4. **Enable**: CSV download nodes\n5. **Configure**: Add post IDs/URLs in \"Set manual fields\" node\n6. **Execute**: Run workflow and download CSV from the CSV node\n",
+                                         "height":  960,
+                                         "width":  1620,
+                                         "color":  6
+                                     },
+                      "id":  "b31a3d5a-ccb9-491b-8653-e12a37e131ed",
+                      "name":  "Sticky Note10",
+                      "type":  "n8n-nodes-base.stickyNote",
+                      "position":  [
+                                       180,
+                                       1080
+                                   ],
+                      "typeVersion":  1
+                  },
+                  {
+                      "parameters":  {
+
+                                     },
+                      "id":  "47eb5c9c-67c7-4ad6-b911-d11a890ce8b1",
+                      "name":  "Done",
+                      "type":  "n8n-nodes-base.noOp",
+                      "position":  [
+                                       6860,
+                                       1200
+                                   ],
+                      "typeVersion":  1
+                  }
+              ],
+    "connections":  {
+                        "Add Leads":  {
+                                          "main":  [
+                                                       [
+                                                           {
+                                                               "node":  "Done",
+                                                               "type":  "main",
+                                                               "index":  0
+                                                           }
+                                                       ]
+                                                   ]
+                                      },
+                        "Aggregate":  {
+                                          "main":  [
+                                                       [
+                                                           {
+                                                               "node":  "More runs needed?",
+                                                               "type":  "main",
+                                                               "index":  0
+                                                           }
+                                                       ]
+                                                   ]
+                                      },
+                        "Split Out":  {
+                                          "main":  [
+                                                       [
+                                                           {
+                                                               "node":  "Loop Over Comments",
+                                                               "type":  "main",
+                                                               "index":  0
+                                                           }
+                                                       ]
+                                                   ]
+                                      },
+                        "Set pagination":  {
+                                               "main":  [
+                                                            [
+                                                                {
+                                                                    "node":  "Split Out",
+                                                                    "type":  "main",
+                                                                    "index":  0
+                                                                }
+                                                            ]
+                                                        ]
+                                           },
+                        "Set APIFY Token":  {
+                                                "main":  [
+                                                             [
+                                                                 {
+                                                                     "node":  "Run Apify Comments Scraper",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ]
+                                                         ]
+                                            },
+                        "Split in batches":  {
+                                                 "main":  [
+                                                              [
+                                                                  {
+                                                                      "node":  "Split Out Batches",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ]
+                                                          ]
+                                             },
+                        "Trigger manually":  {
+                                                 "main":  [
+                                                              [
+                                                                  {
+                                                                      "node":  "Set manual fields",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ]
+                                                          ]
+                                             },
+                        "More runs needed?":  {
+                                                  "main":  [
+                                                               [
+                                                                   {
+                                                                       "node":  "Set pagination",
+                                                                       "type":  "main",
+                                                                       "index":  0
+                                                                   }
+                                                               ],
+                                                               [
+                                                                   {
+                                                                       "node":  "Create Unique List of Leads",
+                                                                       "type":  "main",
+                                                                       "index":  0
+                                                                   }
+                                                               ]
+                                                           ]
+                                              },
+                        "Split Out Batches":  {
+                                                  "main":  [
+                                                               [
+                                                                   {
+                                                                       "node":  "Loop Over Profiles",
+                                                                       "type":  "main",
+                                                                       "index":  0
+                                                                   }
+                                                               ]
+                                                           ]
+                                              },
+                        "Aggregate Comments":  {
+                                                   "main":  [
+                                                                [
+                                                                    {
+                                                                        "node":  "Loop Over Comments",
+                                                                        "type":  "main",
+                                                                        "index":  0
+                                                                    }
+                                                                ]
+                                                            ]
+                                               },
+                        "Aggregate Profiles":  {
+                                                   "main":  [
+                                                                [
+                                                                    {
+                                                                        "node":  "Loop Over Profiles",
+                                                                        "type":  "main",
+                                                                        "index":  0
+                                                                    }
+                                                                ]
+                                                            ]
+                                               },
+                        "Loop Over Comments":  {
+                                                   "main":  [
+                                                                [
+                                                                    {
+                                                                        "node":  "Aggregate All Comments",
+                                                                        "type":  "main",
+                                                                        "index":  0
+                                                                    }
+                                                                ],
+                                                                [
+                                                                    {
+                                                                        "node":  "Run Apify Comments Scraper Loop",
+                                                                        "type":  "main",
+                                                                        "index":  0
+                                                                    }
+                                                                ]
+                                                            ]
+                                               },
+                        "Loop Over Profiles":  {
+                                                   "main":  [
+                                                                [
+                                                                    {
+                                                                        "node":  "Aggregate All Profiles",
+                                                                        "type":  "main",
+                                                                        "index":  0
+                                                                    }
+                                                                ],
+                                                                [
+                                                                    {
+                                                                        "node":  "Run Apify Profile Enrichment",
+                                                                        "type":  "main",
+                                                                        "index":  0
+                                                                    }
+                                                                ]
+                                                            ]
+                                               },
+                        "On form submission":  {
+                                                   "main":  [
+                                                                [
+                                                                    {
+                                                                        "node":  "Set fields from the form",
+                                                                        "type":  "main",
+                                                                        "index":  0
+                                                                    }
+                                                                ]
+                                                            ]
+                                               },
+                        "Create Google Sheet":  {
+                                                    "main":  [
+                                                                 [
+                                                                     {
+                                                                         "node":  "Set the list for sheets",
+                                                                         "type":  "main",
+                                                                         "index":  0
+                                                                     }
+                                                                 ]
+                                                             ]
+                                                },
+                        "Gather All Comments":  {
+                                                    "main":  [
+                                                                 [
+                                                                     {
+                                                                         "node":  "Create Unique List of Leads",
+                                                                         "type":  "main",
+                                                                         "index":  0
+                                                                     }
+                                                                 ]
+                                                             ]
+                                                },
+                        "Aggregate All Comments":  {
+                                                       "main":  [
+                                                                    [
+                                                                        {
+                                                                            "node":  "Gather All Comments",
+                                                                            "type":  "main",
+                                                                            "index":  0
+                                                                        }
+                                                                    ]
+                                                                ]
+                                                   },
+                        "Aggregate All Profiles":  {
+                                                       "main":  [
+                                                                    [
+                                                                        {
+                                                                            "node":  "Prepare the list for export",
+                                                                            "type":  "main",
+                                                                            "index":  0
+                                                                        }
+                                                                    ]
+                                                                ]
+                                                   },
+                        "Set the list for sheets":  {
+                                                        "main":  [
+                                                                     [
+                                                                         {
+                                                                             "node":  "Add Leads",
+                                                                             "type":  "main",
+                                                                             "index":  0
+                                                                         }
+                                                                     ]
+                                                                 ]
+                                                    },
+                        "Set fields from the form":  {
+                                                         "main":  [
+                                                                      [
+                                                                          {
+                                                                              "node":  "Set APIFY Token",
+                                                                              "type":  "main",
+                                                                              "index":  0
+                                                                          }
+                                                                      ]
+                                                                  ]
+                                                     },
+                        "Run Apify Comments Scraper":  {
+                                                           "main":  [
+                                                                        [
+                                                                            {
+                                                                                "node":  "Aggregate",
+                                                                                "type":  "main",
+                                                                                "index":  0
+                                                                            }
+                                                                        ]
+                                                                    ]
+                                                       },
+                        "Create Unique List of Leads":  {
+                                                            "main":  [
+                                                                         [
+                                                                             {
+                                                                                 "node":  "Split in batches",
+                                                                                 "type":  "main",
+                                                                                 "index":  0
+                                                                             }
+                                                                         ]
+                                                                     ]
+                                                        },
+                        "Prepare the list for export":  {
+                                                            "main":  [
+                                                                         [
+                                                                             {
+                                                                                 "node":  "Create Google Sheet",
+                                                                                 "type":  "main",
+                                                                                 "index":  0
+                                                                             },
+                                                                             {
+                                                                                 "node":  "Convert to File",
+                                                                                 "type":  "main",
+                                                                                 "index":  0
+                                                                             }
+                                                                         ]
+                                                                     ]
+                                                        },
+                        "Run Apify Profile Enrichment":  {
+                                                             "main":  [
+                                                                          [
+                                                                              {
+                                                                                  "node":  "Aggregate Profiles",
+                                                                                  "type":  "main",
+                                                                                  "index":  0
+                                                                              }
+                                                                          ]
+                                                                      ]
+                                                         },
+                        "Run Apify Comments Scraper Loop":  {
+                                                                "main":  [
+                                                                             [
+                                                                                 {
+                                                                                     "node":  "Aggregate Comments",
+                                                                                     "type":  "main",
+                                                                                     "index":  0
+                                                                                 }
+                                                                             ]
+                                                                         ]
+                                                            }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1"
+                 },
+    "staticData":  null,
+    "meta":  {
+                 "templateCredsSetupCompleted":  true
+             },
+    "nodeGroups":  [
+
+                   ],
+    "versionId":  "2c81e8c1-0392-408b-82b9-8ccecf4eda33",
+    "activeVersionId":  null,
+    "versionCounter":  1,
+    "triggerCount":  0,
+    "sourceWorkflowId":  null,
+    "shared":  [
+                   {
+                       "updatedAt":  "2025-06-29T13:56:39.590Z",
+                       "createdAt":  "2025-06-29T13:56:39.590Z",
+                       "role":  "workflow:owner",
+                       "workflowId":  "vuPXUQcHGIZQGiEy",
+                       "projectId":  "9rVJoULaKk30HdBB",
+                       "project":  {
+                                       "updatedAt":  "2025-06-26T00:18:14.615Z",
+                                       "createdAt":  "2025-06-25T23:37:35.363Z",
+                                       "id":  "9rVJoULaKk30HdBB",
+                                       "name":  "Nicolas Bednarz \u003cowner@example.com\u003e",
+                                       "type":  "personal",
+                                       "icon":  null,
+                                       "description":  null,
+                                       "customTelemetryTags":  [
+
+                                                               ],
+                                       "creatorId":  "af23e566-dd44-45a3-ac35-e15a8cdef3f2"
+                                   }
+                   }
+               ],
+    "tags":  [
+
+             ],
+    "activeVersion":  null
+}

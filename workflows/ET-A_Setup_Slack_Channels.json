@@ -1,0 +1,126 @@
+{
+    "updatedAt":  "2026-07-20T14:34:22.881Z",
+    "createdAt":  "2026-07-17T18:00:35.913Z",
+    "id":  "H0CYz6XTZcdxXMgV",
+    "name":  "ET-A_Setup_Slack_Channels",
+    "description":  null,
+    "active":  false,
+    "isArchived":  true,
+    "nodes":  [
+                  {
+                      "parameters":  {
+
+                                     },
+                      "id":  "manual",
+                      "name":  "run-once",
+                      "type":  "n8n-nodes-base.manualTrigger",
+                      "typeVersion":  1,
+                      "position":  [
+                                       0,
+                                       304
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// Slack: nazwy kanalow malymi literami, bez # i spacji\nconst channels = [\u0027sprzedaz\u0027,\u0027klienci\u0027,\u0027eskalacje\u0027,\u0027finanse\u0027,\u0027hr\u0027,\u0027szum\u0027,\u0027do-triazu\u0027,\u0027kryzys\u0027,\u0027bezpieczenstwo\u0027,\u0027alerty-n8n\u0027];\nreturn channels.map(name =\u003e ({ json: { name } }));"
+                                     },
+                      "id":  "names",
+                      "name":  "channel-names",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       240,
+                                       304
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "resource":  "channel",
+                                         "channelId":  "={{ $json.name }}"
+                                     },
+                      "id":  "create",
+                      "name":  "create-channel",
+                      "type":  "n8n-nodes-base.slack",
+                      "typeVersion":  2.3,
+                      "position":  [
+                                       480,
+                                       304
+                                   ],
+                      "webhookId":  "33ebb978-c39a-431a-82f8-64ad39bee3a3",
+                      "credentials":  {
+                                          "slackApi":  {
+                                                           "id":  "5CVzetMyusnABbOK",
+                                                           "name":  "Slack Testowe"
+                                                       }
+                                      },
+                      "onError":  "continueRegularOutput"
+                  }
+              ],
+    "connections":  {
+                        "run-once":  {
+                                         "main":  [
+                                                      [
+                                                          {
+                                                              "node":  "channel-names",
+                                                              "type":  "main",
+                                                              "index":  0
+                                                          }
+                                                      ]
+                                                  ]
+                                     },
+                        "channel-names":  {
+                                              "main":  [
+                                                           [
+                                                               {
+                                                                   "node":  "create-channel",
+                                                                   "type":  "main",
+                                                                   "index":  0
+                                                               }
+                                                           ]
+                                                       ]
+                                          }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1",
+                     "timezone":  "Europe/Warsaw",
+                     "binaryMode":  "separate"
+                 },
+    "staticData":  null,
+    "meta":  {
+                 "templateCredsSetupCompleted":  true
+             },
+    "nodeGroups":  [
+
+                   ],
+    "versionId":  "d4c01853-4186-4486-b12b-052575e64e90",
+    "activeVersionId":  null,
+    "versionCounter":  2,
+    "triggerCount":  0,
+    "sourceWorkflowId":  null,
+    "shared":  [
+                   {
+                       "updatedAt":  "2026-07-17T18:00:35.913Z",
+                       "createdAt":  "2026-07-17T18:00:35.913Z",
+                       "role":  "workflow:owner",
+                       "workflowId":  "H0CYz6XTZcdxXMgV",
+                       "projectId":  "9rVJoULaKk30HdBB",
+                       "project":  {
+                                       "updatedAt":  "2025-06-26T00:18:14.615Z",
+                                       "createdAt":  "2025-06-25T23:37:35.363Z",
+                                       "id":  "9rVJoULaKk30HdBB",
+                                       "name":  "Nicolas Bednarz \u003cowner@example.com\u003e",
+                                       "type":  "personal",
+                                       "icon":  null,
+                                       "description":  null,
+                                       "customTelemetryTags":  [
+
+                                                               ],
+                                       "creatorId":  "af23e566-dd44-45a3-ac35-e15a8cdef3f2"
+                                   }
+                   }
+               ],
+    "tags":  [
+
+             ],
+    "activeVersion":  null
+}

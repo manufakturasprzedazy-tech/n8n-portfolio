@@ -1,0 +1,1747 @@
+{
+    "updatedAt":  "2026-07-30T21:39:46.015Z",
+    "createdAt":  "2026-05-01T18:40:08.189Z",
+    "id":  "7dqtcA2hgVkzSBX8",
+    "name":  "MB_Content_Generator",
+    "description":  null,
+    "active":  false,
+    "isArchived":  false,
+    "nodes":  [
+                  {
+                      "parameters":  {
+                                         "workflowInputs":  {
+                                                                "values":  [
+                                                                               {
+                                                                                   "name":  "session_id"
+                                                                               },
+                                                                               {
+                                                                                   "name":  "regen_scope"
+                                                                               },
+                                                                               {
+                                                                                   "name":  "chat_id"
+                                                                               }
+                                                                           ]
+                                                            }
+                                     },
+                      "id":  "402b0ef9-c577-4e77-9b53-95d089f2f3f4",
+                      "name":  "When called by another workflow",
+                      "type":  "n8n-nodes-base.executeWorkflowTrigger",
+                      "typeVersion":  1.1,
+                      "position":  [
+                                       -2304,
+                                       288
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "base":  {
+                                                      "__rl":  true,
+                                                      "value":  "appcf067e6003c219",
+                                                      "mode":  "id"
+                                                  },
+                                         "table":  {
+                                                       "__rl":  true,
+                                                       "value":  "tbldPn3OtxnKiRVL3",
+                                                       "mode":  "id"
+                                                   },
+                                         "id":  "={{ $json.session_id }}",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "df06f9b1-e822-47a7-89a6-6d942aa71313",
+                      "name":  "Get Sesja",
+                      "type":  "n8n-nodes-base.airtable",
+                      "typeVersion":  2.1,
+                      "position":  [
+                                       -2080,
+                                       288
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "operation":  "search",
+                                         "base":  {
+                                                      "__rl":  true,
+                                                      "value":  "appcf067e6003c219",
+                                                      "mode":  "id"
+                                                  },
+                                         "table":  {
+                                                       "__rl":  true,
+                                                       "value":  "tblAEHvT1hoGiHvTr",
+                                                       "mode":  "id"
+                                                   },
+                                         "filterByFormula":  "={Czy aktywna?}=TRUE()",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "17c09f55-2345-4498-b635-f9be4daafcd7",
+                      "name":  "Get Wytyczne",
+                      "type":  "n8n-nodes-base.airtable",
+                      "typeVersion":  2.1,
+                      "position":  [
+                                       -1856,
+                                       288
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const rules = $input.all().map(i =\u003e i.json);\nconst sesja = $(\u0027Get Sesja\u0027).first().json;\nconst typSesji = (sesja[\u0027Typ Sesji\u0027] || \u0027\u0027).toLowerCase();\n\nlet kat = [];\nif (typSesji.includes(\u0027ofertowa\u0027)) kat = [\u0027ofertowe\u0027, \u0027rolka\u0027];\nelse if (typSesji.includes(\u0027blog\u0027) \u0026\u0026 !typSesji.includes(\u0027rolka\u0027)) kat = [\u0027tylko blog\u0027, \u0027edukacyjne\u0027];\nelse if (typSesji.includes(\u0027edukacyjn\u0027)) kat = [\u0027edukacyjne\u0027, \u0027rolka\u0027];\nelse kat = [\u0027edukacyjne\u0027, \u0027rolka\u0027, \u0027tylko blog\u0027];\n\nconst matching = rules.filter(r =\u003e {\n  const k = r[\u0027Kategoria (Dla jakiego typu)\u0027];\n  const arr = Array.isArray(k) ? k : (k ? [k] : []);\n  return arr.some(x =\u003e kat.some(km =\u003e (x || \u0027\u0027).toLowerCase().includes(km)));\n});\n\nconst prio = { \u0027Krytyczne\u0027: 0, \u0027Wysokie\u0027: 1, \u0027Srednie\u0027: 2, \u0027Niskie\u0027: 3 };\nmatching.sort((a, b) =\u003e (prio[a.Priorytet] ?? 99) - (prio[b.Priorytet] ?? 99));\n\nconst tresc = (r) =\u003e r[\u0027Tresc\u0027] || r[\u0027Treść\u0027] || \u0027\u0027;\nconst grupy = { Zakaz: [], Nakaz: [], Fakt: [], Styl: [], Meta_SEO: [] };\nmatching.forEach(r =\u003e { const t = r[\u0027Typ Wytycznej\u0027]; if (grupy[t]) grupy[t].push(r); });\n\nlet sys = `# WYTYCZNE M\u0026B Investment (z Airtable, ${matching.length} aktywnych dla \u0027${sesja[\u0027Typ Sesji\u0027]}\u0027)\\n\\n`;\nif (grupy.Zakaz.length) sys += `## ABSOLUTNE ZAKAZY\\n${grupy.Zakaz.map(r =\u003e `- [${r.Priorytet}] ${r.Nazwa}: ${tresc(r)}`).join(\u0027\\n\u0027)}\\n\\n`;\nif (grupy.Nakaz.length) sys += `## NAKAZY (jezyk korzysci)\\n${grupy.Nakaz.map(r =\u003e `- [${r.Priorytet}] ${r.Nazwa}: ${tresc(r)}`).join(\u0027\\n\u0027)}\\n\\n`;\nif (grupy.Fakt.length) sys += `## FAKTY (konkretne liczby)\\n${grupy.Fakt.map(r =\u003e `- [${r.Priorytet}] ${r.Nazwa}: ${tresc(r)}`).join(\u0027\\n\u0027)}\\n\\n`;\nif (grupy.Styl.length) sys += `## STYL\\n${grupy.Styl.map(r =\u003e `- ${r.Nazwa}: ${tresc(r)}`).join(\u0027\\n\u0027)}\\n\\n`;\n\nreturn [{ json: { wytyczne: sys, typSesji: sesja[\u0027Typ Sesji\u0027], rulesCount: matching.length } }];"
+                                     },
+                      "id":  "e361d2d5-6d67-4353-ae3d-992771e98b10",
+                      "name":  "Build Wytyczne Block",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       -1632,
+                                       288
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "rules":  {
+                                                       "values":  [
+                                                                      {
+                                                                          "conditions":  {
+                                                                                             "options":  {
+                                                                                                             "caseSensitive":  false,
+                                                                                                             "leftValue":  "",
+                                                                                                             "typeValidation":  "loose",
+                                                                                                             "version":  2
+                                                                                                         },
+                                                                                             "conditions":  [
+                                                                                                                {
+                                                                                                                    "id":  "of",
+                                                                                                                    "leftValue":  "={{ $(\u0027Get Sesja\u0027).item.json[\u0027Typ Sesji\u0027] }}",
+                                                                                                                    "rightValue":  "Rolka_Ofertowa",
+                                                                                                                    "operator":  {
+                                                                                                                                     "type":  "string",
+                                                                                                                                     "operation":  "equals"
+                                                                                                                                 }
+                                                                                                                }
+                                                                                                            ],
+                                                                                             "combinator":  "and"
+                                                                                         },
+                                                                          "renameOutput":  true,
+                                                                          "outputKey":  "ofertowa"
+                                                                      },
+                                                                      {
+                                                                          "conditions":  {
+                                                                                             "options":  {
+                                                                                                             "caseSensitive":  false,
+                                                                                                             "leftValue":  "",
+                                                                                                             "typeValidation":  "loose",
+                                                                                                             "version":  2
+                                                                                                         },
+                                                                                             "conditions":  [
+                                                                                                                {
+                                                                                                                    "id":  "ed",
+                                                                                                                    "leftValue":  "={{ $(\u0027Get Sesja\u0027).item.json[\u0027Typ Sesji\u0027] }}",
+                                                                                                                    "rightValue":  "Rolka_Edukacyjna",
+                                                                                                                    "operator":  {
+                                                                                                                                     "type":  "string",
+                                                                                                                                     "operation":  "equals"
+                                                                                                                                 }
+                                                                                                                }
+                                                                                                            ],
+                                                                                             "combinator":  "and"
+                                                                                         },
+                                                                          "renameOutput":  true,
+                                                                          "outputKey":  "edukacyjna"
+                                                                      },
+                                                                      {
+                                                                          "conditions":  {
+                                                                                             "options":  {
+                                                                                                             "caseSensitive":  false,
+                                                                                                             "leftValue":  "",
+                                                                                                             "typeValidation":  "loose",
+                                                                                                             "version":  2
+                                                                                                         },
+                                                                                             "conditions":  [
+                                                                                                                {
+                                                                                                                    "id":  "bl",
+                                                                                                                    "leftValue":  "={{ $(\u0027Get Sesja\u0027).item.json[\u0027Typ Sesji\u0027] }}",
+                                                                                                                    "rightValue":  "Blog_edukacyjny",
+                                                                                                                    "operator":  {
+                                                                                                                                     "type":  "string",
+                                                                                                                                     "operation":  "equals"
+                                                                                                                                 }
+                                                                                                                }
+                                                                                                            ],
+                                                                                             "combinator":  "and"
+                                                                                         },
+                                                                          "renameOutput":  true,
+                                                                          "outputKey":  "blog"
+                                                                      },
+                                                                      {
+                                                                          "conditions":  {
+                                                                                             "options":  {
+                                                                                                             "caseSensitive":  false,
+                                                                                                             "leftValue":  "",
+                                                                                                             "typeValidation":  "loose",
+                                                                                                             "version":  2
+                                                                                                         },
+                                                                                             "conditions":  [
+                                                                                                                {
+                                                                                                                    "id":  "co",
+                                                                                                                    "leftValue":  "={{ $(\u0027Get Sesja\u0027).item.json[\u0027Typ Sesji\u0027] }}",
+                                                                                                                    "rightValue":  "Rolka_z_blogiem_edukacyjna",
+                                                                                                                    "operator":  {
+                                                                                                                                     "type":  "string",
+                                                                                                                                     "operation":  "equals"
+                                                                                                                                 }
+                                                                                                                }
+                                                                                                            ],
+                                                                                             "combinator":  "and"
+                                                                                         },
+                                                                          "renameOutput":  true,
+                                                                          "outputKey":  "combo"
+                                                                      }
+                                                                  ]
+                                                   },
+                                         "options":  {
+                                                         "fallbackOutput":  "extra",
+                                                         "renameFallbackOutput":  "unknown"
+                                                     }
+                                     },
+                      "id":  "f392d3a5-02f2-4f33-aa12-b25e9136853c",
+                      "name":  "Route by Typ",
+                      "type":  "n8n-nodes-base.switch",
+                      "typeVersion":  3.2,
+                      "position":  [
+                                       -1408,
+                                       240
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "operation":  "search",
+                                         "base":  {
+                                                      "__rl":  true,
+                                                      "value":  "appcf067e6003c219",
+                                                      "mode":  "id"
+                                                  },
+                                         "table":  {
+                                                       "__rl":  true,
+                                                       "value":  "tblZOlvPckhg8eWgU",
+                                                       "mode":  "id"
+                                                   },
+                                         "filterByFormula":  "={Numer Działki}={{ ($(\u0027Get Sesja\u0027).item.json[\u0027Sesja-ID Działki\u0027] || $(\u0027Get Sesja\u0027).item.json[\u0027NumerDzialki\u0027] || \u0027\u0027).toString().split(\u0027,\u0027)[0] }}",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "bab310ab-67e8-4601-9edd-c1642c826e6d",
+                      "name":  "Get Dzialka",
+                      "type":  "n8n-nodes-base.airtable",
+                      "typeVersion":  2.1,
+                      "position":  [
+                                       -1184,
+                                       0
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "operation":  "update",
+                                         "base":  {
+                                                      "__rl":  true,
+                                                      "value":  "appcf067e6003c219",
+                                                      "mode":  "id"
+                                                  },
+                                         "table":  {
+                                                       "__rl":  true,
+                                                       "value":  "tblKtzgKI89ab4UjD",
+                                                       "mode":  "id"
+                                                   },
+                                         "columns":  {
+                                                         "mappingMode":  "defineBelow",
+                                                         "value":  {
+                                                                       "id":  "={{ $(\u0027Get Sesja\u0027).item.json[\u0027Powiązana publikacja\u0027][0] }}",
+                                                                       "Wygenerowany scenariusz":  "={{ $json.choices[0].message.content }}",
+                                                                       "Status":  "Wygenerowano"
+                                                                   },
+                                                         "matchingColumns":  [
+                                                                                 "id"
+                                                                             ],
+                                                         "schema":  [
+
+                                                                    ]
+                                                     },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "12e1dbad-37dd-4a1c-aa09-bf00adaa5a9e",
+                      "name":  "Save Ofertowa",
+                      "type":  "n8n-nodes-base.airtable",
+                      "typeVersion":  2.1,
+                      "position":  [
+                                       384,
+                                       0
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "messages":  {
+                                                          "message":  [
+                                                                          {
+                                                                              "content":  "=Wyszukaj POGLEBIONE, aktualne informacje na temat: {{ $(\u0027Get Sesja\u0027).item.json[\u0027Temat Edukacyjny\u0027] }}\n\nKONTEKST: Artykul/rolka edukacyjna dla M\u0026B Investment - dzialki rekreacyjne w Drzonowie (gm. [CITY], ~12 km od morza). Czytelnik = osoba rozwazajaca pierwszy zakup.\n\nFORMAT ODPOWIEDZI:\n1. KLUCZOWE FAKTY (5-7 punktow z danymi)\n2. PROCEDURA KROK PO KROKU (jezeli proces)\n3. PODSTAWY PRAWNE (ustawy, art.)\n4. KOSZTY ORIENTACYJNE (jezeli dotyczy)\n5. PRAKTYCZNE PORADY (3-5)\n6. CZESTE BLEDY I MITY (2-3)\n7. POWIAZANE TEMATY (2-3)\n8. STRONY NA client-site.example (URL + opis - dla linkowania wewnetrznego)\n\nDodatkowo: site:client-site.example - lista podstron."
+                                                                          }
+                                                                      ]
+                                                      },
+                                         "options":  {
+
+                                                     },
+                                         "requestOptions":  {
+
+                                                            }
+                                     },
+                      "id":  "f5a0af79-c87d-46f4-a861-8b8e426aac47",
+                      "name":  "Perplexity Research (Edukacyjna)",
+                      "type":  "n8n-nodes-base.perplexity",
+                      "typeVersion":  1,
+                      "position":  [
+                                       -1184,
+                                       192
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "operation":  "update",
+                                         "base":  {
+                                                      "__rl":  true,
+                                                      "value":  "appcf067e6003c219",
+                                                      "mode":  "id"
+                                                  },
+                                         "table":  {
+                                                       "__rl":  true,
+                                                       "value":  "tblKtzgKI89ab4UjD",
+                                                       "mode":  "id"
+                                                   },
+                                         "columns":  {
+                                                         "mappingMode":  "defineBelow",
+                                                         "value":  {
+                                                                       "id":  "={{ $(\u0027Get Sesja\u0027).item.json[\u0027Powiązana publikacja\u0027][0] }}",
+                                                                       "Wygenerowany scenariusz":  "={{ $json.choices[0].message.content }}",
+                                                                       "Status":  "Wygenerowano"
+                                                                   },
+                                                         "matchingColumns":  [
+                                                                                 "id"
+                                                                             ],
+                                                         "schema":  [
+
+                                                                    ]
+                                                     },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "bc872f67-e990-4911-86bf-7a257543ba84",
+                      "name":  "Save Edukacyjna",
+                      "type":  "n8n-nodes-base.airtable",
+                      "typeVersion":  2.1,
+                      "position":  [
+                                       -288,
+                                       192
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "messages":  {
+                                                          "message":  [
+                                                                          {
+                                                                              "content":  "=Wyszukaj POGLEBIONE informacje na temat artykulu blogowego: {{ $(\u0027Get Sesja\u0027).item.json[\u0027Temat Edukacyjny\u0027] }}\n\nKONTEKST: Artykul blogowy dla M\u0026B Investment - dzialki rekreacyjne w Drzonowie (gm. [CITY], ~12 km od morza). Czytelnik = osoba rozwazajaca pierwszy zakup.Skup sie WYLACZNIE na glownym pytaniu artykulu - nie rozszerzaj na formalnosci/proces zakupu, jezeli temat tego wprost nie dotyczy.\n\nFORMAT:\n1. KLUCZOWE FAKTY (5-7)\n2. PROCEDURA KROK PO KROKU - TYLKO jezeli temat artykulu jest wprost o procedurze\n3. PODSTAWY PRAWNE - TYLKO jezeli temat artykulu jest wprost o prawie\n4. KOSZTY ORIENTACYJNE - TYLKO jezeli temat artykulu jest wprost o kosztach\n5. PRAKTYCZNE PORADY (3-5)\n6. CZESTE BLEDY I MITY (2-3)\n7. POWIAZANE TEMATY\n8. STRONY NA client-site.example (site:client-site.example)"
+                                                                          }
+                                                                      ]
+                                                      },
+                                         "options":  {
+
+                                                     },
+                                         "requestOptions":  {
+
+                                                            }
+                                     },
+                      "id":  "611cfa88-14de-419e-9d89-cff522bd96e5",
+                      "name":  "Perplexity Research (Blog)",
+                      "type":  "n8n-nodes-base.perplexity",
+                      "typeVersion":  1,
+                      "position":  [
+                                       -1184,
+                                       384
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "  const content = $input.first().json.choices[0].message.content;                \n  const pubId = $(\u0027Get Sesja\u0027).first().json[\u0027Powiązana publikacja\u0027][0]; \n                    \n  let prompty = [\u0027\u0027, \u0027\u0027, \u0027\u0027];            \n  const jsonMatch =\n  content.match(/\\{\\s*\"prompty_grafik\"\\s*:\\s*\\[[\\s\\S]+?\\]\\s*\\}/);\n  if (jsonMatch) {\n    try {\n      const parsed = JSON.parse(jsonMatch[0]);\n      if (Array.isArray(parsed.prompty_grafik)) {\n        prompty = parsed.prompty_grafik.slice(0, 3);\n        while (prompty.length \u003c 3) prompty.push(\u0027\u0027);\n      }\n    } catch (e) {}\n  }\n  const FALLBACK = \u0027Photorealistic photograph of a recreational plot in the Polish countryside near the Baltic Sea, summer daylight, green grass, scattered pine trees, calm rural landscape, no people, no buildings, no text. Shot on Canon EOS R5, 35mm lens, f/8, deep depth of field, natural daylight, Fujifilm Velvia color palette, subtle film grain, natural imperfections, no retouching, no HDR over-processing, no cinematic color grading, no illustration, no cartoon, no 3D render, no CGI, no digital art, no animation, no artificial elements, no text overlays.\u0027;\nconst FALLBACKS = [\u0027High aerial drone shot of a whole coastal recreational plot and its boundaries near the Baltic Sea, meadow and pine woods, cool blue-hour dawn light, photorealistic photograph shot on Canon EOS R5, 35mm lens, f/8, no faces, no text overlays, no logo\u0027, \u0027Eye-level view standing on a sandy access track toward a coastal recreational plot, meadow and pine trunks in the foreground, hard midday sunlight, contrasty shadows, photorealistic photograph shot on Canon EOS R5, 35mm lens, f/8, no faces, no text overlays, no logo\u0027, \u0027Low-angle golden-hour close view of a coastal plot edge where meadow meets pine forest near the Baltic, dunes and a footpath, warm backlight, long shadows, photorealistic photograph shot on Canon EOS R5, 35mm lens, f/8, no faces, no text overlays, no logo\u0027];\nprompty = prompty.map((p, i) =\u003e (typeof p === \u0027string\u0027 \u0026\u0026 p.trim().length \u003e 0) ? p : FALLBACKS[i]);\n  return [\n    { json: { publication_id: pubId, prompt_index: 1, prompt: prompty[0] } },\n    { json: { publication_id: pubId, prompt_index: 2, prompt: prompty[1] } },\n    { json: { publication_id: pubId, prompt_index: 3, prompt: prompty[2] } }\n  ];"
+                                     },
+                      "id":  "6257772f-e94d-435d-84a8-2f281554cd97",
+                      "name":  "Parse Blog + Prompty",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       -736,
+                                       384
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const items = $input.all();\nconst urls = items.map(i =\u003e i.json.url || \u0027\u0027);\n\nconst blogContent = $(\u0027Generate Blog Article\u0027).first().json.choices[0].message.content;\nlet prompty = [\u0027\u0027, \u0027\u0027, \u0027\u0027];\nlet html = blogContent;\n\nconst jsonMatch = blogContent.match(/\\{\\s*\"prompty_grafik\"\\s*:\\s*\\[[\\s\\S]+?\\]\\s*\\}/);\nif (jsonMatch) {\n  try {\n    const parsed = JSON.parse(jsonMatch[0]);\n    if (Array.isArray(parsed.prompty_grafik)) prompty = parsed.prompty_grafik;\n    html = blogContent.replace(jsonMatch[0], \u0027\u0027).trim();\n  } catch (e) {}\n}\n\nconst pubId = items[0]?.json.publication_id || \u0027\u0027;\n\nreturn [{ \n  json: { \n    publication_id: pubId, \n    html, \n    url1: urls[0] || \u0027\u0027, \n    url2: urls[1] || \u0027\u0027, \n    url3: urls[2] || \u0027\u0027, \n    prompty: JSON.stringify(prompty) \n  } \n}];"
+                                     },
+                      "id":  "6f6bc0ab-765c-45c9-a78e-3b9d5a4020ee",
+                      "name":  "Aggregate Blog Images",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       608,
+                                       384
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "operation":  "update",
+                                         "base":  {
+                                                      "__rl":  true,
+                                                      "value":  "appcf067e6003c219",
+                                                      "mode":  "id"
+                                                  },
+                                         "table":  {
+                                                       "__rl":  true,
+                                                       "value":  "tblKtzgKI89ab4UjD",
+                                                       "mode":  "id"
+                                                   },
+                                         "columns":  {
+                                                         "mappingMode":  "defineBelow",
+                                                         "value":  {
+                                                                       "id":  "={{ $json.publication_id }}",
+                                                                       "Treść Bloga (HTML)":  "={{ $json.html }}",
+                                                                       "Blog_Grafika_URL_1":  "={{ $json.url1 }}",
+                                                                       "Blog_Grafika_URL_2":  "={{ $json.url2 }}",
+                                                                       "Blog_Grafika_URL_3":  "={{ $json.url3 }}",
+                                                                       "Status":  "Wygenerowano",
+                                                                       "Blog_Grafika_Wybrana":  0,
+                                                                       "Blog_Grafika_Prompty":  "={{ $json.prompty }}"
+                                                                   },
+                                                         "matchingColumns":  [
+                                                                                 "id"
+                                                                             ],
+                                                         "schema":  [
+                                                                        {
+                                                                            "id":  "id",
+                                                                            "displayName":  "id",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "ID",
+                                                                            "displayName":  "ID",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  true,
+                                                                            "removed":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "ID Użytkownika Telegram",
+                                                                            "displayName":  "ID Użytkownika Telegram",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "number",
+                                                                            "readOnly":  false,
+                                                                            "removed":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "Nazwa użytkownika Telegram",
+                                                                            "displayName":  "Nazwa użytkownika Telegram",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "Data utworzenia",
+                                                                            "displayName":  "Data utworzenia",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  true,
+                                                                            "removed":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "Typ publikacji",
+                                                                            "displayName":  "Typ publikacji",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "options",
+                                                                            "options":  [
+                                                                                            {
+                                                                                                "name":  "Rolka Ofertowa",
+                                                                                                "value":  "Rolka Ofertowa"
+                                                                                            },
+                                                                                            {
+                                                                                                "name":  "Rolka Edukacyjna",
+                                                                                                "value":  "Rolka Edukacyjna"
+                                                                                            },
+                                                                                            {
+                                                                                                "name":  "Blog Edukacyjny",
+                                                                                                "value":  "Blog Edukacyjny"
+                                                                                            },
+                                                                                            {
+                                                                                                "name":  "Blog Edukacyjny",
+                                                                                                "value":  "Blog Edukacyjny"
+                                                                                            },
+                                                                                            {
+                                                                                                "name":  "Rolka + Blog",
+                                                                                                "value":  "Rolka + Blog"
+                                                                                            }
+                                                                                        ],
+                                                                            "readOnly":  false,
+                                                                            "removed":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "Status",
+                                                                            "displayName":  "Status",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "options",
+                                                                            "options":  [
+                                                                                            {
+                                                                                                "name":  "Czeka na dane",
+                                                                                                "value":  "Czeka na dane"
+                                                                                            },
+                                                                                            {
+                                                                                                "name":  "Generowanie",
+                                                                                                "value":  "Generowanie"
+                                                                                            },
+                                                                                            {
+                                                                                                "name":  "Wygenerowano",
+                                                                                                "value":  "Wygenerowano"
+                                                                                            },
+                                                                                            {
+                                                                                                "name":  "Zatwierdzone",
+                                                                                                "value":  "Zatwierdzone"
+                                                                                            },
+                                                                                            {
+                                                                                                "name":  "Zaplanowane",
+                                                                                                "value":  "Zaplanowane"
+                                                                                            },
+                                                                                            {
+                                                                                                "name":  "Opublikowane",
+                                                                                                "value":  "Opublikowane"
+                                                                                            },
+                                                                                            {
+                                                                                                "name":  "Odrzucone",
+                                                                                                "value":  "Odrzucone"
+                                                                                            },
+                                                                                            {
+                                                                                                "name":  "Błąd",
+                                                                                                "value":  "Błąd"
+                                                                                            }
+                                                                                        ],
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Numer Działki",
+                                                                            "displayName":  "Numer Działki",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "array",
+                                                                            "readOnly":  false,
+                                                                            "removed":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "Numer Działki (from Numer Działki)",
+                                                                            "displayName":  "Numer Działki (from Numer Działki)",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  true,
+                                                                            "removed":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "Temat Edukacyjny",
+                                                                            "displayName":  "Temat Edukacyjny",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "Dodatkowe Info",
+                                                                            "displayName":  "Dodatkowe Info",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "Wygenerowany scenariusz",
+                                                                            "displayName":  "Wygenerowany scenariusz",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "URL Rolki (Przed publikacją)",
+                                                                            "displayName":  "URL Rolki (Przed publikacją)",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "URL Rolki (Po zatwierdzeniu)",
+                                                                            "displayName":  "URL Rolki (Po zatwierdzeniu)",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "Treść Bloga (HTML)",
+                                                                            "displayName":  "Treść Bloga (HTML)",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Data Publikacji",
+                                                                            "displayName":  "Data Publikacji",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "dateTime",
+                                                                            "readOnly":  false,
+                                                                            "removed":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "Opublikowane?",
+                                                                            "displayName":  "Opublikowane?",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "boolean",
+                                                                            "readOnly":  false,
+                                                                            "removed":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "URL Facebook",
+                                                                            "displayName":  "URL Facebook",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "URL Instagram",
+                                                                            "displayName":  "URL Instagram",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "URL TikTok",
+                                                                            "displayName":  "URL TikTok",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "Link Blog",
+                                                                            "displayName":  "Link Blog",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "Notatki/Błędy",
+                                                                            "displayName":  "Notatki/Błędy",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "Ostatnia aktualizacja",
+                                                                            "displayName":  "Ostatnia aktualizacja",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  true,
+                                                                            "removed":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "Sesje Telegram",
+                                                                            "displayName":  "Sesje Telegram",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "array",
+                                                                            "readOnly":  false,
+                                                                            "removed":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "Opis_TikTok",
+                                                                            "displayName":  "Opis_TikTok",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "Opis_Instagram",
+                                                                            "displayName":  "Opis_Instagram",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "Opis_Facebook",
+                                                                            "displayName":  "Opis_Facebook",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "Hashtagi",
+                                                                            "displayName":  "Hashtagi",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "Blog_Tytul",
+                                                                            "displayName":  "Blog_Tytul",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "Blog_Meta_Description",
+                                                                            "displayName":  "Blog_Meta_Description",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "Blog_Slug",
+                                                                            "displayName":  "Blog_Slug",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "Opublikowano_TikTok",
+                                                                            "displayName":  "Opublikowano_TikTok",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "boolean",
+                                                                            "readOnly":  false,
+                                                                            "removed":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "Opublikowano_Instagram",
+                                                                            "displayName":  "Opublikowano_Instagram",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "boolean",
+                                                                            "readOnly":  false,
+                                                                            "removed":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "Opublikowano_Facebook",
+                                                                            "displayName":  "Opublikowano_Facebook",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "boolean",
+                                                                            "readOnly":  false,
+                                                                            "removed":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "Opublikowano_Blog",
+                                                                            "displayName":  "Opublikowano_Blog",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "boolean",
+                                                                            "readOnly":  false,
+                                                                            "removed":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "Message_ID_Review",
+                                                                            "displayName":  "Message_ID_Review",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "number",
+                                                                            "readOnly":  false,
+                                                                            "removed":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "Chat_ID_Review",
+                                                                            "displayName":  "Chat_ID_Review",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "number",
+                                                                            "readOnly":  false,
+                                                                            "removed":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "Status_Publikacji",
+                                                                            "displayName":  "Status_Publikacji",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "options",
+                                                                            "options":  [
+                                                                                            {
+                                                                                                "name":  "Do przeglądu",
+                                                                                                "value":  "Do przeglądu"
+                                                                                            },
+                                                                                            {
+                                                                                                "name":  "Zaplanowane",
+                                                                                                "value":  "Zaplanowane"
+                                                                                            },
+                                                                                            {
+                                                                                                "name":  "Opublikowane",
+                                                                                                "value":  "Opublikowane"
+                                                                                            },
+                                                                                            {
+                                                                                                "name":  "Odrzucone",
+                                                                                                "value":  "Odrzucone"
+                                                                                            }
+                                                                                        ],
+                                                                            "readOnly":  false,
+                                                                            "removed":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "Sesje Telegram 2",
+                                                                            "displayName":  "Sesje Telegram 2",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "array",
+                                                                            "readOnly":  false,
+                                                                            "removed":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "Platformy?",
+                                                                            "displayName":  "Platformy?",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "Blog_Grafika_Tresc_URL",
+                                                                            "displayName":  "Blog_Grafika_Tresc_URL",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "Blog_Grafika_Wybrana_Hero",
+                                                                            "displayName":  "Blog_Grafika_Wybrana_Hero",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "number",
+                                                                            "readOnly":  false,
+                                                                            "removed":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "Calculation",
+                                                                            "displayName":  "Calculation",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  true,
+                                                                            "removed":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "Blog_Grafika_Wybrana_Tresc",
+                                                                            "displayName":  "Blog_Grafika_Wybrana_Tresc",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "number",
+                                                                            "readOnly":  false,
+                                                                            "removed":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "Blog_Grafika_URL_1",
+                                                                            "displayName":  "Blog_Grafika_URL_1",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Blog_Grafika_URL_2",
+                                                                            "displayName":  "Blog_Grafika_URL_2",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Blog_Grafika_URL_3",
+                                                                            "displayName":  "Blog_Grafika_URL_3",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Blog_Grafika_Wybrana",
+                                                                            "displayName":  "Blog_Grafika_Wybrana",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "number",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Blog_Grafika_Finalna_URL",
+                                                                            "displayName":  "Blog_Grafika_Finalna_URL",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Blog_Grafika_Historia",
+                                                                            "displayName":  "Blog_Grafika_Historia",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Blog_Grafika_Historia_Idx",
+                                                                            "displayName":  "Blog_Grafika_Historia_Idx",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Blog_Grafika_Prompty",
+                                                                            "displayName":  "Blog_Grafika_Prompty",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        }
+                                                                    ],
+                                                         "attemptToConvertTypes":  false,
+                                                         "convertFieldsToString":  false
+                                                     },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "a41e82fd-64a9-41f1-be0e-c83bba74ba57",
+                      "name":  "Save Blog",
+                      "type":  "n8n-nodes-base.airtable",
+                      "typeVersion":  2.1,
+                      "position":  [
+                                       832,
+                                       384
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "chatId":  "={{ $(\u0027When called by another workflow\u0027).item.json.chat_id }}",
+                                         "text":  "=❌ Nieznany Typ Sesji: {{ $(\u0027Get Sesja\u0027).item.json[\u0027Typ Sesji\u0027] }}\n\nObslugiwane: Rolka_Ofertowa, Rolka_Edukacyjna, Blog_edukacyjny, Rolka_z_blogiem_edukacyjna",
+                                         "additionalFields":  {
+                                                                  "appendAttribution":  false
+                                                              }
+                                     },
+                      "id":  "8e71f7d4-9326-4324-913a-162c01e0ab61",
+                      "name":  "Unknown Type",
+                      "type":  "n8n-nodes-base.telegram",
+                      "typeVersion":  1.2,
+                      "position":  [
+                                       -1184,
+                                       576
+                                   ],
+                      "webhookId":  "a216538a-9ab5-4cdd-8b8d-3feb6fe380b9"
+                  },
+                  {
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "https://api.openai.com/v1/chat/completions",
+                                         "authentication":  "genericCredentialType",
+                                         "genericAuthType":  "httpBearerAuth",
+                                         "sendBody":  true,
+                                         "specifyBody":  "json",
+                                         "jsonBody":  "={{ JSON.stringify($(\u0027Build OpenAI Body Ofertowa\u0027).first().json.body) }}",
+                                         "options":  {
+                                                         "timeout":  180000
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.4,
+                      "position":  [
+                                       160,
+                                       0
+                                   ],
+                      "id":  "fa5dab8c-8eb1-4f27-a7ca-0ef52d636615",
+                      "name":  "Generate Rolka Ofertowa"
+                  },
+                  {
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "https://api.openai.com/v1/chat/completions",
+                                         "authentication":  "genericCredentialType",
+                                         "genericAuthType":  "httpBearerAuth",
+                                         "sendBody":  true,
+                                         "specifyBody":  "json",
+                                         "jsonBody":  "={{ JSON.stringify($json.body) }}",
+                                         "options":  {
+                                                         "timeout":  180000
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.4,
+                      "position":  [
+                                       -736,
+                                       192
+                                   ],
+                      "id":  "377d1039-65fd-4f7c-b287-af71678039c1",
+                      "name":  "Generate Rolka Edukacyjna"
+                  },
+                  {
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "https://api.openai.com/v1/chat/completions",
+                                         "authentication":  "genericCredentialType",
+                                         "genericAuthType":  "httpBearerAuth",
+                                         "sendBody":  true,
+                                         "specifyBody":  "json",
+                                         "jsonBody":  "={\n  \"model\": \"gpt-4.1\",\n  \"max_tokens\": 8000,\n  \"temperature\": 0.6,\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": {{ JSON.stringify(\u0027Senior SEO Content Strategist \u0026 Expert Ghostwriter for Polish recreational real estate. Write for client-site.example (M\u0026B Investment, [LOCATION] gm. [CITY], ~12 km od morza). ALL OUTPUT IN POLISH.\\n\\nGOALS: SEO + factual value + trust + soft transition to offer.\\n\\nSCOPE CONTROL: Answer ONE specific question. If subtopic could be standalone Google query - SEPARATE article. When in doubt - CUT.\\n\\nANTI-REPETITION (TWARDA REGULA): zaden fakt, liczba ani teza NIE powtarza sie miedzy 3 sekcjami. Po napisaniu przeczytaj caly tekst i USUN duplikaty.\\n\\nLENGTH: DOKLADNIE 3 H2 (ani mniej, ani wiecej) - kazda inny aspekt TEGO SAMEGO tematu, ZERO overlap. Kazda H2 = 3-4 akapity, LACZNIE 210-260 slow na sekcje (TWARDY LIMIT: min 210, max 260; licz slowa, nie znaki). Jezeli powtorzenie - MERGE/DELETE.\\n\\nSTYLE: Expert yet natural. Mix krotkich (5-8 slow) i dluzszych (15-20) zdan. Max 3-4 zdania/akapit.\\n\\nJEZYK (TWARDA REGULA): bezbledna polszczyzna - gramatyka, odmiana, skladnia, interpunkcja, polskie znaki. Naturalny ludzki ton, zero kalk z angielskiego i zero sztywnych formul AI. Poprawnie stylistycznie, bez powtorzen slow obok siebie.\\n\\nPOV (TWARDA REGULA): pisz jako FIRMA \"my / M\u0026B Investment\" (oferujemy, polecamy, w naszej ofercie, z naszego doswiadczenia). Adresuj czytelnika \"Ty/Twoj\". NIGDY pierwsza osoba liczby pojedynczej ani osobiste doswiadczenie jednej osoby. BAD: \"Z mojego doswiadczenia...\", \"Moim zdaniem...\", \"polecam Ci moja dzialke\". GOOD: \"Z naszego doswiadczenia...\", \"Polecamy zwrocic uwage na...\", \"W naszej ofercie znajdziesz...\"..\\n\\n## ZASADY LOKALIZACJI I NAZW WLASNYCH (TWARDA REGULA klientki)\\nNazwy wlasne lokalizacji ([LOCATION], [CITY], okolice [CITY]u/Drzonowa, nazwy wsi i gmin) ORAZ nazwa firmy M\u0026B Investment i domena client-site.example moga pojawic sie WYLACZNIE w OSTATNIEJ sekcji H2 oraz w koncowym CTA - jako krotka wzmianka/nawiazanie (lacznie max 1-2 zdania).\\nW H1, leadzie, spisie tresci oraz w PIERWSZEJ i DRUGIEJ sekcji H2 pisz o temacie OGOLNIE i uniwersalnie: ZERO nazw miejscowosci, ZERO nazwy firmy, ZERO numeru dzialki, ZERO adresu www. POV firmy utrzymuj przez my / nasz / w naszej praktyce BEZ podawania nazwy - nazwe M\u0026B Investment i lokalizacje dopisz dopiero w ostatniej sekcji lub w CTA.\\nTa regula NIE dotyczy koncowego JSON-a prompty_grafik - tam kontekst nadmorski ([CITY]/[LOCATION]/Baltyk) jest wymagany.\\nBAD (lead): W M\u0026B Investment wiemy, jak wazny jest ten dokument dla kupujacych dzialke w okolicach [CITY]u czy Drzonowa.\\nGOOD (lead): Ten dokument ma duze znaczenie dla kazdego, kto planuje zakup dzialki rekreacyjnej - niezaleznie od regionu.\\nBAD (sekcja 1 lub 2): W gminach wiejskich, takich jak [CITY] czy [LOCATION], obowiazuje klasyczne studium.\\nGOOD (sekcja 1 lub 2): W gminach wiejskich zwykle obowiazuje klasyczne studium.\\nGOOD (tylko ostatnia sekcja / CTA): Jesli szukasz dzialki rekreacyjnej w okolicach [CITY]u i Drzonowa, sprawdz oferte M\u0026B Investment.\\n\\nFORBIDDEN: chaos/uporzadkowanie/zryw, realny/realnie, \"w dzisiejszym artykule\", \"warto zaznaczyc\", \"nalezy podkreslic\", \"kompleksowe omowienie\", \"kluczowe znaczenie\", \"zaglebimy sie\", \"holistyczny\", \"game changer\", \"niesamowity\", \"przelomowy\", \"W dzisiejszych czasach\", \"Jak powszechnie wiadomo\". Zero hedging. Zero Rule of Three patterns.\\n\\nREQUIRED: min 1 counter-intuitive expert insight WPLECIONY w proze akapitu. NIGDY nie pisz etykiety/naglowka tego spostrzezenia — zakazane literalne: \"Counter-intuitive insight:\", \"Wbrew pozorom:\", \"\u003cstrong\u003eCounter-intuitive insight:\u003c/strong\u003e\" i podobne labele. Zaskakujace spostrzezenie ma byc po prostu zdaniem w tekscie (np. \"Co ciekawe, ...\", \"Wbrew powszechnej opinii, ...\").\\n\\n\u0027 + $(\u0027Build Wytyczne Block\u0027).first().json.wytyczne + \u0027\\n## STRUKTURA\\n1. H1 (z primary keyword)\\n2. Lead 2-3 akapity + szybka odpowiedz w pierwszych 150 slowach (NIE osobny H2!)\\n3. Spis tresci (HTML list z linkami do H2)\\n4. DOKLADNIE 3 H2 (ani mniej, ani wiecej) - kazda inny aspekt TEGO SAMEGO tematu, ZERO overlap, kazda 210-260 slow (licz slowa; NIE przekraczaj 260 - zwiezle, bez paddingu). Jezeli powtorzenie - MERGE/DELETE.\\n5. H3 - tylko jezeli potrzebne (max 2/H2)\\n6. Krotkie podsumowanie 2-3 zdania\\n7. Soft CTA na koncu\\n8. Placeholder grafiki: \u003c!-- GRAFIKA_TRESC --\u003e dokladnie raz, miedzy 2 a 3 H2\\n\\nBEZ SEKCJI FAQ (TWARDA REGULA klientki): NIE generuj zadnej sekcji FAQ, ani listy pytan i odpowiedzi, ani naglowka \"FAQ\"/\"Najczestsze pytania\". Wiedze z FAQ wpleciemy w akapity H2.\\n\\nTRZYMAJ SIE WYLACZNIE GLOWNEGO TEMATU artykulu i wskazowek uzytkownika. Watki, ktore moglyby byc osobnym artykulem (formalnosci, proces/procedura zakupu, koszty i podatki, podstawy prawne, dokumenty, checklist) - POMIN lub jedno zdanie inline, NIGDY osobny H2 (chyba ze temat artykulu = dokladnie to). Gdy masz watpliwosc - WYTNIJ.\\n\\n## KAZDY H2 = ODPOWIEDZ NA DOKLADNE PYTANIE ARTYKULU (TWARDA REGULA - naruszenie = odrzucone)\\nPrzed napisaniem KAZDEGO H2 sprawdz: czy ten naglowek to nadal odpowiedz na TOPIC, czy juz osobny temat? Jesli H2 dalby sie zatytulowac jako inny artykul (np. Jak kupic dzialke, Koszty i podatki, Dokumenty i formalnosci, Jak wybrac lokalizacje, Na co uwazac prawnie) - to OFF-TOPIC: NIE rob z niego H2, najwyzej jedno zdanie inline. Wszystkie sekcje to ROZNE aspekty TEGO SAMEGO pytania, nie sasiednie tematy.\\nBAD (TOPIC czy to dobry czas na zakup dzialki): H2 Czynniki wplywajace na oplacalnosc opisujacy ksiege wieczysta, MPZP, koszt budowy domku i podatek PCC - to osobny temat, nie odpowiedz na pytanie o CZAS.\\nGOOD (TOPIC czy to dobry czas na zakup dzialki): H2 Co dzis dzieje sie z cenami dzialek, H2 Czekac czy kupowac argumenty za i przeciw, H2 Dla kogo to dobry moment a dla kogo nie - kazdy H2 to inny aspekt tego samego pytania.\\n\\n## ZRODLA OFICJALNE\\nLink inline (NIE oddzielna sekcja): ISAP/ELI/Dziennik Ustaw, gov.pl/biznes.gov.pl, EKW/Geoportal/GUGiK, urzedy. NIE blogi prawnicze, nieoficjalne PDFy.\\n\\n## FORMS RULE\\nLink download (jezeli istnieje), funkcja, urzad odpowiedzialny. NIGDY \"sprawdz samodzielnie\".\\n\\n## FALLBACK\\nZagospodarowanie -\u003e urzad gminy, KW -\u003e starostwo, hipoteka -\u003e EKW, media -\u003e operatorzy, cudzoziemcy -\u003e MSWiA.\\n\\n## SEO\\n1 primary keyword, 3-5 supporting, 6-12 semantic. H1 z primary. Naturalna integracja, NO stuffing.\\n\\n## CTA\\nTYLKO 1 delikatna wzmianka o ofercie na samym KONCU (po podsumowaniu). ZERO oferty/CTA w srodku i w sekcjach H2 - to blog edukacyjny, oferta to tylko miekka koncowka (\"nasza oferta odpowiada na te potrzeby\"). Link na koncu: https://www.client-site.example/rezerwacja/ lub /kontakt/.\\n\\n## INTERNAL LINKING (TYLKO TE 5 URL!)\\n- https://www.client-site.example/\\n- https://www.client-site.example/kontakt/\\n- https://www.client-site.example/rezerwacja/\\n- https://www.client-site.example/o-nas/\\n- https://www.client-site.example/blog/\\nMax 4-6 internal links/artykul. Naturalne anchory, NIE \"kliknij tutaj\". NIE inwentuj URL-i.\\n\\n## OUTPUT\\nTYLKO czysty HTML: h1, h2, h3, p, ul/li, ol/li, strong, a (z href do zrodel). Start \u003ch1\u003e, koniec ostatnim \u003c/p\u003e. NIE JSON, NIE markdown, NIE SEO metadata (osobny system), NIE ```.\\n\\nNA SAMYM KONCU (po \u003c/p\u003e) dodaj jednolinijkowy JSON: {\"prompty_grafik\": [\"prompt1 EN 60-90 slow\", \"prompt2\", \"prompt3\"]} - 3 prompty po angielsku do gpt-image-1.5. KAZDY prompt MUSI ilustrowac TEMAT tego artykulu ORAZ kontekst nadmorskiej dzialki rekreacyjnej okolic [CITY]u/Drzonowa (Baltyk, wybrzeze, dzialka, laka, sosny, wydmy, polna droga dojazdowa, morze) — NIE generyczny gotowy dom, wnetrze ani miasto. Subject ma odpowiadac tematowi (np. temat \"warunki zabudowy\" -\u003e niezabudowana dzialka z granicami/tablica info na tle nadmorskiego krajobrazu, NIE gotowy domek). Kazdy zaczyna sie od konkretnego subject (10 slow), zawiera \"photorealistic photograph shot on Canon EOS R5, 35mm lens, f/8, deep depth of field, natural daylight, Fujifilm Velvia color palette, subtle film grain, natural imperfections, no retouching, no HDR over-processing, no cinematic color grading, no illustration, no cartoon, no 3D render, no CGI, no digital art, no animation, no artificial elements, no text overlays\", REGULA ROZNORODNOSCI 3 WARIANTOW (TWARDA REGULA - naruszenie = odrzucone): 3 prompty MUSZA sie WYRAZNIE roznic - to NIE moga byc 3 warianty tego samego ujecia. Temat i caly blok fotorealizmu pozostaja identyczne, ale KAZDY wariant ma OBOWIAZKOWO inne: dystans/kat kamery, kompozycje, pore dnia i swiatlo. Ceche roznicujaca (rodzaj ujecia) umiesc na POCZATKU promptu jako pierwszy subject - nie na koncu. Zakazane: 3 prompty z tym samym dystansem kamery lub ta sama pora dnia. Przypisz SZTYWNO (nie zmieniaj kolejnosci):\\n- WARIANT 1 = szerokie ujecie z lotu ptaka / drona: cala dzialka i jej granice z gory, nadmorski krajobraz i Baltyk na horyzoncie, chlodne swiatlo switu / blue hour, wysoki kat.\\n- WARIANT 2 = z poziomu terenu, blizej (sredni plan): perspektywa czlowieka stojacego na dzialce lub na polnej drodze dojazdowej; pierwszy plan (trawa/laka, koleiny drogi, pnie sosen z boku) prowadzi wzrok w glab; twarde poludniowe slonce, kontrastowe cienie; wysokosc oczu.\\n- WARIANT 3 = detal / inny motyw sceny + inna pora: zblizenie lub sredni plan na charakterystyczny element tematu (skraj lasu przy dzialce, sciezka przez wydmy, fragment wybrzeza, granica laki); zlota godzina / zachod, cieply plan, niski lub boczny kat.\\nWszystkie 3 zachowuja: ten sam temat artykulu, ten sam nadmorski kontekst ([CITY]/[LOCATION], Baltyk, dzialka rekreacyjna, laka, sosny, wydmy, polna droga), pelny blok fotorealizmu oraz ZERO tekstu/tablic/map/napisow/logo/twarzy. Roznicowanie WYLACZNIE przez kamere, kompozycje, swiatlo i pore dnia/roku - NIGDY przez dodanie tekstu, tablicy informacyjnej, mapy czy znaku. Wszystkie 3 prompty PO ANGIELSKU.\\nBAD (za podobne): (1) aerial view of coastal plot early morning (2) aerial view of plot near sea, meadow, dunes midday - oba to szerokie krajobrazy, roznia sie tylko pora.\\nGOOD (wyraznie rozne): (1) high aerial drone shot of the whole plot and its boundaries, Baltic coast on the horizon, cool blue-hour dawn light; (2) eye-level view standing on the sandy access track, meadow and pine trunks in the foreground leading toward the plot, hard midday sunlight; (3) low-angle golden-hour close view of the plot edge where meadow meets the pine forest, warm backlight, long shadows. ZAKAZ: twarze, tekst w obrazie, logo, magical/ethereal/dreamlike/stunning/epic/cinematic/stylized/artistic/render/concept art.\u0027) }}\n    },\n    {\n      \"role\": \"user\",\n      \"content\": {{ JSON.stringify(\u0027Napisz expert SEO blog po polsku.\\n\\nTOPIC: \u0027 + ($(\u0027Get Sesja\u0027).item.json[\u0027Temat Edukacyjny\u0027] || \u0027\u0027) + \u0027\\n\\nRESEARCH (Perplexity):\\n\u0027 + JSON.stringify($(\u0027Perplexity Research (Blog)\u0027).first().json) + \u0027\\n\\nDODATKOWY KONTEKST UZYTKOWNIKA:\\n\u0027 + ($(\u0027Get Sesja\u0027).item.json.WizjaRolki || \u0027\u0027) + \u0027\\n\\nWYMAGANIA:\\n1. Dlugosc: 3 sekcje H2, kazda 210-260 slow (TWARDY limit, licz slowa) - zwiezle, BEZ paddingu i powtorzen\\n2. Format: czysty HTML\\n3. Odpowiedz na glowne pytanie w LEAD (pierwsze 150 slow) - NIE w osobnym H2\\n4.Struktura: H1 -\u003e lead z szybka odpowiedzia -\u003e spis tresci -\u003e DOKLADNIE 3 H2 (kazda 4-5 akapitow) -\u003e podsumowanie -\u003e 1 CTA na koncu (BEZ FAQ) \\n5. KAZDY fakt/liczba ONLY ONCE\\n6. NIE rob osobnych H2 dla: dokumenty, zrodla prawne, checklist, formalnosci, proces/procedura zakupu, koszty i podatki (chyba ze topic = dokladnie to). Pomin lub fold inline. Trzymaj sie GLOWNEGO tematu.\\n7. Kazda wzmianka ustawy/procedury/formularza -\u003e inline link do oficjalnego zrodla\\n8. Internal links: tylko z 5 zweryfikowanych URL\\n9. Tylko 1 delikatna wzmianka o ofercie na samym koncu (zadnej w srodku ani w sekcjach)\\n10. BEZ sekcji FAQ — nie generuj pytan i odpowiedzi (wiedze wplec w H2)\\n11. Min 1 counter-intuitive insight — wpleciony w zdanie akapitu, BEZ etykiety/naglowka i BEZ \"\u003cstrong\u003e...\u003c/strong\u003e\" z taka etykieta\\n12. Re-read i DELETE powtorzenia\\n\\nZWROC TYLKO HTML + na koncu JSON {\"prompty_grafik\":[..3..]}.\\n13. Po napisaniu POLICZ slowa kazdej sekcji H2. Jesli \u003e 260 slow - SKROC; jesli \u003c 210 - dopisz merytorycznie bez powtorzen. Zadna sekcja poza 210-260.\u0027) }}\n    }\n  ]\n}",
+                                         "options":  {
+                                                         "timeout":  240000
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.4,
+                      "position":  [
+                                       -960,
+                                       384
+                                   ],
+                      "id":  "55cb6a92-cd7e-48ca-beed-672048cd79a8",
+                      "name":  "Generate Blog Article"
+                  },
+                  {
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "https://api.openai.com/v1/images/generations",
+                                         "authentication":  "genericCredentialType",
+                                         "genericAuthType":  "httpBearerAuth",
+                                         "sendBody":  true,
+                                         "specifyBody":  "json",
+                                         "jsonBody":  "={\n  \"model\": \"gpt-image-1.5\",\n  \"prompt\": {{ JSON.stringify($json.prompt) }},\n  \"size\": \"1536x1024\",\n  \"n\": 1,\n  \"quality\": \"medium\",\n  \"output_format\": \"jpeg\",\n  \"output_compression\": 80\n}",
+                                         "options":  {
+                                                         "timeout":  120000
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.4,
+                      "position":  [
+                                       -512,
+                                       384
+                                   ],
+                      "id":  "d09611d4-1217-4af0-8086-95b0003f4152",
+                      "name":  "Generate Blog Image (gpt-image-1.5)"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const sesja = $(\u0027Get Sesja\u0027).first().json;\nconst aggregated = $(\u0027Aggregate Photo URLs\u0027).first()?.json || {};\nconst photos = aggregated.selected_photos || [];\n\nconst n_real = photos.length;\nconst n_scen_real = Math.min(n_real, 5);\nconst n_scen_ai = 5 - n_scen_real;\n\nconst dz_photos = photos.filter(p =\u003e p.source === \u0027dz\u0027);\nconst droga_photos = photos.filter(p =\u003e p.source === \u0027droga\u0027);\n\nreturn [{\n  json: {\n    n_real,\n    n_scen_real,\n    n_scen_ai,\n    photo_filenames: photos.map(p =\u003e p.name).join(\u0027, \u0027) || \u0027(brak - same AI)\u0027,\n    folder_dzialki: $(\u0027Get Dzialka\u0027).first().json[\u0027ID folderu z zdjęciami GD\u0027] || \u0027\u0027,\n    selected_photos: photos,\n    dz_photos,\n    droga_photos\n  }\n}];"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       -288,
+                                       0
+                                   ],
+                      "id":  "cb116c04-05ac-4b02-a50b-29ec3615b1a7",
+                      "name":  "Count Photos"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const dz = $(\u0027Get Dzialka\u0027).first().json;\nconst sesja = $(\u0027Get Sesja\u0027).first().json;\nconst cp = $(\u0027Count Photos\u0027).first().json;\n\nconst dzPhotos = cp.dz_photos || [];\nconst drogaPhotos = cp.droga_photos || [];\n\n// Music URL\nconst muzykaArr = sesja[\u0027Zasób (from Wybrana Muzyka)\u0027] || sesja.fields?.[\u0027Zasób (from Wybrana Muzyka)\u0027];\nconst muzykaUrl = (Array.isArray(muzykaArr) \u0026\u0026 muzykaArr[0]) \n  ? (typeof muzykaArr[0] === \u0027string\u0027 ? muzykaArr[0] : muzykaArr[0].url) \n  : \u0027PLACEHOLDER_MUSIC_URL\u0027;\n\nconst LOGO_URL = \u0027https://dl.dropboxusercontent.com/scl/fi/muheamff4x2b5ue9abxnh/download.jpg?rlkey=cfjuz3qovtu3b3spipfljsoum\u0026dl=1\u0027;\n\n// SCENE ASSIGNMENT — per slide decyzja real/flux/logo\nconst buildScene = (idx, role, realUrl, fluxHint) =\u003e {\n  if (realUrl) {\n    return `Slajd ${idx} (${role}): REAL: ${realUrl}`;\n  } else {\n    return `Slajd ${idx} (${role}): FLUX: ${fluxHint}`;\n  }\n};\n\nconst scenes = [\n  buildScene(1, \u0027HOOK\u0027, dzPhotos[0]?.url, \u0027Aerial drone view of Polish countryside near [LOCATION] [CITY], recreational plot, summer light, no buildings, vertical 9:16\u0027),\n  buildScene(2, \u0027TEREN\u0027, dzPhotos[1]?.url, \u0027Ground-level view of flat sunlit recreational plot, Polish countryside, pine forest edge, vertical 9:16, no people\u0027),\n  buildScene(3, \u0027DETALE\u0027, dzPhotos[2]?.url, \u0027Close-up plot border, grass and stakes, rural Poland, summer daylight, vertical 9:16, no buildings\u0027),\n  buildScene(4, \u0027KONTEKST/DOJAZD\u0027, drogaPhotos[0]?.url || dzPhotos[3]?.url, \u0027Rural public road leading to recreational plot, Polish countryside, vertical 9:16, no cars no people\u0027),\n  buildScene(5, \u0027PERSPEKTYWA\u0027, dzPhotos[4]?.url || dzPhotos[3]?.url, \u0027Alternative aerial view of multiple plots in Polish countryside, plot boundaries, summer, vertical 9:16\u0027),\n  `Slajd 6 (CTA/LOGO): LOGO: ${LOGO_URL}`\n];\n\nconst systemMsg = [\n  \u0027Jestes ekspertem content creatorem dla M\u0026B Investment - sprzedaja dzialki rekreacyjne w Drzonowie (gm. [CITY], ~12 km od morza). Tworzysz scenariusze Instagram/TikTok Reels (45-60s).\u0027,\n  \u0027\u0027,\n  \u0027# JĘZYK I STYL (TWARDA REGUŁA)\u0027,\n  \u0027- Pisz bezbłędną polszczyzną: poprawna gramatyka, odmiana, składnia, interpunkcja i polskie znaki (ą ć ę ł ń ó ś ź ż).\u0027,\n  \u0027- Naturalny, ludzki ton — jak człowiek do człowieka, NIE jak generator AI. Zero kalek z angielskiego, zero sztywnych formuł.\u0027,\n  \u0027- Poprawnie stylistycznie: płynne zdania, bez powtórzeń tego samego słowa obok siebie, bez literówek i „robotycznych\" złożeń.\u0027,\n  \u0027# OUTPUT: JSON json2video v2\u0027,\n  \u0027Zwracasz POPRAWNY JSON ze strukturą: { resolution: \"custom\", width: 1080, height: 1920, scenes: [...] }.\u0027,\n  \u0027KAZDA z 6 scen MUSI miec element {type:\"image\"} (real src LUB flux-pro prompt) + element {type:\"voice\"} z narracja.\u0027,\n  \u0027BEZ image elementu scena jest czarna - to BLAD.\u0027,\n  \u0027\u0027,\n  \u0027# WYTYCZNE M\u0026B (z Airtable)\u0027,\n  $(\u0027Build Wytyczne Block\u0027).first().json.wytyczne,\n  \u0027\u0027,\n  \u0027# STRUKTURA 6 SLAJDOW (45-60s)\u0027,\n  \u00271. HOOK (10s): pytanie/problem, wide aerial perspektywa\u0027,\n  \u00272. TEREN (9s): ground-level, fakty o powierzchni\u0027,\n  \u00273. DETALE (9s): close-up granic/cech\u0027,\n  \u00274. KONTEKST/DOJAZD (9s): okolica, droga publiczna\u0027,\n  \u00275. PERSPEKTYWA (9s): inna perspektywa, mozliwosci polaczenia\u0027,\n  \u00276. CTA (10s): logo, kontakt, www\u0027,\n  \u0027\u0027,\n    \u0027# ZAKAZANE SLOWA (TWARDY ZAKAZ — narusza = scenariusz odrzucony)\u0027,\n  \u0027NIGDY nie uzywaj slow ani odmian: \"idealny/idealna/idealne\", \"ROD\" (ogrod dzialkowy), \"kluczowy/kluczowa\", \"raj\", \"okazja zycia\", \"dzialka budowlana\".\u0027,\n  \u0027To sa dzialki REKREACYJNE — nie budowlane, nie ROD.\u0027,\n  \u0027BAD:  \"To idealna dzialka w raju nad jeziorem, okazja zycia.\"\u0027,\n  \u0027GOOD: \"To rowna, nasloneczniona dzialka rekreacyjna blisko lasu, z dobrym dojazdem.\"\u0027,\n  \u0027BAD:  \"Kluczowy atut tej dzialki ROD to...\"\u0027,\n  \u0027GOOD: \"Najwiekszy atut tej dzialki rekreacyjnej to...\"\u0027,\n  \n  \u0027# NARRACJA (per slajd, w polu voice.text)\u0027,\n  \u0027- KAZDY SLAJD = jedno krotkie zdanie, MAKSYMALNIE 12 slow (cel 10-12). Nie doklejaj drugiego zdania.\u0027,   \u0027  BAD (za dlugo, 19 slow): \"To rowna, nasloneczniona dzialka rekreacyjna blisko lasu, ze swietnym dojazdem droga publiczna i mozliwoscia polaczenia z sasiednia dzialka.\"\u0027,   \u0027  GOOD (12 slow): \"To rowna i nasloneczniona dzialka rekreacyjna blisko lasu, z bardzo dobrym dojazdem.\"\u0027,\n  \u0027- Liczby SLOWAMI: \"piecset piecdziesiat cztery metry kwadratowe\"\u0027,\n  \u0027- Telefon: \"szesc dziewiec siedem, dwa siedem szesc, piec jeden dwa\"\u0027,\n  \u0027- URL: \"wuwuwu kropka embe myslnik dzialki kropka pe el\"\u0027,\n  \u0027- POV firmy: \"My, M\u0026B Investment\", \"naszej oferty\"\u0027,\n  \u0027- NIGDY 1. osoba pojedyncza (\"ja\", \"z mojego doswiadczenia\") — zawsze \"my/M\u0026B Investment\". Adresuj widza \"Ty/Twoj\".\u0027,\n  \u0027- Zabudowa: \"Od trzydziestu pieciu do siedemdziesieciu metrow kwadratowych na zgloszenie\" (NIGDY konkretne metry)\u0027,\n  \u0027- BEZ emoji, BEZ cudzyslowow, BEZ wykrzyknikow\u0027,\n  \u0027\u0027,\n  \u0027# REAL PHOTOS (HYBRID MODE)\u0027,\n  \u0027User message zawiera tabele \"SCENE ASSIGNMENT\" z konkretnym przypisaniem URL/AI per slajd.\u0027,\n  \u0027WYKONAJ DOKLADNIE TO PRZYPISANIE:\u0027,\n  \u0027- Jezeli SCENE ma \"REAL: \u003cURL\u003e\" → uzyj { type:\"image\", src:\"\u003cdokladny URL\u003e\", resize:\"cover\", position:\"center-center\" }\u0027,\n  \u0027- Jezeli SCENE ma \"FLUX: \u003copis\u003e\" → uzyj { type:\"image\", model:\"flux-pro\", prompt:\"\u003cEN prompt 50-80 slow\u003e\", \"aspect-ratio\":\"vertical\" }\u0027,\n  \u0027- Jezeli SCENE ma \"LOGO: \u003cURL\u003e\" → uzyj { type:\"image\", src:\"\u003cdokladny URL\u003e\", duration:-2, resize:\"contain\", position:\"center-center\" }\u0027,\n  \u0027- Voice: { type:\"voice\", voice:\"hIssydxXZ1WuDorjx6Ic\", model:\"elevenlabs-flash-v2-5\", text:\"\u003cnarracja PL\u003e\", \"fade-in\":0.2, \"fade-out\":0.2 }\u0027,\n  \u0027\u0027,\n  \u0027# AI FLUX PROMPTY (jezeli scena ma \"FLUX\")\u0027,\n  \u0027- Aerial drone polish countryside / pine forest / recreational plots\u0027,\n  \u0027- Vertical 9:16, photorealistic, no faces, no text, no logos, no buildings\u0027,\n  \u0027- 50-80 slow EN, opisowo\u0027,\n  \u0027\u0027,\n  \u0027# ZWROC TYLKO POPRAWNY JSON. ZADNYCH KOMENTARZY POZA JSON.\u0027\n].join(\u0027\\n\u0027);\n\nconst userMsg = [\n  \u0027# DANE DZIALKI\u0027,\n  `Numer: ${dz[\u0027Numer Działki\u0027] || \u0027\u0027}`,\n  `Lokalizacja: ${dz.Lokalizacja || \u0027\u0027}`,\n  `Powierzchnia: ${dz.Powierzchnia || \u0027\u0027}`,\n  `Wymiary: ${dz.Wymiary || \u0027\u0027}`,\n  `Cena: ${dz.Cena || \u0027(do ustalenia)\u0027} PLN`,\n  `Status: ${dz[\u0027Status sprzedaży\u0027] || \u0027\u0027}`,\n  `Mozliwosc laczenia: ${dz[\u0027Możliwość połączenia z inną działką\u0027] || \u0027brak\u0027}`,\n  `Odleglosci: ${dz[\u0027Odległość\u0027] || \u0027\u0027}`,\n  `Media: ${dz[\u0027Media I Możliwości\u0027] || \u0027\u0027}`,\n  `Dodatkowe info: ${dz[\u0027Dodatkowe informacje\u0027] || \u0027\u0027}`,\n  \u0027\u0027,\n  \u0027# WIZJA KLIENTKI\u0027,\n  sesja.WizjaRolki || sesja.fields?.WizjaRolki || \u0027Standardowo - profesjonalnie, spokojnie, zbalansowanie\u0027,\n  \u0027\u0027,\n  \u0027# SCENE ASSIGNMENT (kazda scena MUSI miec image element)\u0027,\n  ...scenes,\n  \u0027\u0027,\n  \u0027# AUDIO + OVERLAY\u0027,\n  `URL MUZYKI (root elements.audio.src): ${muzykaUrl}`,\n  `KONTAKT (CTA narracja): tel. 697 276 512, www.client-site.example`,\n  \u0027\u0027,\n  \u0027# OUTPUT JSON STRUKTURA\u0027,\n  \u0027Zwroc JSON z polami: resolution:\"custom\", width:1080, height:1920, quality:\"high\", draft:false, scenes:[6 scen]\u0027,\n  \u0027Kazda scena: { comment, \"background-color\":\"#000000\", elements:[image_obj, voice_obj] }\u0027,\n  \u0027Image_obj per SCENE ASSIGNMENT powyzej (REAL/FLUX/LOGO).\u0027,\n  \u0027Voice_obj: { type:\"voice\", voice:\"hIssydxXZ1WuDorjx6Ic\", model:\"elevenlabs-flash-v2-5\", text:\"\u003cnarracja PL, MAKS 12 slow\u003e\", \"fade-in\":0.2, \"fade-out\":0.2 }\u0027,\n  \u0027\u0027,\n  \u0027KAZDA Z 6 SCEN MUSI MIEC IMAGE ELEMENT - bez tego scena bedzie czarna!\u0027,\n  \u0027\u0027,\n  \u0027ZWROC TYLKO JSON. Bez ```. Bez komentarzy.\u0027\n].join(\u0027\\n\u0027);\n\nreturn [{\n  json: {\n    body: {\n      model: \u0027gpt-4.1\u0027,\n      max_tokens: 3500,\n      temperature: 0.8,\n      response_format: { type: \u0027json_object\u0027 },\n      messages: [\n        { role: \u0027system\u0027, content: systemMsg },\n        { role: \u0027user\u0027, content: userMsg }\n      ]\n    }\n  }\n}];"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       -64,
+                                       0
+                                   ],
+                      "id":  "9597cf61-9447-49fd-bb74-6aa09fc3378e",
+                      "name":  "Build OpenAI Body Ofertowa"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const sesja = $(\u0027Get Sesja\u0027).first().json;\nconst dzialka = $(\u0027Get Dzialka\u0027).first().json;\n\nconst wybrane = (sesja[\u0027Wybrane Zdjęcia\u0027] || \u0027\u0027).split(\u0027,\u0027).map(s =\u003e s.trim()).filter(Boolean);\nconst lista = (sesja[\u0027ListaWszystkichZdjec\u0027] || \u0027\u0027).split(\u0027,\u0027).map(s =\u003e s.trim()).filter(Boolean);\n\nconst lookup = {};\nlista.forEach(entry =\u003e {\n  const [idx, name, source] = entry.split(\u0027:\u0027);\n  if (idx \u0026\u0026 name) lookup[idx] = { name, source: source || \u0027dz\u0027 };\n});\n\nconst dzNum = sesja.NumerDzialki || dzialka[\u0027Numer Działki\u0027] || \u0027\u0027;\nconst selected = wybrane\n  .map(idx =\u003e ({ index: idx, ...lookup[idx] }))\n  .filter(s =\u003e s.name)\n  .map(p =\u003e ({\n    index: p.index,\n    name: p.name,\n    source: p.source,\n    path: p.source === \u0027droga\u0027\n      ? `/Folder zespołu Mbinvestment.spolka/Pliki do automatyzacji/Działki/Droga dojazdowa/${p.name}`\n      : `/Folder zespołu Mbinvestment.spolka/Pliki do automatyzacji/Działki/${dzNum}/${p.name}`\n  }));\n\nif (selected.length === 0) {\n  return [{ json: { skip: true, photos: [] } }];\n}\n\nreturn selected.map(p =\u003e ({ json: p }));"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       -960,
+                                       0
+                                   ],
+                      "id":  "3433f66f-407e-4217-bd01-9cf6de166c39",
+                      "name":  "Parse Selected Photos"
+                  },
+                  {
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "https://api.dropboxapi.com/2/files/get_temporary_link",
+                                         "authentication":  "predefinedCredentialType",
+                                         "nodeCredentialType":  "dropboxOAuth2Api",
+                                         "sendBody":  true,
+                                         "specifyBody":  "json",
+                                         "jsonBody":  "={\"path\": \"{{ $json.path }}\"}",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.4,
+                      "position":  [
+                                       -736,
+                                       0
+                                   ],
+                      "id":  "440496db-feea-48a8-bd06-6b48354c9ecc",
+                      "name":  "Get Photo Temp Link"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "  const links = $input.all().map(i =\u003e i.json.link).filter(Boolean);\n  const parsed = $(\u0027Parse Selected Photos\u0027).all().map(i =\u003e i.json);\n\n  const photos = parsed.map((p, idx) =\u003e ({\n    index: p.index,\n    name: p.name,\n    source: p.source,\n    url: links[idx] || \u0027\u0027\n  })).filter(p =\u003e p.url);\n\n  return [{ json: { selected_photos: photos } }];"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       -512,
+                                       0
+                                   ],
+                      "id":  "8a8eb855-2236-4495-874a-0aa601371cdf",
+                      "name":  "Aggregate Photo URLs"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const sesja = $(\u0027Get Sesja\u0027).first().json;\nconst research = $(\u0027Perplexity Research (Edukacyjna)\u0027).first().json;\nconst wytyczne = $(\u0027Build Wytyczne Block\u0027).first().json.wytyczne || \u0027\u0027;\n\nconst muzykaArr = sesja[\u0027Zasób (from Wybrana Muzyka)\u0027] || sesja.fields?.[\u0027Zasób (from Wybrana Muzyka)\u0027];\nconst muzykaUrl = (Array.isArray(muzykaArr) \u0026\u0026 muzykaArr[0]) \n  ? (typeof muzykaArr[0] === \u0027string\u0027 ? muzykaArr[0] : muzykaArr[0].url) \n  : \u0027PLACEHOLDER_MUSIC_URL\u0027;\n\nconst LOGO_URL = \u0027https://dl.dropboxusercontent.com/scl/fi/muheamff4x2b5ue9abxnh/download.jpg?rlkey=cfjuz3qovtu3b3spipfljsoum\u0026dl=1\u0027;\n\nconst temat = sesja[\u0027Temat Edukacyjny\u0027] || sesja.fields?.[\u0027Temat Edukacyjny\u0027] || \u0027\u0027;\nconst wizja = sesja.WizjaRolki || sesja.fields?.WizjaRolki || \u0027Standardowo - profesjonalnie, spokojnie, zbalansowanie\u0027;\n\nconst systemMsg = [\n  \u0027Jestes ekspertem ds. nieruchomosci rekreacyjnych w Polsce, tworzysz krotkie edukacyjne rolki wideo (45-60s) dla Instagram/TikTok dla M\u0026B Investment ([LOCATION], gm. [CITY], ~12 km od morza).\u0027,\n  \u0027\u0027,\n  \u0027CEL: Budowanie zaufania i pozycji eksperta - dzielenie WARTOSCIOWA WIEDZA. NIE sprzedaz - edukacja.\u0027,\n  \u0027GRUPA: rozwazajacy pierwszy zakup, rodziny, osoby nieznajace MPZP/WZ/KW.\u0027,\n  \u0027TON: rzeczowy, konkretny, bez pustoslowia. Przyjazny ekspert nie sprzedawca.\u0027,\n  \u0027# PRIORYTET NADRZEDNY (TWARDA REGULA - naruszenie = scenariusz odrzucony)\\n1. TEMAT EDUKACYJNY oraz DODATKOWY KONTEKST UZYTKOWNIKA to najwazniejsze zrodlo. Wszystkie 6 slajdow MUSI wprost odpowiadac na TEMAT i realizowac WSZYSTKIE wskazowki uzytkownika.\\n2. Kazda wskazowka uzytkownika (np. wzrost wartosci, inwestycja na przyszlosc, porownanie z apartamentem) MUSI byc slyszalna w narracji co najmniej jednego slajdu.\\n3. RESEARCH to material pomocniczy w tle. Wybierz z niego TYLKO fakty wprost odpowiadajace na TEMAT. IGNORUJ w research: nazwy miejscowosci, konkretne oferty, ceny ogloszen, listy dzialek, ROD, procedury i podstawy prawne, jesli TEMAT o to wprost nie pyta.\\n4. Wytyczne FAKTY z Airtable to baza wiedzy, NIE lista do wpisania. Uzyj faktu TYLKO gdy bezposrednio odpowiada na TEMAT. Pisz wlasnymi slowami, nie kopiuj zdan z research ani z wytycznych.\u0027,\n  \u0027\u0027,\n  \u0027# WYTYCZNE M\u0026B (z Airtable)\u0027,\n  wytyczne,\n  \u0027\u0027,\n  \u0027# STRUKTURA 6 SLAJDOW (50-60s)\u0027,\n  \u00271. HOOK (8-10s): pytanie/problem budzacy ciekawosc\u0027,\n  \u00272. KONTEKST (8-10s): dlaczego to wazne\u0027,\n  \u00273. GLOWNA TRESC 1 (10s): pierwszy fakt/procedura\u0027,\n  \u00274. GLOWNA TRESC 2 (10s): drugi punkt\u0027,\n  \u00275. PRAKTYCZNA RADA (10s): co konkretnie zrobic\u0027,\n  \u00276. PUENTA (5-8s): domkniecie tematu jedna mysla + logo (BEZ Obserwuj nas)\u0027,\n  \u0027\u0027,\n  \u0027# ZASADA LOKALIZACJI (TWARDA REGULA)\\nRolka edukacyjna uczy o TEMACIE ogolnie, nie reklamuje lokalizacji. W NARRACJI nie wymieniaj nazw wlasnych: [LOCATION], Drzonow, Drzonkow, [CITY], Zielona Gora ani zadnej innej miejscowosci, ulicy czy numeru dzialki. Mow ogolnie: dzialka rekreacyjna, nadmorska okolica, Twoja przyszla dzialka. Wyjatek: tylko gdy TEMAT wprost dotyczy konkretnej lokalizacji. Kontekst nadmorski wolno umiescic WYLACZNIE w promptach FLUX do obrazow, nigdy w narracji.\\nBAD: Dzialki w Drzonowie sa blisko morza i dostepne w ograniczonej liczbie.\\nGOOD: Dobrze polozona dzialka blisko morza dlugo utrzymuje wartosc.\u0027,\n\u0027# ZAKAZ TRESCI NIE NA TEMAT (TWARDA REGULA)\\nNie wprowadzaj watkow, ktorych TEMAT nie wymaga. ZAKAZ (chyba ze TEMAT wprost o to pyta): rozroznienie ZD vs ROD, definicje pojec prawnych, sprawdzanie MPZP, planu miejscowego, ksiegi wieczystej, procedura zakupu, formalnosci, koszty i podatki, mity typu darmowa dzialka. Kazdy slajd ma wnosic tresc odpowiadajaca na TEMAT i wskazowki uzytkownika, a nie ogolny poradnik zakupu.\\nBAD: Dzialka ZD oznacza pelna wlasnosc, nie myl tego z dzialka ROD.\\nBAD: Zawsze sprawdzaj miejscowy plan i ksiege wieczysta przed zakupem.\\nGOOD (temat czy dobry czas na zakup): Wartosc dobrze polozonych dzialek rosnie z roku na rok.\u0027,\n\u0027# ZAKONCZENIE slajd 6 (TWARDA REGULA)\\nZAKAZ fraz: Obserwuj nas, Obserwuj po wiecej, Sledz nas, Zapisz sie, wiecej wiedzy o dzialkach oraz podobnych sztampowych CTA. Slajd 6 domyka TEMAT jedna mysla: pointa, wniosek lub pytanie do przemyslenia zwiazane z tematem. Roznicuj zakonczenia miedzy rolkami; dobierz do tematu.\\nGOOD: Dobry czas na zakup to ten, w ktorym znasz wartosc tego, co kupujesz.\\nGOOD: Dzialka to nie wydatek, lecz inwestycja, ktora pracuje latami.\\nBAD: Obserwuj nas po wiecej wiedzy o dzialkach rekreacyjnych.\u0027,\n  \u0027# NARRACJA (per slajd, w polu voice.text)\u0027,\n  \u0027- KAZDY SLAJD = jedno krotkie zdanie, MAKSYMALNIE 12 slow (cel 10-12). Nie doklejaj drugiego zdania.\u0027,   \u0027  BAD (za dlugo): \"Pamietaj, ze przed zakupem dzialki rekreacyjnej zawsze sprawdz miejscowy plan zagospodarowania i ksiege wieczysta, bo to chroni Twoja inwestycje.\"\u0027,   \u0027GOOD (10 slow): \"Dobrze polozona dzialka rekreacyjna z roku na rok zyskuje na wartosci.\"\u0027,\n  \u0027- Liczby SLOWAMI\u0027,\n  \u0027- Naturalny ton, BEZ emoji\u0027,\n  \u0027- \"Ty/Twoj\" - mow do widza\u0027,\n  \u0027- POV firmy \"My, M\u0026B Investment\" — NIGDY \"ja\"/\"z mojego doswiadczenia\".\u0027,\n  \u0027- BEZ \"kup teraz\" - to edukacja\u0027,\n  \u0027\u0027,\n  \u0027# AI IMAGES (FLUX PROMPTY)\u0027,\n  \u0027- 50-80 slow EN, format Subject -\u003e Style -\u003e Lighting -\u003e Camera -\u003e Aspect -\u003e Mood\u0027,\n  \u0027- Aerial drone polish countryside / pine forest / recreational plots\u0027,\n  \u0027- Vertical 9:16, photorealistic, no faces, no text, no logos, no buildings\u0027,\n  \u0027- Ostatnia scena = LOGO: { type:\"image\", src:\"\u0027 + LOGO_URL + \u0027\", resize:\"contain\", position:\"center-center\" }\u0027,\n  \u0027\u0027,\n  \u0027# OUTPUT JSON\u0027,\n  \u0027Zwroc JSON: { resolution:\"custom\", width:1080, height:1920, quality:\"high\", draft:false, scenes:[6 scen] }\u0027,\n  \u0027Kazda scena: { comment, \"background-color\":\"#000000\", elements:[image_obj, voice_obj] }\u0027,\n  \u0027Image scena 1-5: { type:\"image\", model:\"flux-pro\", prompt:\"\u003cEN 50-80 slow\u003e\", \"aspect-ratio\":\"vertical\" }\u0027,\n  \u0027Image scena 6 (LOGO): { type:\"image\", src:\"\u0027 + LOGO_URL + \u0027\", resize:\"contain\", position:\"center-center\" }\u0027,\n  \u0027Voice: { type:\"voice\", voice:\"hIssydxXZ1WuDorjx6Ic\", model:\"elevenlabs-flash-v2-5\", text:\"\u003cPL, MAKS 12 slow\u003e\", \"fade-in\":0.2, \"fade-out\":0.2 }\u0027,\n  \u0027\u0027,\n  \u0027KAZDA SCENA MUSI MIEC IMAGE I VOICE. ZWROC TYLKO JSON. Bez ```.\u0027\n].join(\u0027\\n\u0027);\n\nconst userMsg = [\n  \u0027# TEMAT EDUKACYJNY\u0027,\n  temat,\n  \u0027\u0027,\n  \u0027# RESEARCH (Perplexity)\u0027,\n  JSON.stringify(research),\n  \u0027\u0027,\n  \u0027# DODATKOWY KONTEKST UZYTKOWNIKA\u0027,\n  wizja,\n  \u0027\u0027,\n  \u0027# AUDIO\u0027,\n  \u0027URL muzyki (root elements.audio.src): \u0027 + muzykaUrl,\n  \u0027\u0027,\n  \u0027# INSTRUKCJE\u0027,\n  \u00270. PRIORYTET: najpierw zrealizuj TEMAT i wszystkie wskazowki z DODATKOWY KONTEKST UZYTKOWNIKA, dopiero potem siegaj po research\u0027,\n  \u00271. Wybierz z research TYLKO fakty wprost odpowiadajace na TEMAT i wskazowki uzytkownika; reszte research IGNORUJ\u0027,\n  \u00272. Uprosc jezyk - jak dla pierwszy raz kupujacego\u0027,\n  \u00273. 6 scen wedlug struktury (HOOK / KONTEKST / TRESC1 / TRESC2 / RADA / CTA)\u0027,\n  \u00274. Ostatnia scena: logo jako src (NIE flux)\u0027,\n  \u00275. Narracja: kazda scena MAKS 12 slow (cel 10-12), lacznie ~60-72 slowa\u0027,\n  \u0027\u0027,\n  \u0027ZWROC TYLKO JSON.\u0027\n].join(\u0027\\n\u0027);\n\nreturn [{\n  json: {\n    body: {\n      model: \u0027gpt-4.1\u0027,\n      max_tokens: 3000,\n      temperature: 0.7,\n      response_format: { type: \u0027json_object\u0027 },\n      messages: [\n        { role: \u0027system\u0027, content: systemMsg },\n        { role: \u0027user\u0027, content: userMsg }\n      ]\n    }\n  }\n}];"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       -960,
+                                       192
+                                   ],
+                      "id":  "a45706d2-838a-4a46-9335-14493c07b3da",
+                      "name":  "Build OpenAI Body Edukacyjna"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "  const items = $input.all();                                           \n  const results = [];                    \n  const pubId = $(\u0027Get Sesja\u0027).first().json[\u0027Powiązana publikacja\u0027][0];\n\n  items.forEach((item, idx) =\u003e {\n    const b64 = item.json.data?.[0]?.b64_json;\n    if (!b64) {\n      return;\n    }\n    const promptIndex = idx + 1;\n    const filename = `blog_${pubId}_${promptIndex}.jpg`;\n\n    results.push({\n      json: {\n        publication_id: pubId,\n        prompt_index: promptIndex,\n        filename,\n        dropbox_path: `/Pliki do\n  automatyzacji/Wygenerowane(Tymczasowe)/${filename}`\n      },\n      binary: {\n        data: {\n          data: b64,\n          mimeType: \u0027image/jpeg\u0027,\n          fileName: filename\n        }\n      }\n    });\n  });\n\n  if (results.length === 0) {\n    throw new Error(\u0027Brak b64_json w żadnym item z Generate Blog Image\u0027);\n  }\n\n  return results;"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       -288,
+                                       384
+                                   ],
+                      "id":  "77b008cf-c196-419e-8bb6-4b50d10097c5",
+                      "name":  "Convert b64 to Binary"
+                  },
+                  {
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "https://content.dropboxapi.com/2/files/upload",
+                                         "authentication":  "predefinedCredentialType",
+                                         "nodeCredentialType":  "dropboxOAuth2Api",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "Content-Type",
+                                                                                         "value":  "application/octet-stream"
+                                                                                     },
+                                                                                     {
+                                                                                         "name":  "Dropbox-API-Arg",
+                                                                                         "value":  "={{ JSON.stringify({ path: $json.dropbox_path, mode: \"overwrite\", autorename: false, mute: true }) }}"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "sendBody":  true,
+                                         "contentType":  "binaryData",
+                                         "inputDataFieldName":  "data",
+                                         "options":  {
+                                                         "response":  {
+                                                                          "response":  {
+                                                                                           "responseFormat":  "json"
+                                                                                       }
+                                                                      }
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.4,
+                      "position":  [
+                                       -64,
+                                       384
+                                   ],
+                      "id":  "e9060646-38fa-4d94-8d80-f75079d725c7",
+                      "name":  "Upload to Dropbox"
+                  },
+                  {
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "https://api.dropboxapi.com/2/files/get_temporary_link",
+                                         "authentication":  "predefinedCredentialType",
+                                         "nodeCredentialType":  "dropboxOAuth2Api",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "Content-Type",
+                                                                                         "value":  "application/json"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "sendBody":  true,
+                                         "specifyBody":  "json",
+                                         "jsonBody":  "={{ JSON.stringify({ path: $(\u0027Convert b64 to Binary\u0027).itemMatching($itemIndex).json.dropbox_path }) }}",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.4,
+                      "position":  [
+                                       160,
+                                       384
+                                   ],
+                      "id":  "63a0a966-17b4-4ee2-9ce6-d1095e4d7165",
+                      "name":  "Get Dropbox URL",
+                      "onError":  "continueRegularOutput"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "  const items = $input.all();                                           \n  const convAll = $(\u0027Convert b64 to Binary\u0027).all();\n                                         \n  return items.map((item, idx) =\u003e {\n  let url = item.json.url || item.json.link\n    || item.json?.error?.[\u0027shared_link_already_exists\u0027]?.metadata?.url || \u0027\u0027;\n  url = url.replace(\u0027www.dropbox.com\u0027, \u0027dl.dropboxusercontent.com\u0027)\n           .replace(\u0027?dl=0\u0027, \u0027\u0027).replace(\u0027\u0026dl=0\u0027, \u0027\u0027);\n    const conv = convAll[idx]?.json || convAll[0]?.json || {};\n\n    return {\n      json: {\n        publication_id: conv.publication_id || \u0027\u0027,\n        prompt_index: conv.prompt_index || (idx + 1),\n        url\n      }\n    };\n  });"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       384,
+                                       384
+                                   ],
+                      "id":  "5f670edf-d1e8-4f57-b8a6-fcfc7de43554",
+                      "name":  "Transform Dropbox URL"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// Wpięcie: Generate Rolka Edukacyjna → [ten node] → Save Edukacyjna\n// GPT edukacyjny emituje root \"elements\" jako OBIEKT {audio:{src}};\n// json2video wymaga TABLICY typowanych elementów. Ten węzeł deterministycznie\n// nadpisuje elements poprawną tablicą audio (nie polega na GPT).\n\nconst resp = $input.item.json;                       // pełny obiekt OpenAI chat completion\nconst scenario = JSON.parse(resp.choices[0].message.content);\n\n// URL muzyki z sesji (attachment). Brak muzyki =\u003e pole nieobecne/puste.\nconst arr = $(\u0027Get Sesja\u0027).first().json[\u0027Zasób (from Wybrana Muzyka)\u0027];\nconst musicUrl = Array.isArray(arr) \u0026\u0026 arr[0]\n  ? (typeof arr[0] === \u0027string\u0027 ? arr[0] : arr[0].url)\n  : null;\n\n// Nadpisz root elements poprawną TABLICĄ. Bez muzyki =\u003e pusta tablica (żaden 404).\nscenario.elements = [];\nif (musicUrl) {\n  scenario.elements.push({\n    type: \u0027audio\u0027,\n    src: musicUrl,\n    \u0027fade-in\u0027: 1.5,\n    \u0027fade-out\u0027: 2.5,\n    loop: -1,\n    duration: -2,\n    volume: 0.04\n  });\n}\n\nresp.choices[0].message.content = JSON.stringify(scenario);\nreturn { json: resp };\nreturn $input.all();"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       -512,
+                                       192
+                                   ],
+                      "id":  "198dd949-e27e-40ac-8f2f-ea9d879eee1a",
+                      "name":  "Inject Music Edukacyjna"
+                  }
+              ],
+    "connections":  {
+                        "When called by another workflow":  {
+                                                                "main":  [
+                                                                             [
+                                                                                 {
+                                                                                     "node":  "Get Sesja",
+                                                                                     "type":  "main",
+                                                                                     "index":  0
+                                                                                 }
+                                                                             ]
+                                                                         ]
+                                                            },
+                        "Get Sesja":  {
+                                          "main":  [
+                                                       [
+                                                           {
+                                                               "node":  "Get Wytyczne",
+                                                               "type":  "main",
+                                                               "index":  0
+                                                           }
+                                                       ]
+                                                   ]
+                                      },
+                        "Get Wytyczne":  {
+                                             "main":  [
+                                                          [
+                                                              {
+                                                                  "node":  "Build Wytyczne Block",
+                                                                  "type":  "main",
+                                                                  "index":  0
+                                                              }
+                                                          ]
+                                                      ]
+                                         },
+                        "Build Wytyczne Block":  {
+                                                     "main":  [
+                                                                  [
+                                                                      {
+                                                                          "node":  "Route by Typ",
+                                                                          "type":  "main",
+                                                                          "index":  0
+                                                                      }
+                                                                  ]
+                                                              ]
+                                                 },
+                        "Route by Typ":  {
+                                             "main":  [
+                                                          [
+                                                              {
+                                                                  "node":  "Get Dzialka",
+                                                                  "type":  "main",
+                                                                  "index":  0
+                                                              }
+                                                          ],
+                                                          [
+                                                              {
+                                                                  "node":  "Perplexity Research (Edukacyjna)",
+                                                                  "type":  "main",
+                                                                  "index":  0
+                                                              }
+                                                          ],
+                                                          [
+                                                              {
+                                                                  "node":  "Perplexity Research (Blog)",
+                                                                  "type":  "main",
+                                                                  "index":  0
+                                                              }
+                                                          ],
+                                                          [
+                                                              {
+                                                                  "node":  "Perplexity Research (Edukacyjna)",
+                                                                  "type":  "main",
+                                                                  "index":  0
+                                                              },
+                                                              {
+                                                                  "node":  "Perplexity Research (Blog)",
+                                                                  "type":  "main",
+                                                                  "index":  0
+                                                              }
+                                                          ],
+                                                          [
+                                                              {
+                                                                  "node":  "Unknown Type",
+                                                                  "type":  "main",
+                                                                  "index":  0
+                                                              }
+                                                          ]
+                                                      ]
+                                         },
+                        "Get Dzialka":  {
+                                            "main":  [
+                                                         [
+                                                             {
+                                                                 "node":  "Parse Selected Photos",
+                                                                 "type":  "main",
+                                                                 "index":  0
+                                                             }
+                                                         ]
+                                                     ]
+                                        },
+                        "Perplexity Research (Edukacyjna)":  {
+                                                                 "main":  [
+                                                                              [
+                                                                                  {
+                                                                                      "node":  "Build OpenAI Body Edukacyjna",
+                                                                                      "type":  "main",
+                                                                                      "index":  0
+                                                                                  }
+                                                                              ]
+                                                                          ]
+                                                             },
+                        "Perplexity Research (Blog)":  {
+                                                           "main":  [
+                                                                        [
+                                                                            {
+                                                                                "node":  "Generate Blog Article",
+                                                                                "type":  "main",
+                                                                                "index":  0
+                                                                            }
+                                                                        ]
+                                                                    ]
+                                                       },
+                        "Parse Blog + Prompty":  {
+                                                     "main":  [
+                                                                  [
+                                                                      {
+                                                                          "node":  "Generate Blog Image (gpt-image-1.5)",
+                                                                          "type":  "main",
+                                                                          "index":  0
+                                                                      }
+                                                                  ]
+                                                              ]
+                                                 },
+                        "Aggregate Blog Images":  {
+                                                      "main":  [
+                                                                   [
+                                                                       {
+                                                                           "node":  "Save Blog",
+                                                                           "type":  "main",
+                                                                           "index":  0
+                                                                       }
+                                                                   ]
+                                                               ]
+                                                  },
+                        "Generate Rolka Ofertowa":  {
+                                                        "main":  [
+                                                                     [
+                                                                         {
+                                                                             "node":  "Save Ofertowa",
+                                                                             "type":  "main",
+                                                                             "index":  0
+                                                                         }
+                                                                     ]
+                                                                 ]
+                                                    },
+                        "Generate Rolka Edukacyjna":  {
+                                                          "main":  [
+                                                                       [
+                                                                           {
+                                                                               "node":  "Inject Music Edukacyjna",
+                                                                               "type":  "main",
+                                                                               "index":  0
+                                                                           }
+                                                                       ]
+                                                                   ]
+                                                      },
+                        "Generate Blog Article":  {
+                                                      "main":  [
+                                                                   [
+                                                                       {
+                                                                           "node":  "Parse Blog + Prompty",
+                                                                           "type":  "main",
+                                                                           "index":  0
+                                                                       }
+                                                                   ]
+                                                               ]
+                                                  },
+                        "Generate Blog Image (gpt-image-1.5)":  {
+                                                                    "main":  [
+                                                                                 [
+                                                                                     {
+                                                                                         "node":  "Convert b64 to Binary",
+                                                                                         "type":  "main",
+                                                                                         "index":  0
+                                                                                     }
+                                                                                 ]
+                                                                             ]
+                                                                },
+                        "Count Photos":  {
+                                             "main":  [
+                                                          [
+                                                              {
+                                                                  "node":  "Build OpenAI Body Ofertowa",
+                                                                  "type":  "main",
+                                                                  "index":  0
+                                                              }
+                                                          ]
+                                                      ]
+                                         },
+                        "Build OpenAI Body Ofertowa":  {
+                                                           "main":  [
+                                                                        [
+                                                                            {
+                                                                                "node":  "Generate Rolka Ofertowa",
+                                                                                "type":  "main",
+                                                                                "index":  0
+                                                                            }
+                                                                        ]
+                                                                    ]
+                                                       },
+                        "Parse Selected Photos":  {
+                                                      "main":  [
+                                                                   [
+                                                                       {
+                                                                           "node":  "Get Photo Temp Link",
+                                                                           "type":  "main",
+                                                                           "index":  0
+                                                                       }
+                                                                   ]
+                                                               ]
+                                                  },
+                        "Get Photo Temp Link":  {
+                                                    "main":  [
+                                                                 [
+                                                                     {
+                                                                         "node":  "Aggregate Photo URLs",
+                                                                         "type":  "main",
+                                                                         "index":  0
+                                                                     }
+                                                                 ]
+                                                             ]
+                                                },
+                        "Aggregate Photo URLs":  {
+                                                     "main":  [
+                                                                  [
+                                                                      {
+                                                                          "node":  "Count Photos",
+                                                                          "type":  "main",
+                                                                          "index":  0
+                                                                      }
+                                                                  ]
+                                                              ]
+                                                 },
+                        "Build OpenAI Body Edukacyjna":  {
+                                                             "main":  [
+                                                                          [
+                                                                              {
+                                                                                  "node":  "Generate Rolka Edukacyjna",
+                                                                                  "type":  "main",
+                                                                                  "index":  0
+                                                                              }
+                                                                          ]
+                                                                      ]
+                                                         },
+                        "Convert b64 to Binary":  {
+                                                      "main":  [
+                                                                   [
+                                                                       {
+                                                                           "node":  "Upload to Dropbox",
+                                                                           "type":  "main",
+                                                                           "index":  0
+                                                                       }
+                                                                   ]
+                                                               ]
+                                                  },
+                        "Upload to Dropbox":  {
+                                                  "main":  [
+                                                               [
+                                                                   {
+                                                                       "node":  "Get Dropbox URL",
+                                                                       "type":  "main",
+                                                                       "index":  0
+                                                                   }
+                                                               ]
+                                                           ]
+                                              },
+                        "Get Dropbox URL":  {
+                                                "main":  [
+                                                             [
+                                                                 {
+                                                                     "node":  "Transform Dropbox URL",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ]
+                                                         ]
+                                            },
+                        "Transform Dropbox URL":  {
+                                                      "main":  [
+                                                                   [
+                                                                       {
+                                                                           "node":  "Aggregate Blog Images",
+                                                                           "type":  "main",
+                                                                           "index":  0
+                                                                       }
+                                                                   ]
+                                                               ]
+                                                  },
+                        "Inject Music Edukacyjna":  {
+                                                        "main":  [
+                                                                     [
+                                                                         {
+                                                                             "node":  "Save Edukacyjna",
+                                                                             "type":  "main",
+                                                                             "index":  0
+                                                                         }
+                                                                     ]
+                                                                 ]
+                                                    }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1",
+                     "timezone":  "Europe/Warsaw",
+                     "binaryMode":  "separate"
+                 },
+    "staticData":  null,
+    "meta":  {
+                 "templateCredsSetupCompleted":  true
+             },
+    "nodeGroups":  [
+
+                   ],
+    "versionId":  "7b7cffd4-725f-4000-9feb-11862991f668",
+    "activeVersionId":  null,
+    "versionCounter":  29,
+    "triggerCount":  0,
+    "sourceWorkflowId":  null,
+    "shared":  [
+                   {
+                       "updatedAt":  "2026-05-01T18:40:08.189Z",
+                       "createdAt":  "2026-05-01T18:40:08.189Z",
+                       "role":  "workflow:owner",
+                       "workflowId":  "7dqtcA2hgVkzSBX8",
+                       "projectId":  "9rVJoULaKk30HdBB",
+                       "project":  {
+                                       "updatedAt":  "2025-06-26T00:18:14.615Z",
+                                       "createdAt":  "2025-06-25T23:37:35.363Z",
+                                       "id":  "9rVJoULaKk30HdBB",
+                                       "name":  "Nicolas Bednarz \u003cowner@example.com\u003e",
+                                       "type":  "personal",
+                                       "icon":  null,
+                                       "description":  null,
+                                       "customTelemetryTags":  [
+
+                                                               ],
+                                       "creatorId":  "af23e566-dd44-45a3-ac35-e15a8cdef3f2"
+                                   }
+                   }
+               ],
+    "tags":  [
+
+             ],
+    "activeVersion":  null
+}

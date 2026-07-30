@@ -1,0 +1,112 @@
+{
+    "updatedAt":  "2026-07-20T15:33:32.576Z",
+    "createdAt":  "2026-07-17T14:01:30.633Z",
+    "id":  "mJ3sT0NOJyq1l9Ko",
+    "name":  "ET-A_Error_Handler",
+    "description":  null,
+    "active":  false,
+    "isArchived":  false,
+    "nodes":  [
+                  {
+                      "parameters":  {
+
+                                     },
+                      "id":  "errtrigger",
+                      "name":  "error-trigger",
+                      "type":  "n8n-nodes-base.errorTrigger",
+                      "typeVersion":  1,
+                      "position":  [
+                                       0,
+                                       304
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "select":  "channel",
+                                         "channelId":  {
+                                                           "__rl":  true,
+                                                           "mode":  "name",
+                                                           "value":  "#alerty-n8n"
+                                                       },
+                                         "text":  "=:x: *AWARIA AUTOMATYZACJI n8n*\n*Workflow:* {{ $json.workflow.name }}\n*Node:* {{ $json.execution.lastNodeExecuted }}\n*Błąd:* {{ $json.execution.error.message }}\n*Tryb:* {{ $json.execution.mode }}\n*Wykonanie:* {{ $json.execution.url }}\n\n_Ktoś z zespołu musi zajrzeć ręcznie — triage moment nie zadziałał automatycznie._",
+                                         "otherOptions":  {
+
+                                                          }
+                                     },
+                      "id":  "erralert",
+                      "name":  "error-alert-slack",
+                      "type":  "n8n-nodes-base.slack",
+                      "typeVersion":  2.3,
+                      "position":  [
+                                       272,
+                                       304
+                                   ],
+                      "retryOnFail":  true,
+                      "maxTries":  3,
+                      "waitBetweenTries":  3000,
+                      "webhookId":  "4c689638-238f-4dba-8154-dc8154ed42a9",
+                      "credentials":  {
+                                          "slackApi":  {
+                                                           "id":  "5CVzetMyusnABbOK",
+                                                           "name":  "Slack Testowe"
+                                                       }
+                                      }
+                  }
+              ],
+    "connections":  {
+                        "error-trigger":  {
+                                              "main":  [
+                                                           [
+                                                               {
+                                                                   "node":  "error-alert-slack",
+                                                                   "type":  "main",
+                                                                   "index":  0
+                                                               }
+                                                           ]
+                                                       ]
+                                          }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1",
+                     "timezone":  "Europe/Warsaw",
+                     "binaryMode":  "separate"
+                 },
+    "staticData":  null,
+    "meta":  {
+                 "templateCredsSetupCompleted":  true
+             },
+    "nodeGroups":  [
+
+                   ],
+    "versionId":  "3338e522-a771-4ed2-8303-01996a9e31b6",
+    "activeVersionId":  null,
+    "versionCounter":  2,
+    "triggerCount":  0,
+    "sourceWorkflowId":  null,
+    "shared":  [
+                   {
+                       "updatedAt":  "2026-07-17T14:01:30.633Z",
+                       "createdAt":  "2026-07-17T14:01:30.633Z",
+                       "role":  "workflow:owner",
+                       "workflowId":  "mJ3sT0NOJyq1l9Ko",
+                       "projectId":  "9rVJoULaKk30HdBB",
+                       "project":  {
+                                       "updatedAt":  "2025-06-26T00:18:14.615Z",
+                                       "createdAt":  "2025-06-25T23:37:35.363Z",
+                                       "id":  "9rVJoULaKk30HdBB",
+                                       "name":  "Nicolas Bednarz \u003cowner@example.com\u003e",
+                                       "type":  "personal",
+                                       "icon":  null,
+                                       "description":  null,
+                                       "customTelemetryTags":  [
+
+                                                               ],
+                                       "creatorId":  "af23e566-dd44-45a3-ac35-e15a8cdef3f2"
+                                   }
+                   }
+               ],
+    "tags":  [
+
+             ],
+    "activeVersion":  null
+}

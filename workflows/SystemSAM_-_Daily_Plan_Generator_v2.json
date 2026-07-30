@@ -1,0 +1,593 @@
+{
+    "updatedAt":  "2026-01-10T15:30:57.402Z",
+    "createdAt":  "2026-01-08T00:20:37.124Z",
+    "id":  "9OHN8ci7giGSvIkk",
+    "name":  "SystemSAM - Daily Plan Generator v2",
+    "description":  null,
+    "active":  false,
+    "isArchived":  false,
+    "nodes":  [
+                  {
+                      "parameters":  {
+                                         "rule":  {
+                                                      "interval":  [
+                                                                       {
+                                                                           "field":  "months",
+                                                                           "triggerAtHour":  13,
+                                                                           "triggerAtMinute":  30
+                                                                       }
+                                                                   ]
+                                                  }
+                                     },
+                      "id":  "schedule-trigger",
+                      "name":  "Schedule Trigger",
+                      "type":  "n8n-nodes-base.scheduleTrigger",
+                      "typeVersion":  1.3,
+                      "position":  [
+                                       0,
+                                       48
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "url":  "https://api.clickup.com/api/v2/team/90151765948/task",
+                                         "authentication":  "predefinedCredentialType",
+                                         "nodeCredentialType":  "clickUpApi",
+                                         "sendQuery":  true,
+                                         "queryParameters":  {
+                                                                 "parameters":  [
+                                                                                    {
+                                                                                        "name":  "list_ids[]",
+                                                                                        "value":  "901519350187"
+                                                                                    },
+                                                                                    {
+                                                                                        "name":  "list_ids[]",
+                                                                                        "value":  "901519350191"
+                                                                                    },
+                                                                                    {
+                                                                                        "name":  "list_ids[]",
+                                                                                        "value":  "901519350197"
+                                                                                    },
+                                                                                    {
+                                                                                        "name":  "list_ids[]",
+                                                                                        "value":  "901519350203"
+                                                                                    },
+                                                                                    {
+                                                                                        "name":  "include_closed",
+                                                                                        "value":  "false"
+                                                                                    },
+                                                                                    {
+                                                                                        "name":  "subtasks",
+                                                                                        "value":  "true"
+                                                                                    }
+                                                                                ]
+                                                             },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "get-subtasks",
+                      "name":  "Get Subtasks",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.3,
+                      "position":  [
+                                       224,
+                                       -96
+                                   ],
+                      "credentials":  {
+                                          "clickUpApi":  {
+                                                             "id":  "FVDkMa0LpqdXzbIQ",
+                                                             "name":  "ClickUp_ADHD_V2"
+                                                         }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "url":  "https://api.clickup.com/api/v2/list/901519552364/task",
+                                         "authentication":  "predefinedCredentialType",
+                                         "nodeCredentialType":  "clickUpApi",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "get-habits",
+                      "name":  "Get Habits",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.3,
+                      "position":  [
+                                       224,
+                                       96
+                                   ],
+                      "credentials":  {
+                                          "clickUpApi":  {
+                                                             "id":  "FVDkMa0LpqdXzbIQ",
+                                                             "name":  "ClickUp_ADHD_V2"
+                                                         }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "url":  "https://api.clickup.com/api/v2/task/86c7ec2db",
+                                         "authentication":  "predefinedCredentialType",
+                                         "nodeCredentialType":  "clickUpApi",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "get-player-stats",
+                      "name":  "Get Player Stats",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.3,
+                      "position":  [
+                                       224,
+                                       288
+                                   ],
+                      "credentials":  {
+                                          "clickUpApi":  {
+                                                             "id":  "FVDkMa0LpqdXzbIQ",
+                                                             "name":  "ClickUp_ADHD_V2"
+                                                         }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "numberInputs":  3
+                                     },
+                      "id":  "merge-data",
+                      "name":  "Merge Data",
+                      "type":  "n8n-nodes-base.merge",
+                      "typeVersion":  3,
+                      "position":  [
+                                       448,
+                                       48
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// Pobierz dane z poprzednich nodów\nconst allItems = $input.all();\n\nlet subtasks = [];\nlet habits = [];\nlet playerStats = {};\n\nfor (const item of allItems) {\n  const data = item.json;\n  \n  // Subtaski - taski które mają parent (są subtaskami)\n  if (data.tasks \u0026\u0026 Array.isArray(data.tasks)) {\n    for (const task of data.tasks) {\n      // Sprawdź czy to subtask (ma parent) i czy ma odpowiedni tag\n      const hasSubtaskTag = task.tags?.some(t =\u003e t.name.toLowerCase().startsWith(\u0027subtask-\u0027));\n      const isOpen = [\u0027open\u0027, \u0027to do\u0027, \u0027in progress\u0027].includes(task.status?.status?.toLowerCase());\n      \n      if (hasSubtaskTag \u0026\u0026 isOpen) {\n        subtasks.push({\n          id: task.id,\n          name: task.name,\n          priority: task.priority?.priority || \u0027normal\u0027,\n          priorityOrder: task.priority?.orderindex || 3,\n          tags: task.tags?.map(t =\u003e t.name) || [],\n          parentTag: task.tags?.find(t =\u003e t.name.toLowerCase().startsWith(\u0027subtask-\u0027))?.name || \u0027\u0027,\n          listName: task.list?.name || \u0027\u0027,\n          listId: task.list?.id || \u0027\u0027,\n          url: task.url\n        });\n      }\n    }\n  }\n  \n  // Habits z listy Master Habits (sprawdź po list ID)\n  if (data.tasks \u0026\u0026 Array.isArray(data.tasks)) {\n    for (const task of data.tasks) {\n      const isFromHabitsList = task.list?.id === \u0027901519552364\u0027;\n      if (isFromHabitsList) {\n        habits.push({\n          id: task.id,\n          name: task.name,\n          url: task.url\n        });\n      }\n    }\n  }\n  \n  // Player Stats - bezpośrednio z pojedynczego taska\n  if (data.custom_fields \u0026\u0026 data.id === \u002786c7ec2db\u0027) {\n    for (const field of data.custom_fields) {\n      if (field.name === \u0027Current Streak\u0027) playerStats.currentStreak = parseInt(field.value) || 0;\n      if (field.name === \u0027Best Streak\u0027) playerStats.bestStreak = parseInt(field.value) || 0;\n      if (field.name === \u0027Total Days Completed\u0027) playerStats.totalDays = parseInt(field.value) || 0;\n      if (field.name === \u0027Total XP\u0027) playerStats.totalXP = parseInt(field.value) || 0;\n    }\n  }\n}\n\n// Sortuj subtaski po priorytecie (urgent=1, high=2, normal=3, low=4)\nsubtasks.sort((a, b) =\u003e a.priorityOrder - b.priorityOrder);\n\n// Ogranicz do 6 subtasków\nconst selectedSubtasks = subtasks.slice(0, 6);\n\n// KLUCZOWE: Stwórz mapowanie name → task info\nconst taskMapping = {};\nfor (const task of selectedSubtasks) {\n  taskMapping[task.name] = {\n    id: task.id,\n    listId: task.listId,\n    url: task.url\n  };\n}\n\n// Dodaj nawyki do mapowania\nfor (const habit of habits) {\n  taskMapping[habit.name] = {\n    id: habit.id,\n    listId: \u0027901519552364\u0027,\n    url: habit.url,\n    isHabit: true\n  };\n}\n\n// Jeśli nie ma nawyków z API, użyj domyślnych\nif (habits.length === 0) {\n  habits = [\n    {id: \u0027habit-podcast\u0027, name: \u0027🎧 Angielskie podcasty\u0027},\n    {id: \u0027habit-slowka\u0027, name: \u0027📚 Nauka słówek\u0027}\n  ];\n  taskMapping[\u0027🎧 Angielskie podcasty\u0027] = {id: \u0027habit-podcast\u0027, isHabit: true};\n  taskMapping[\u0027📚 Nauka słówek\u0027] = {id: \u0027habit-slowka\u0027, isHabit: true};\n}\n\nconst dayNumber = (playerStats.totalDays || 0) + 1;\n\nreturn [{\n  json: {\n    subtasks: selectedSubtasks,\n    habits: habits,\n    playerStats: playerStats,\n    taskMapping: taskMapping,\n    dayNumber: dayNumber,\n    date: new Date().toISOString().split(\u0027T\u0027)[0]\n  }\n}];"
+                                     },
+                      "id":  "prepare-ai-input",
+                      "name":  "Prepare AI Input",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       672,
+                                       48
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "model":  {
+                                                       "mode":  "id",
+                                                       "value":  "gpt-4o-mini"
+                                                   },
+                                         "builtInTools":  {
+
+                                                          },
+                                         "options":  {
+                                                         "temperature":  0.7
+                                                     }
+                                     },
+                      "id":  "openai-model",
+                      "name":  "OpenAI Chat Model",
+                      "type":  "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+                      "typeVersion":  1.3,
+                      "position":  [
+                                       976,
+                                       272
+                                   ],
+                      "credentials":  {
+                                          "openAiApi":  {
+                                                            "id":  "CevclqSiRa9VJGwm",
+                                                            "name":  "OpenAi Manufaktura"
+                                                        }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "promptType":  "define",
+                                         "text":  "=Jesteś asystentem planowania dnia dla osoby z ADHD pracującej na nocnej zmianie (21:00-06:00).\n\nAktualne dane:\n- Dzień #{{ $json.dayNumber }}\n- Current Streak: {{ $json.playerStats.currentStreak || 0 }} 🔥\n- Data: {{ $json.date }}\n\nDostępne subtaski do zaplanowania:\n{{ JSON.stringify($json.subtasks, null, 2) }}\n\nCodzienne nawyki:\n{{ JSON.stringify($json.habits, null, 2) }}\n\nTwoje zadanie:\n1. Wybierz maksymalnie 6 subtasków (priorytet: urgent \u003e high \u003e normal \u003e low)\n2. Rozłóż je w time-boxingu 13:30-20:00:\n   - 13:30-14:30 🟢 Rozgrzewka (low priority)\n   - 14:30-17:00 🔴 Deep Work Block 1 (urgent/high priority)\n   - 17:00-17:30 ☕ Przerwa\n   - 17:30-19:30 ⚡ Deep Work Block 2 (high/normal priority)\n   - 19:30-20:00 📋 Wrap-up (drobne rzeczy)\n3. Wygeneruj motywacyjny cytat od współczesnego przedsiębiorcy/lidera (Elon Musk, Steve Jobs, Naval Ravikant, Tim Ferriss, James Clear, etc.)\n\nOdpowiedz w formacie JSON:\n{\n  \"motto\": \"Cytat motywacyjny - Autor\",\n  \"timeBoxing\": {\n    \"rozgrzewka\": [\"nazwa subtaska 1\"],\n    \"deepWork1\": [\"nazwa subtaska 2\", \"nazwa subtaska 3\"],\n    \"deepWork2\": [\"nazwa subtaska 4\", \"nazwa subtaska 5\"],\n    \"wrapup\": [\"nazwa subtaska 6\"]\n  },\n  \"selectedTasks\": [\"nazwa1\", \"nazwa2\", ...],\n  \"habits\": [\"🎧 Angielskie podcasty\", \"📚 Nauka słówek\"]\n}",
+                                         "options":  {
+                                                         "systemMessage":  "Jesteś ekspertem od produktywności i planowania dnia. Odpowiadaj TYLKO w formacie JSON bez dodatkowego tekstu. Cytaty muszą być prawdziwe od znanych osób."
+                                                     }
+                                     },
+                      "id":  "ai-agent",
+                      "name":  "AI Planner",
+                      "type":  "@n8n/n8n-nodes-langchain.agent",
+                      "typeVersion":  3.1,
+                      "position":  [
+                                       896,
+                                       48
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const aiOutput = $input.first().json.output;\n\n// Parsuj JSON z odpowiedzi AI\nlet plan;\ntry {\n  // Usuń markdown code blocks jeśli są\n  let cleanOutput = aiOutput.replace(/```json\\n?/g, \u0027\u0027).replace(/```\\n?/g, \u0027\u0027).trim();\n  plan = JSON.parse(cleanOutput);\n} catch (e) {\n  // Fallback - podstawowy plan\n  plan = {\n    motto: \"Sukces to suma małych wysiłków powtarzanych dzień po dniu. - Robert Collier\",\n    timeBoxing: {\n      rozgrzewka: [],\n      deepWork1: [],\n      deepWork2: [],\n      wrapup: []\n    },\n    selectedTasks: [],\n    habits: [\"🎧 Angielskie podcasty\", \"📚 Nauka słówek\"]\n  };\n}\n\n// Pobierz dane z poprzedniego kroku\nconst inputData = $(\u0027Prepare AI Input\u0027).first().json;\nconst taskMapping = inputData.taskMapping || {};\n\n// Przygotuj listę dla checklisty Z MAPOWANIEM\nconst checklistItemsWithMapping = [];\n\nfor (const taskName of plan.selectedTasks) {\n  const mapping = taskMapping[taskName];\n  checklistItemsWithMapping.push({\n    name: taskName,\n    originalTaskId: mapping?.id || null,\n    originalListId: mapping?.listId || null,\n    isHabit: mapping?.isHabit || false\n  });\n}\n\n// Separator\nchecklistItemsWithMapping.push({\n  name: \u0027───────────────\u0027,\n  originalTaskId: null,\n  isSeparator: true\n});\n\n// Nawyki\nfor (const habitName of plan.habits) {\n  const mapping = taskMapping[habitName];\n  checklistItemsWithMapping.push({\n    name: habitName,\n    originalTaskId: mapping?.id || null,\n    isHabit: true\n  });\n}\n\n// Formatuj wiadomość Telegram\nconst dayNumber = inputData.dayNumber;\nconst streak = inputData.playerStats.currentStreak || 0;\nconst date = inputData.date;\n\nlet telegramMessage = `🌅 *Dzień #${dayNumber}* | Streak: ${streak} 🔥\\n\\n`;\ntelegramMessage += `💡 _\"${plan.motto}\"_\\n\\n`;\ntelegramMessage += `📋 *Twój plan na dziś:*\\n\\n`;\ntelegramMessage += `⏰ *TIME-BOXING:*\\n`;\ntelegramMessage += `*13:30-14:30* 🟢 Rozgrzewka\\n`;\nfor (const task of plan.timeBoxing.rozgrzewka || []) {\n  telegramMessage += `• ${task}\\n`;\n}\ntelegramMessage += `\\n*14:30-17:00* 🔴 Deep Work Block 1\\n`;\nfor (const task of plan.timeBoxing.deepWork1 || []) {\n  telegramMessage += `• ${task}\\n`;\n}\ntelegramMessage += `\\n*17:30-19:30* ⚡ Deep Work Block 2\\n`;\nfor (const task of plan.timeBoxing.deepWork2 || []) {\n  telegramMessage += `• ${task}\\n`;\n}\ntelegramMessage += `\\n*19:30-20:00* 📋 Wrap-up\\n`;\nfor (const task of plan.timeBoxing.wrapup || []) {\n  telegramMessage += `• ${task}\\n`;\n}\ntelegramMessage += `\\n🎧 *W pracy (21:00-06:00):*\\n`;\nfor (const habit of plan.habits || []) {\n  telegramMessage += `• ${habit}\\n`;\n}\ntelegramMessage += `\\nPowodzenia! 💪`;\n\n// Task description - ZAWIERA UKRYTE MAPOWANIE\nlet taskDescription = `🌅 Dzień #${dayNumber} | Streak: ${streak} 🔥\\n\\n`;\ntaskDescription += `💡 ${plan.motto}\\n\\n`;\ntaskDescription += `⏰ TIME-BOXING:\\n`;\ntaskDescription += `13:30-14:30 🟢 Rozgrzewka\\n`;\ntaskDescription += `14:30-17:00 🔴 Deep Work Block 1\\n`;\ntaskDescription += `17:00-17:30 ☕ Przerwa\\n`;\ntaskDescription += `17:30-19:30 ⚡ Deep Work Block 2\\n`;\ntaskDescription += `19:30-20:00 📋 Wrap-up\\n\\n`;\n\n// DODAJ UKRYTE MAPOWANIE NA KOŃCU DESCRIPTION\ntaskDescription += `\\n\u003c!-- TASK_MAPPING_JSON\\n${JSON.stringify(checklistItemsWithMapping)}\\nEND_TASK_MAPPING --\u003e`;\n\nreturn [{\n  json: {\n    plan: plan,\n    checklistItems: checklistItemsWithMapping.map(i =\u003e i.name),\n    checklistItemsWithMapping: checklistItemsWithMapping,\n    taskMapping: taskMapping,\n    telegramMessage: telegramMessage,\n    taskDescription: taskDescription,\n    taskName: `📅 ${date} - Daily Quest`,\n    dayNumber: dayNumber,\n    streak: streak,\n    date: date\n  }\n}];"
+                                     },
+                      "id":  "parse-ai-response",
+                      "name":  "Parse AI Response",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       1248,
+                                       48
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "https://api.clickup.com/api/v2/list/901519287429/task",
+                                         "authentication":  "predefinedCredentialType",
+                                         "nodeCredentialType":  "clickUpApi",
+                                         "sendBody":  true,
+                                         "bodyParameters":  {
+                                                                "parameters":  [
+                                                                                   {
+                                                                                       "name":  "name",
+                                                                                       "value":  "={{ $json.taskName }}"
+                                                                                   },
+                                                                                   {
+                                                                                       "name":  "description",
+                                                                                       "value":  "={{ $json.taskDescription }}"
+                                                                                   },
+                                                                                   {
+                                                                                       "name":  "priority",
+                                                                                       "value":  "2"
+                                                                                   }
+                                                                               ]
+                                                            },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "create-daily-task",
+                      "name":  "Create Daily Task",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.3,
+                      "position":  [
+                                       1472,
+                                       48
+                                   ],
+                      "credentials":  {
+                                          "clickUpApi":  {
+                                                             "id":  "FVDkMa0LpqdXzbIQ",
+                                                             "name":  "ClickUp_ADHD_V2"
+                                                         }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "=https://api.clickup.com/api/v2/task/{{ $json.id }}/checklist",
+                                         "authentication":  "predefinedCredentialType",
+                                         "nodeCredentialType":  "clickUpApi",
+                                         "sendBody":  true,
+                                         "specifyBody":  "json",
+                                         "jsonBody":  "={\"name\": \"📋 Do zrobienia\"}",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "create-checklist",
+                      "name":  "Create Checklist",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.3,
+                      "position":  [
+                                       1696,
+                                       48
+                                   ],
+                      "credentials":  {
+                                          "clickUpApi":  {
+                                                             "id":  "FVDkMa0LpqdXzbIQ",
+                                                             "name":  "ClickUp_ADHD_V2"
+                                                         }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// Pobierz checklist ID z poprzedniego kroku\nconst checklistResponse = $input.first().json;\nconst checklistId = checklistResponse.checklist?.id;\n\nif (!checklistId) {\n  throw new Error(\u0027Checklist ID not found\u0027);\n}\n\n// Pobierz items z Parse AI Response\nconst parseData = $(\u0027Parse AI Response\u0027).first().json;\nconst items = parseData.checklistItems || [];\n\n// Zwróć OSOBNE itemy dla każdego elementu checklisty\nreturn items.map(itemName =\u003e ({\n  json: {\n    itemName: itemName,\n    checklistId: checklistId,\n    telegramMessage: parseData.telegramMessage\n  }\n}));"
+                                     },
+                      "id":  "add-checklist-items",
+                      "name":  "Add Checklist Items",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       1920,
+                                       48
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "chatId":  "5532162136",
+                                         "text":  "={{ $(\u0027Add Checklist Items\u0027).first().json.telegramMessage }}",
+                                         "additionalFields":  {
+                                                                  "parse_mode":  "Markdown"
+                                                              }
+                                     },
+                      "id":  "send-telegram",
+                      "name":  "Send Telegram Plan",
+                      "type":  "n8n-nodes-base.telegram",
+                      "typeVersion":  1.2,
+                      "position":  [
+                                       2576,
+                                       48
+                                   ],
+                      "webhookId":  "47a344d8-5b1c-4ce8-818a-ef764d36712f",
+                      "credentials":  {
+                                          "telegramApi":  {
+                                                              "id":  "I7zUJVPP02OEKir8",
+                                                              "name":  "SAM_BOT"
+                                                          }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "content":  "## 🌅 SystemSAM - Daily Plan Generator\n\n**Trigger:** Codziennie o 13:30\n\n**Co robi:**\n1. Pobiera subtaski z MASTER TASKS\n2. Pobiera nawyki z Master Habits\n3. Pobiera Player Stats (streak)\n4. AI generuje plan z time-boxingiem\n5. Tworzy Daily Task w ClickUp\n6. Wysyła plan przez Telegram"
+                                     },
+                      "id":  "sticky-note",
+                      "name":  "Sticky Note",
+                      "type":  "n8n-nodes-base.stickyNote",
+                      "typeVersion":  1,
+                      "position":  [
+                                       -96,
+                                       -208
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "resource":  "checklistItem",
+                                         "checklist":  "={{ $json.checklistId }}",
+                                         "name":  "={{ $json.itemName }}",
+                                         "additionalFields":  {
+
+                                                              }
+                                     },
+                      "id":  "clickup-add-item",
+                      "name":  "Add Item to Checklist",
+                      "type":  "n8n-nodes-base.clickUp",
+                      "typeVersion":  1,
+                      "position":  [
+                                       2144,
+                                       48
+                                   ],
+                      "credentials":  {
+                                          "clickUpApi":  {
+                                                             "id":  "FVDkMa0LpqdXzbIQ",
+                                                             "name":  "ClickUp_ADHD_V2"
+                                                         }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+
+                                     },
+                      "type":  "n8n-nodes-base.limit",
+                      "typeVersion":  1,
+                      "position":  [
+                                       2352,
+                                       48
+                                   ],
+                      "id":  "230b8dfc-a9cf-4951-9875-036e8a279fda",
+                      "name":  "Limit"
+                  }
+              ],
+    "connections":  {
+                        "Schedule Trigger":  {
+                                                 "main":  [
+                                                              [
+                                                                  {
+                                                                      "node":  "Get Subtasks",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  },
+                                                                  {
+                                                                      "node":  "Get Habits",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  },
+                                                                  {
+                                                                      "node":  "Get Player Stats",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ]
+                                                          ]
+                                             },
+                        "Get Subtasks":  {
+                                             "main":  [
+                                                          [
+                                                              {
+                                                                  "node":  "Merge Data",
+                                                                  "type":  "main",
+                                                                  "index":  0
+                                                              }
+                                                          ]
+                                                      ]
+                                         },
+                        "Get Habits":  {
+                                           "main":  [
+                                                        [
+                                                            {
+                                                                "node":  "Merge Data",
+                                                                "type":  "main",
+                                                                "index":  1
+                                                            }
+                                                        ]
+                                                    ]
+                                       },
+                        "Get Player Stats":  {
+                                                 "main":  [
+                                                              [
+                                                                  {
+                                                                      "node":  "Merge Data",
+                                                                      "type":  "main",
+                                                                      "index":  2
+                                                                  }
+                                                              ]
+                                                          ]
+                                             },
+                        "Merge Data":  {
+                                           "main":  [
+                                                        [
+                                                            {
+                                                                "node":  "Prepare AI Input",
+                                                                "type":  "main",
+                                                                "index":  0
+                                                            }
+                                                        ]
+                                                    ]
+                                       },
+                        "Prepare AI Input":  {
+                                                 "main":  [
+                                                              [
+                                                                  {
+                                                                      "node":  "AI Planner",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ]
+                                                          ]
+                                             },
+                        "OpenAI Chat Model":  {
+                                                  "ai_languageModel":  [
+                                                                           [
+                                                                               {
+                                                                                   "node":  "AI Planner",
+                                                                                   "type":  "ai_languageModel",
+                                                                                   "index":  0
+                                                                               }
+                                                                           ]
+                                                                       ]
+                                              },
+                        "AI Planner":  {
+                                           "main":  [
+                                                        [
+                                                            {
+                                                                "node":  "Parse AI Response",
+                                                                "type":  "main",
+                                                                "index":  0
+                                                            }
+                                                        ]
+                                                    ]
+                                       },
+                        "Parse AI Response":  {
+                                                  "main":  [
+                                                               [
+                                                                   {
+                                                                       "node":  "Create Daily Task",
+                                                                       "type":  "main",
+                                                                       "index":  0
+                                                                   }
+                                                               ]
+                                                           ]
+                                              },
+                        "Create Daily Task":  {
+                                                  "main":  [
+                                                               [
+                                                                   {
+                                                                       "node":  "Create Checklist",
+                                                                       "type":  "main",
+                                                                       "index":  0
+                                                                   }
+                                                               ]
+                                                           ]
+                                              },
+                        "Create Checklist":  {
+                                                 "main":  [
+                                                              [
+                                                                  {
+                                                                      "node":  "Add Checklist Items",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ]
+                                                          ]
+                                             },
+                        "Add Checklist Items":  {
+                                                    "main":  [
+                                                                 [
+                                                                     {
+                                                                         "node":  "Add Item to Checklist",
+                                                                         "type":  "main",
+                                                                         "index":  0
+                                                                     }
+                                                                 ]
+                                                             ]
+                                                },
+                        "Add Item to Checklist":  {
+                                                      "main":  [
+                                                                   [
+                                                                       {
+                                                                           "node":  "Limit",
+                                                                           "type":  "main",
+                                                                           "index":  0
+                                                                       }
+                                                                   ]
+                                                               ]
+                                                  },
+                        "Limit":  {
+                                      "main":  [
+                                                   [
+                                                       {
+                                                           "node":  "Send Telegram Plan",
+                                                           "type":  "main",
+                                                           "index":  0
+                                                       }
+                                                   ]
+                                               ]
+                                  }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1",
+                     "saveDataErrorExecution":  "all",
+                     "saveDataSuccessExecution":  "all",
+                     "saveManualExecutions":  true,
+                     "saveExecutionProgress":  true,
+                     "callerPolicy":  "workflowsFromSameOwner",
+                     "availableInMCP":  false
+                 },
+    "staticData":  {
+                       "node:Schedule Trigger":  {
+                                                     "recurrenceRules":  [
+                                                                             13
+                                                                         ]
+                                                 }
+                   },
+    "meta":  {
+                 "templateCredsSetupCompleted":  true
+             },
+    "nodeGroups":  [
+
+                   ],
+    "versionId":  "16638465-0045-4738-ac3f-2179b2ebf35c",
+    "activeVersionId":  null,
+    "versionCounter":  66,
+    "triggerCount":  1,
+    "sourceWorkflowId":  null,
+    "shared":  [
+                   {
+                       "updatedAt":  "2026-01-08T00:20:37.124Z",
+                       "createdAt":  "2026-01-08T00:20:37.124Z",
+                       "role":  "workflow:owner",
+                       "workflowId":  "9OHN8ci7giGSvIkk",
+                       "projectId":  "9rVJoULaKk30HdBB",
+                       "project":  {
+                                       "updatedAt":  "2025-06-26T00:18:14.615Z",
+                                       "createdAt":  "2025-06-25T23:37:35.363Z",
+                                       "id":  "9rVJoULaKk30HdBB",
+                                       "name":  "Nicolas Bednarz \u003cowner@example.com\u003e",
+                                       "type":  "personal",
+                                       "icon":  null,
+                                       "description":  null,
+                                       "customTelemetryTags":  [
+
+                                                               ],
+                                       "creatorId":  "af23e566-dd44-45a3-ac35-e15a8cdef3f2"
+                                   }
+                   }
+               ],
+    "tags":  [
+
+             ],
+    "activeVersion":  null
+}

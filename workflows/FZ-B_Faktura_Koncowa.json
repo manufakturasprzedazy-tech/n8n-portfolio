@@ -1,0 +1,552 @@
+{
+    "updatedAt":  "2026-04-26T20:00:16.994Z",
+    "createdAt":  "2026-04-24T19:01:24.300Z",
+    "id":  "dPOFQQnibX9Papmh",
+    "name":  "FZ-B_Faktura_Koncowa",
+    "description":  null,
+    "active":  false,
+    "isArchived":  false,
+    "nodes":  [
+                  {
+                      "parameters":  {
+                                         "httpMethod":  "POST",
+                                         "path":  "fz-b-wysylka",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "webhook",
+                      "name":  "Webhook Wysłano",
+                      "type":  "n8n-nodes-base.webhook",
+                      "typeVersion":  2,
+                      "position":  [
+                                       -1200,
+                                       400
+                                   ],
+                      "webhookId":  "b196199c-e130-4f7e-8064-9c2c7052ae9f",
+                      "notes":  "Trigger od BL po zmianie statusu na \u0027WYSŁANE. SPRAWDŹ FAKTURĘ KOŃCOWĄ\u0027.\nURL: https://n8n.example.com/webhook/fz-b-wysylka\nBody: {\"order_id\": 123456}"
+                  },
+                  {
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "https://api.baselinker.com/connector.php",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "X-BLToken",
+                                                                                         "value":  "TODO_BL_TOKEN_CREDENTIAL"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "sendBody":  true,
+                                         "contentType":  "form-urlencoded",
+                                         "bodyParameters":  {
+                                                                "parameters":  [
+                                                                                   {
+                                                                                       "name":  "method",
+                                                                                       "value":  "getOrders"
+                                                                                   },
+                                                                                   {
+                                                                                       "name":  "parameters",
+                                                                                       "value":  "={{ JSON.stringify({ order_id: $json.body.order_id, get_unconfirmed_orders: true }) }}"
+                                                                                   }
+                                                                               ]
+                                                            },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "bl-get-orders",
+                      "name":  "BL getOrders (by id)",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       -960,
+                                       400
+                                   ],
+                      "notes":  "Pobiera pełne dane zamówienia po order_id z webhooka."
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  true,
+                                                                            "leftValue":  "",
+                                                                            "typeValidation":  "loose",
+                                                                            "version":  2
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "leftValue":  "={{ $json.orders[0].extra_field_1 }}",
+                                                                                   "rightValue":  "",
+                                                                                   "operator":  {
+                                                                                                    "type":  "string",
+                                                                                                    "operation":  "notEmpty"
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "if-advance",
+                      "name":  "IF była zaliczka?",
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       -720,
+                                       400
+                                   ],
+                      "notes":  "True=była zaliczka → final. False=nie było → vat."
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const order = $json.orders[0];\nconst advanceInvoiceId = order.extra_field_1;\nconst today = new Date().toISOString().slice(0, 10);\n\nconst payload = {\n  api_token: \u0027TODO_FAKTUROWNIA_TOKEN\u0027,\n  invoice: {\n    kind: \u0027final\u0027,\n    from_invoice_id: parseInt(advanceInvoiceId, 10),\n    issue_date: today,\n    sell_date: today,\n    payment_to: today,\n    buyer_name: order.delivery_fullname || order.invoice_fullname,\n    description: `Rozliczenie zaliczki do zamówienia ${order.order_id}`,\n    status: \u0027paid\u0027\n  },\n  _order_id: order.order_id\n};\n\nreturn [{ json: payload }];"
+                                     },
+                      "id":  "build-final",
+                      "name":  "Build payload (faktura końcowa)",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       -480,
+                                       304
+                                   ],
+                      "notes":  "kind=final + from_invoice_id → wyzerowana."
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const order = $json.orders[0];\nconst today = new Date().toISOString().slice(0, 10);\n\nconst positions = (order.products || []).map(p =\u003e ({\n  name: p.name,\n  tax: 23,\n  total_price_gross: p.price_brutto,\n  quantity: p.quantity\n}));\n\nif (positions.length === 0) {\n  positions.push({\n    name: `Zamówienie nr ${order.order_id}`,\n    tax: 23,\n    total_price_gross: order.order_total_gross || 0,\n    quantity: 1\n  });\n}\n\nconst payload = {\n  api_token: \u0027TODO_FAKTUROWNIA_TOKEN\u0027,\n  invoice: {\n    kind: \u0027vat\u0027,\n    issue_date: today,\n    sell_date: today,\n    payment_to: today,\n    buyer_name: order.delivery_fullname || order.invoice_fullname,\n    buyer_tax_no: order.invoice_nip || \u0027\u0027,\n    buyer_post_code: order.invoice_postcode || \u0027\u0027,\n    buyer_city: order.invoice_city || \u0027\u0027,\n    buyer_street: order.invoice_address || \u0027\u0027,\n    buyer_country: order.invoice_country_code || \u0027PL\u0027,\n    buyer_email: order.email || \u0027\u0027,\n    positions: positions,\n    payment_type: \u0027transfer\u0027,\n    status: \u0027paid\u0027\n  },\n  _order_id: order.order_id\n};\n\nreturn [{ json: payload }];"
+                                     },
+                      "id":  "build-vat",
+                      "name":  "Build payload (zwykła VAT)",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       -480,
+                                       512
+                                   ],
+                      "notes":  "Faktura VAT w całości."
+                  },
+                  {
+                      "parameters":  {
+
+                                     },
+                      "id":  "merge",
+                      "name":  "Merge",
+                      "type":  "n8n-nodes-base.merge",
+                      "typeVersion":  3.2,
+                      "position":  [
+                                       -240,
+                                       400
+                                   ],
+                      "notes":  "Łączy ścieżki IF."
+                  },
+                  {
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "https://TODO_SLUG.fakturownia.pl/invoices.json",
+                                         "sendBody":  true,
+                                         "bodyParameters":  {
+                                                                "parameters":  [
+                                                                                   {
+
+                                                                                   }
+                                                                               ]
+                                                            },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "fakturownia",
+                      "name":  "Fakturownia addInvoice (final/vat)",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       0,
+                                       400
+                                   ],
+                      "onError":  "continueRegularOutput",
+                      "notes":  "TODO: SLUG."
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  true,
+                                                                            "leftValue":  "",
+                                                                            "typeValidation":  "loose",
+                                                                            "version":  2
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "leftValue":  "={{ $json.id }}",
+                                                                                   "rightValue":  "",
+                                                                                   "operator":  {
+                                                                                                    "type":  "string",
+                                                                                                    "operation":  "notEmpty"
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "if-success",
+                      "name":  "IF success",
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       240,
+                                       400
+                                   ],
+                      "notes":  "Sprawdza response.id."
+                  },
+                  {
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "https://api.baselinker.com/connector.php",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "X-BLToken",
+                                                                                         "value":  "TODO_BL_TOKEN_CREDENTIAL"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "sendBody":  true,
+                                         "contentType":  "form-urlencoded",
+                                         "bodyParameters":  {
+                                                                "parameters":  [
+                                                                                   {
+                                                                                       "name":  "method",
+                                                                                       "value":  "setOrderExtraFields"
+                                                                                   },
+                                                                                   {
+                                                                                       "name":  "parameters",
+                                                                                       "value":  "={{ JSON.stringify({ order_id: $(\u0027Merge\u0027).item.json._order_id, extra_fields: { extra_field_3: String($json.id), extra_field_4: $json.view_url } }) }}"
+                                                                                   }
+                                                                               ]
+                                                            },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "bl-extra-fields",
+                      "name":  "BL setOrderExtraFields (KOŃCOWA)",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       480,
+                                       304
+                                   ],
+                      "notes":  "Zapis ID faktury końcowej."
+                  },
+                  {
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "https://api.baselinker.com/connector.php",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "X-BLToken",
+                                                                                         "value":  "TODO_BL_TOKEN_CREDENTIAL"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "sendBody":  true,
+                                         "contentType":  "form-urlencoded",
+                                         "bodyParameters":  {
+                                                                "parameters":  [
+                                                                                   {
+                                                                                       "name":  "method",
+                                                                                       "value":  "setOrderStatus"
+                                                                                   },
+                                                                                   {
+                                                                                       "name":  "parameters",
+                                                                                       "value":  "={{ JSON.stringify({ order_id: $(\u0027Merge\u0027).item.json._order_id, status_id: \u0027STATUS_FINAL_ISSUED\u0027 }) }}"
+                                                                                   }
+                                                                               ]
+                                                            },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "bl-status",
+                      "name":  "BL setOrderStatus (FV OK)",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       720,
+                                       304
+                                   ],
+                      "notes":  "TODO: STATUS_FINAL_ISSUED."
+                  },
+                  {
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "https://api.clickup.com/api/v2/list/TODO_LIST_ID/task",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "Authorization",
+                                                                                         "value":  "TODO_CLICKUP_TOKEN"
+                                                                                     },
+                                                                                     {
+                                                                                         "name":  "Content-Type",
+                                                                                         "value":  "application/json"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "sendBody":  true,
+                                         "bodyParameters":  {
+                                                                "parameters":  [
+                                                                                   {
+
+                                                                                   }
+                                                                               ]
+                                                            },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "clickup-error",
+                      "name":  "ClickUp createTask (error)",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       480,
+                                       512
+                                   ],
+                      "onError":  "continueRegularOutput",
+                      "notes":  "TODO: LIST_ID + CLICKUP_TOKEN."
+                  },
+                  {
+                      "parameters":  {
+                                         "content":  "## 1️⃣ Trigger — Webhook od BL\n\nPath: `/webhook/fz-b-wysylka`\n\nBL wysyła po zmianie statusu na **WYSŁANE. SPRAWDŹ FAKTURĘ KOŃCOWĄ**.\n\nBody: `{ \"order_id\": 123456 }`",
+                                         "height":  200,
+                                         "width":  520,
+                                         "color":  5
+                                     },
+                      "id":  "sticky-1",
+                      "name":  "Sticky Note — Webhook",
+                      "type":  "n8n-nodes-base.stickyNote",
+                      "typeVersion":  1,
+                      "position":  [
+                                       -1248,
+                                       64
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "content":  "## 2️⃣ Zaliczka była czy nie?\n\n- **IF** sprawdza `FAKTURA_ZALICZKOWA_ID` w BL\n- Tak → `kind=final` + `from_invoice_id`\n- Nie → `kind=vat`",
+                                         "height":  180,
+                                         "width":  480,
+                                         "color":  4
+                                     },
+                      "id":  "sticky-2",
+                      "name":  "Sticky Note — Rozgałęzienie",
+                      "type":  "n8n-nodes-base.stickyNote",
+                      "typeVersion":  1,
+                      "position":  [
+                                       -704,
+                                       80
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "content":  "## 3️⃣ Merge + Fakturownia\n\n- Merge łączy obie ścieżki IF\n- POST do Fakturowni\n- IF success = response.id istnieje",
+                                         "height":  180,
+                                         "width":  520,
+                                         "color":  3
+                                     },
+                      "id":  "sticky-3",
+                      "name":  "Sticky Note — Wystawienie",
+                      "type":  "n8n-nodes-base.stickyNote",
+                      "typeVersion":  1,
+                      "position":  [
+                                       -176,
+                                       80
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "content":  "## 4️⃣ Zapis w BL / Error\n\n**Success**:\n- setOrderExtraFields → `FAKTURA_KONCOWA_ID` + link\n- setOrderStatus → `FV KOŃCOWA WYSTAWIONA`\n\n**Error** → ClickUp.",
+                                         "height":  180,
+                                         "width":  460,
+                                         "color":  2
+                                     },
+                      "id":  "sticky-4",
+                      "name":  "Sticky Note — Zapis / Error",
+                      "type":  "n8n-nodes-base.stickyNote",
+                      "typeVersion":  1,
+                      "position":  [
+                                       448,
+                                       80
+                                   ]
+                  }
+              ],
+    "connections":  {
+                        "Webhook Wysłano":  {
+                                                "main":  [
+                                                             [
+                                                                 {
+                                                                     "node":  "BL getOrders (by id)",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ]
+                                                         ]
+                                            },
+                        "BL getOrders (by id)":  {
+                                                     "main":  [
+                                                                  [
+                                                                      {
+                                                                          "node":  "IF była zaliczka?",
+                                                                          "type":  "main",
+                                                                          "index":  0
+                                                                      }
+                                                                  ]
+                                                              ]
+                                                 },
+                        "IF była zaliczka?":  {
+                                                  "main":  [
+                                                               [
+                                                                   {
+                                                                       "node":  "Build payload (faktura końcowa)",
+                                                                       "type":  "main",
+                                                                       "index":  0
+                                                                   }
+                                                               ],
+                                                               [
+                                                                   {
+                                                                       "node":  "Build payload (zwykła VAT)",
+                                                                       "type":  "main",
+                                                                       "index":  0
+                                                                   }
+                                                               ]
+                                                           ]
+                                              },
+                        "Build payload (faktura końcowa)":  {
+                                                                "main":  [
+                                                                             [
+                                                                                 {
+                                                                                     "node":  "Merge",
+                                                                                     "type":  "main",
+                                                                                     "index":  0
+                                                                                 }
+                                                                             ]
+                                                                         ]
+                                                            },
+                        "Build payload (zwykła VAT)":  {
+                                                           "main":  [
+                                                                        [
+                                                                            {
+                                                                                "node":  "Merge",
+                                                                                "type":  "main",
+                                                                                "index":  1
+                                                                            }
+                                                                        ]
+                                                                    ]
+                                                       },
+                        "Merge":  {
+                                      "main":  [
+                                                   [
+                                                       {
+                                                           "node":  "Fakturownia addInvoice (final/vat)",
+                                                           "type":  "main",
+                                                           "index":  0
+                                                       }
+                                                   ]
+                                               ]
+                                  },
+                        "Fakturownia addInvoice (final/vat)":  {
+                                                                   "main":  [
+                                                                                [
+                                                                                    {
+                                                                                        "node":  "IF success",
+                                                                                        "type":  "main",
+                                                                                        "index":  0
+                                                                                    }
+                                                                                ]
+                                                                            ]
+                                                               },
+                        "IF success":  {
+                                           "main":  [
+                                                        [
+                                                            {
+                                                                "node":  "BL setOrderExtraFields (KOŃCOWA)",
+                                                                "type":  "main",
+                                                                "index":  0
+                                                            }
+                                                        ],
+                                                        [
+                                                            {
+                                                                "node":  "ClickUp createTask (error)",
+                                                                "type":  "main",
+                                                                "index":  0
+                                                            }
+                                                        ]
+                                                    ]
+                                       },
+                        "BL setOrderExtraFields (KOŃCOWA)":  {
+                                                                 "main":  [
+                                                                              [
+                                                                                  {
+                                                                                      "node":  "BL setOrderStatus (FV OK)",
+                                                                                      "type":  "main",
+                                                                                      "index":  0
+                                                                                  }
+                                                                              ]
+                                                                          ]
+                                                             }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1",
+                     "timezone":  "Europe/Warsaw",
+                     "binaryMode":  "separate"
+                 },
+    "staticData":  null,
+    "meta":  null,
+    "nodeGroups":  [
+
+                   ],
+    "versionId":  "0a3a35fb-3819-4143-8e0f-a2cabe95c73b",
+    "activeVersionId":  null,
+    "versionCounter":  6,
+    "triggerCount":  0,
+    "sourceWorkflowId":  null,
+    "shared":  [
+                   {
+                       "updatedAt":  "2026-04-24T19:01:24.300Z",
+                       "createdAt":  "2026-04-24T19:01:24.300Z",
+                       "role":  "workflow:owner",
+                       "workflowId":  "dPOFQQnibX9Papmh",
+                       "projectId":  "9rVJoULaKk30HdBB",
+                       "project":  {
+                                       "updatedAt":  "2025-06-26T00:18:14.615Z",
+                                       "createdAt":  "2025-06-25T23:37:35.363Z",
+                                       "id":  "9rVJoULaKk30HdBB",
+                                       "name":  "Nicolas Bednarz \u003cowner@example.com\u003e",
+                                       "type":  "personal",
+                                       "icon":  null,
+                                       "description":  null,
+                                       "customTelemetryTags":  [
+
+                                                               ],
+                                       "creatorId":  "af23e566-dd44-45a3-ac35-e15a8cdef3f2"
+                                   }
+                   }
+               ],
+    "tags":  [
+
+             ],
+    "activeVersion":  null
+}

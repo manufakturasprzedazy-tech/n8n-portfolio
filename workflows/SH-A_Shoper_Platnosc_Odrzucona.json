@@ -1,0 +1,628 @@
+{
+    "updatedAt":  "2026-05-13T15:56:10.089Z",
+    "createdAt":  "2026-05-12T19:12:06.069Z",
+    "id":  "geMC21BzGax401zf",
+    "name":  "SH-A_Shoper_Platnosc_Odrzucona",
+    "description":  null,
+    "active":  false,
+    "isArchived":  false,
+    "nodes":  [
+                  {
+                      "id":  "wyzwalacz-cron",
+                      "name":  "Wyzwalacz-Cron",
+                      "type":  "n8n-nodes-base.scheduleTrigger",
+                      "typeVersion":  1.2,
+                      "position":  [
+                                       -1800,
+                                       400
+                                   ],
+                      "parameters":  {
+                                         "rule":  {
+                                                      "interval":  [
+                                                                       {
+                                                                           "field":  "minutes",
+                                                                           "minutesInterval":  30
+                                                                       }
+                                                                   ]
+                                                  }
+                                     },
+                      "notes":  "Cron co 30 min. Trigger glowny SH-A. Cykl: pobierz zamowienia Shoper -\u003e filtr nieoplacone -\u003e wystaw proforme."
+                  },
+                  {
+                      "id":  "autoryzacja-shoper",
+                      "name":  "Autoryzacja-Shoper",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       -1560,
+                                       400
+                                   ],
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "https://sklep047881.shoparena.pl/webapi/rest/auth",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "Authorization",
+                                                                                         "value":  "=Basic {{ $env.SHOPER_BASIC_AUTH || \u0027TODO_BASIC_AUTH_BASE64\u0027 }}"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "notes":  "POST /webapi/rest/auth -\u003e dostajemy access_token (Bearer, expires 1h). Header Authorization: Basic base64(CLIENT_ID:TOKEN_API). TODO_BASIC_AUTH_BASE64 podmienic na faktyczna wartosc base64 lub uzyc env var SHOPER_BASIC_AUTH."
+                  },
+                  {
+                      "id":  "pobierz-zamowienia-shoper",
+                      "name":  "Pobierz-Zamowienia-Shoper",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       -1320,
+                                       400
+                                   ],
+                      "parameters":  {
+                                         "method":  "GET",
+                                         "url":  "https://sklep047881.shoparena.pl/webapi/rest/orders",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "Authorization",
+                                                                                         "value":  "=Bearer {{ $json.access_token }}"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "sendQuery":  true,
+                                         "queryParameters":  {
+                                                                 "parameters":  [
+                                                                                    {
+                                                                                        "name":  "filter",
+                                                                                        "value":  "={{ JSON.stringify({ is_paid: 0, payment_id: 3 }) }}"
+                                                                                    },
+                                                                                    {
+                                                                                        "name":  "limit",
+                                                                                        "value":  "50"
+                                                                                    },
+                                                                                    {
+                                                                                        "name":  "order",
+                                                                                        "value":  "-date"
+                                                                                    }
+                                                                                ]
+                                                             },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "notes":  "GET /orders?filter[is_paid]=0\u0026filter[payment_id]=3 (Autopay - online). Limit 50, sort -date (najnowsze). Bearer token z poprzedniego nodu."
+                  },
+                  {
+                      "id":  "filtruj-kandydatow",
+                      "name":  "Filtruj-Kandydatow",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       -1080,
+                                       400
+                                   ],
+                      "parameters":  {
+                                         "language":  "javaScript",
+                                         "jsCode":  "// Wejscie: response Shopera (lista zamowien lub paginated container)\nconst raw = $input.first().json;\n// Shoper API zwraca: { list: [...], count: N, pages: M } albo bezposrednio [...]\nconst orders = Array.isArray(raw) ? raw : (raw.list || []);\n\nconst DELAY_HOURS = 24; // TODO_DELAY_HOURS - po ilu godzinach od utworzenia uznajemy \u0027nieoplacone\u0027\nconst nowMs = Date.now();\nconst delayMs = DELAY_HOURS * 60 * 60 * 1000;\n\nconst candidates = orders.filter(o =\u003e {\n  // Heurystyka: zamowienie online nieoplacone, link platnosci aktywny, wystarczajaco stare\n  if (o.is_paid !== false) return false;\n  if (parseFloat(o.paid) !== 0) return false;\n  if (!o.payment_url || o.payment_url === \u0027\u0027) return false;\n  if (parseInt(o.payment_id, 10) !== 3) return false; // tylko Autopay\n  // Wiek zamowienia\n  const orderDate = new Date(o.date.replace(\u0027 \u0027, \u0027T\u0027) + \u0027+02:00\u0027).getTime();\n  if ((nowMs - orderDate) \u003c delayMs) return false;\n  return true;\n});\n\nreturn candidates.map(o =\u003e ({ json: o }));"
+                                     },
+                      "notes":  "Filtr kandydatow: is_paid=false, paid=0.00, payment_url≠\u0027\u0027, payment_id=3 (Autopay), wiek \u003e DELAY_HOURS godzin. Default 24h. Zwraca kazdego kandydata jako osobny item n8n -\u003e reszta workflow iteruje po nich."
+                  },
+                  {
+                      "id":  "pobierz-zamowienie-bl",
+                      "name":  "Pobierz-Zamowienie-BL",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       -840,
+                                       400
+                                   ],
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "https://api.baselinker.com/connector.php",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "X-BLToken",
+                                                                                         "value":  "TODO_BL_TOKEN"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "sendBody":  true,
+                                         "contentType":  "form-urlencoded",
+                                         "bodyParameters":  {
+                                                                "parameters":  [
+                                                                                   {
+                                                                                       "name":  "method",
+                                                                                       "value":  "getOrders"
+                                                                                   },
+                                                                                   {
+                                                                                       "name":  "parameters",
+                                                                                       "value":  "={{ JSON.stringify({ filter_external_order_id: String($json.order_id), include_custom_extra_fields: true, get_unconfirmed_orders: true }) }}"
+                                                                                   }
+                                                                               ]
+                                                            },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "notes":  "BL getOrders po Shoper order_id (filter_external_order_id). Idempotencja przez pole BL i dane do faktury z BL."
+                  },
+                  {
+                      "id":  "rozpakuj-zamowienie-bl",
+                      "name":  "Rozpakuj-Zamowienie-BL",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       -600,
+                                       400
+                                   ],
+                      "parameters":  {
+                                         "language":  "javaScript",
+                                         "jsCode":  "const orders = $input.first().json.orders || [];\nif (orders.length === 0) {\n  const shopId = $(\u0027Filtruj-Kandydatow\u0027).first().json.order_id;\n  throw new Error(\u0027BL getOrders zwrocil pusta liste dla Shoper order_id=\u0027 + shopId + \u0027 - sprawdz sync BL-Shoper\u0027);\n}\nreturn [{ json: orders[0] }];"
+                                     },
+                      "notes":  "Wyciaga orders[0] z BL response. Throw jesli puste -\u003e error path -\u003e ClickUp."
+                  },
+                  {
+                      "id":  "sprawdz-duplikat",
+                      "name":  "Sprawdz-Duplikat",
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       -360,
+                                       400
+                                   ],
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  true,
+                                                                            "leftValue":  "",
+                                                                            "typeValidation":  "loose",
+                                                                            "version":  2
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "leftValue":  "={{ ($json.custom_extra_fields \u0026\u0026 $json.custom_extra_fields[\u002735897\u0027]) || \u0027\u0027 }}",
+                                                                                   "rightValue":  "",
+                                                                                   "operator":  {
+                                                                                                    "type":  "string",
+                                                                                                    "operation":  "empty"
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        }
+                                     },
+                      "notes":  "Idempotencja: pole BL 35897 puste -\u003e kontynuuj. Niepuste -\u003e exit (juz wystawiono proforme)."
+                  },
+                  {
+                      "id":  "buduj-payload",
+                      "name":  "Buduj-Payload",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       -120,
+                                       400
+                                   ],
+                      "parameters":  {
+                                         "language":  "javaScript",
+                                         "jsCode":  "// BL zamowienie (dane do faktury, produkty, email)\nconst bl = $input.first().json;\n// Shoper zamowienie (numer sklep, kwoty)\nconst shop = $(\u0027Filtruj-Kandydatow\u0027).first().json;\n\nfunction toLocalISO(d) {\n  const fmt = new Intl.DateTimeFormat(\u0027en-CA\u0027, { timeZone: \u0027Europe/Warsaw\u0027, year: \u0027numeric\u0027, month: \u00272-digit\u0027, day: \u00272-digit\u0027 });\n  return fmt.format(d);\n}\nconst today = new Date();\nconst issueDate = toLocalISO(today);\nconst due = new Date(today.getTime() + 14 * 24 * 60 * 60 * 1000);\nconst paymentTo = toLocalISO(due);\n\nconst buyerName = (bl.invoice_company || \u0027\u0027).trim() || bl.invoice_fullname || bl.delivery_fullname || \u0027Klient\u0027;\nconst buyerEmail = bl.email || bl.delivery_email || bl.invoice_email || \u0027\u0027;\n\nconst productsList = (bl.products || [])\n  .map(p =\u003e \u0027- \u0027 + p.name + \u0027 (\u0027 + p.quantity + \u0027 szt)\u0027)\n  .join(\u0027\\n\u0027);\n\nconst shopOrderNumber = shop.order_id; // numer sklep Shoper\n\nconst positions = (bl.products || []).map(p =\u003e ({\n  name: p.name,\n  tax: 23,\n  quantity: p.quantity,\n  quantity_unit: \u0027szt\u0027,\n  total_price_gross: Number(p.price_brutto) * Number(p.quantity)\n}));\n\nconst payload = {\n  api_token: \u0027TODO_FAKTUROWNIA_TOKEN\u0027,\n  invoice: {\n    kind: \u0027proforma\u0027,\n    place: \u0027Radzionkow\u0027,\n    issue_date: issueDate,\n    sell_date: issueDate,\n    payment_to: paymentTo,\n    buyer_name: buyerName,\n    buyer_tax_no: bl.invoice_nip || \u0027\u0027,\n    buyer_post_code: bl.invoice_postcode || \u0027\u0027,\n    buyer_city: bl.invoice_city || \u0027\u0027,\n    buyer_street: bl.invoice_address || \u0027\u0027,\n    buyer_country: bl.invoice_country_code || \u0027PL\u0027,\n    buyer_email: buyerEmail,\n    description: \u0027Proforma za zamowienie \u0027 + shopOrderNumber + \u0027 - platnosc online nieudana\u0027,\n    internal_note: \u0027Shoper odrzut / BL: \u0027 + bl.order_id + \u0027 / Shoper: \u0027 + shopOrderNumber,\n    payment_type: \u0027transfer\u0027,\n    positions: positions\n  },\n  _shop_order_number: shopOrderNumber,\n  _products_list: productsList,\n  _email: buyerEmail,\n  _bl_order_id: bl.order_id\n};\n\nreturn [{ json: payload }];"
+                                     },
+                      "notes":  "Mapping BL+Shoper -\u003e Fakturownia. kind=proforma, payment_to=+14 dni, VAT 23%, positions z BL.products. internal_note z BL ID + Shoper ID jako slad audytowy."
+                  },
+                  {
+                      "id":  "utworz-proforme",
+                      "name":  "Utworz-Proforme",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       120,
+                                       400
+                                   ],
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "https://TODO_FAKTUROWNIA_SLUG.fakturownia.pl/invoices.json",
+                                         "sendBody":  true,
+                                         "contentType":  "json",
+                                         "jsonBody":  "={{ JSON.stringify({ api_token: $json.api_token, invoice: $json.invoice }) }}",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "onError":  "continueErrorOutput",
+                      "notes":  "POST do Fakturowni. SLUG = clientcocnc."
+                  },
+                  {
+                      "id":  "pobierz-pdf",
+                      "name":  "Pobierz-PDF",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       360,
+                                       300
+                                   ],
+                      "parameters":  {
+                                         "method":  "GET",
+                                         "url":  "=https://TODO_FAKTUROWNIA_SLUG.fakturownia.pl/invoices/{{ $json.id }}.pdf?api_token=TODO_FAKTUROWNIA_TOKEN",
+                                         "options":  {
+                                                         "response":  {
+                                                                          "response":  {
+                                                                                           "responseFormat":  "file",
+                                                                                           "outputPropertyName":  "data"
+                                                                                       }
+                                                                      }
+                                                     }
+                                     },
+                      "onError":  "continueErrorOutput",
+                      "notes":  "GET PDF, binary \u0027data\u0027."
+                  },
+                  {
+                      "id":  "nazwij-pdf",
+                      "name":  "Nazwij-PDF",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       600,
+                                       300
+                                   ],
+                      "parameters":  {
+                                         "language":  "javaScript",
+                                         "jsCode":  "const item = $input.first();\nconst shopId = $(\u0027Buduj-Payload\u0027).first().json._shop_order_number;\nif (item.binary \u0026\u0026 item.binary.data) {\n  item.binary.data.fileName = \u0027proforma_odrzut_\u0027 + shopId + \u0027.pdf\u0027;\n}\nreturn [item];"
+                                     },
+                      "notes":  "Nazywa PDF czytelnie. Mode: Run Once for All Items."
+                  },
+                  {
+                      "id":  "konwertuj-pdf",
+                      "name":  "Konwertuj-PDF",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       840,
+                                       300
+                                   ],
+                      "parameters":  {
+                                         "language":  "javaScript",
+                                         "jsCode":  "const item = $input.first();\nconst buf = await this.helpers.getBinaryDataBuffer(0, \u0027data\u0027);\nconst filename = (item.binary \u0026\u0026 item.binary.data \u0026\u0026 item.binary.data.fileName) || \u0027proforma.pdf\u0027;\nreturn [{\n  json: {\n    pdf_base64: buf.toString(\u0027base64\u0027),\n    pdf_filename: filename\n  },\n  binary: item.binary\n}];"
+                                     },
+                      "notes":  "Binary PDF -\u003e base64 dla Zapisz-link. Mode: Run Once for All Items."
+                  },
+                  {
+                      "id":  "wyslij-maila",
+                      "name":  "Wyslij-Maila",
+                      "type":  "n8n-nodes-base.emailSend",
+                      "typeVersion":  2.1,
+                      "position":  [
+                                       1080,
+                                       300
+                                   ],
+                      "parameters":  {
+                                         "fromEmail":  "TODO_FROM_EMAIL",
+                                         "toEmail":  "={{ $(\u0027Buduj-Payload\u0027).first().json._email }}",
+                                         "subject":  "={{ \u0027Platnosc odrzucona - faktura ProForma \u0027 + $(\u0027Utworz-Proforme\u0027).first().json.number + \u0027 (zamowienie \u0027 + $(\u0027Buduj-Payload\u0027).first().json._shop_order_number + \u0027)\u0027 }}",
+                                         "emailFormat":  "text",
+                                         "text":  "={{ \u0027Dzien dobry,\\n\\notrzymalismy informacje, ze platnosc online dla zamowienia \u0027 + $(\u0027Buduj-Payload\u0027).first().json._shop_order_number + \u0027 nie zostala zrealizowana.\\n\\nZamowienie obejmuje ponizsze produkty:\\n\u0027 + $(\u0027Buduj-Payload\u0027).first().json._products_list + \u0027\\n\\nW zwiazku z tym wystawilismy fakture ProForma \u0027 + $(\u0027Utworz-Proforme\u0027).first().json.number + \u0027, ktora przesylamy w zalaczeniu.\\n\\nFakture ProForma mozna oplacic przelewem tradycyjnym albo online, korzystajac z przycisku Kliknij i zaplac online znajdujacego sie na dokumencie.\\n\\nPo zaksiegowaniu platnosci przekazemy zamowienie do dalszej realizacji.\\n\\nW razie pytan prosimy o odpowiedz bezposrednio na te wiadomosc lub kontakt mailowy na adres: office@client.example\\n\\nPozdrawiamy,\\nZespol ClientCo\u0027 }}",
+                                         "options":  {
+                                                         "attachments":  "data"
+                                                     }
+                                     },
+                      "onError":  "continueErrorOutput",
+                      "notes":  "SMTP n8n. Klient na produkcji moze podmienic na Gmail OAuth2 (jak DZ-A).",
+                      "webhookId":  "sh-a-emailsend-id"
+                  },
+                  {
+                      "id":  "zapisz-link",
+                      "name":  "Zapisz-Link",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       1320,
+                                       300
+                                   ],
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "https://api.baselinker.com/connector.php",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "X-BLToken",
+                                                                                         "value":  "TODO_BL_TOKEN"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "sendBody":  true,
+                                         "contentType":  "form-urlencoded",
+                                         "bodyParameters":  {
+                                                                "parameters":  [
+                                                                                   {
+                                                                                       "name":  "method",
+                                                                                       "value":  "setOrderFields"
+                                                                                   },
+                                                                                   {
+                                                                                       "name":  "parameters",
+                                                                                       "value":  "={{ JSON.stringify({ order_id: $(\u0027Buduj-Payload\u0027).first().json._bl_order_id, custom_extra_fields: { \u002735897\u0027: { title: $(\u0027Konwertuj-PDF\u0027).first().json.pdf_filename, file: \u0027data:\u0027 + $(\u0027Konwertuj-PDF\u0027).first().json.pdf_base64 } } }) }}"
+                                                                                   }
+                                                                               ]
+                                                            },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "notes":  "BL setOrderFields. PDF jako \u0027data:\u0027 + base64 (BEZ application/pdf;base64,). Pole 35897 (reuse z DZ-A; ryzyko kolizji na produkcji)."
+                  },
+                  {
+                      "id":  "buduj-blad",
+                      "name":  "Buduj-Blad",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       600,
+                                       540
+                                   ],
+                      "parameters":  {
+                                         "language":  "javaScript",
+                                         "jsCode":  "const shop = $(\u0027Filtruj-Kandydatow\u0027).first().json;\nconst shopId = shop.order_id || \u0027UNKNOWN\u0027;\nconst item = $input.first();\nconst errObj = item.error || (item.json \u0026\u0026 item.json.error) || item.json;\nconst errMsg = (errObj \u0026\u0026 errObj.message) || (typeof errObj === \u0027string\u0027 ? errObj : JSON.stringify(errObj || {}).slice(0, 500));\nconst execId = $execution.id;\n\nconst taskName = \u0027[SH-A BLAD] Proforma odrzut Shoper - order Shoper \u0027 + shopId;\nconst taskDescription = [\n  \u0027Workflow SH-A_Shoper_Platnosc_Odrzucona zatrzymal sie na bledzie.\u0027,\n  \u0027\u0027,\n  \u0027Shoper order: \u0027 + shopId,\n  \u0027Blad: \u0027 + errMsg,\n  \u0027Wykonanie n8n: \u0027 + execId,\n  \u0027\u0027,\n  \u0027Do wykonania recznie:\u0027,\n  \u00271. Znajdz zamowienie BL po Shoper ID \u0027 + shopId + \u0027 (filter_external_order_id).\u0027,\n  \u00272. Sprawdz w Fakturowni czy proforma juz powstala.\u0027,\n  \u00273. Jesli nie - wystaw recznie proforme z pozycjami z zamowienia BL.\u0027,\n  \u00274. Pobierz PDF i wyslij mailem do klienta.\u0027,\n  \u00275. Zapisz link/PDF w polu BL 35897.\u0027\n].join(\u0027\\n\u0027);\n\nreturn [{ json: { taskName, taskDescription, priority: 2, status: \u0027open\u0027 } }];"
+                                     },
+                      "notes":  "Builder task ClickUp z error info. .first() zamiast .item, taskName zamiast name."
+                  },
+                  {
+                      "id":  "utworz-task",
+                      "name":  "Utworz-Task",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       840,
+                                       540
+                                   ],
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "https://api.clickup.com/api/v2/list/901519277113/task",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "Authorization",
+                                                                                         "value":  "TODO_CLICKUP_TOKEN"
+                                                                                     },
+                                                                                     {
+                                                                                         "name":  "Content-Type",
+                                                                                         "value":  "application/json"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "sendBody":  true,
+                                         "contentType":  "json",
+                                         "jsonBody":  "={{ JSON.stringify({ name: $json.taskName, description: $json.taskDescription, priority: $json.priority, status: $json.status }) }}",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "onError":  "continueRegularOutput",
+                      "notes":  "ClickUp List ID 901519277113 - lista pakowacza."
+                  }
+              ],
+    "connections":  {
+                        "Wyzwalacz-Cron":  {
+                                               "main":  [
+                                                            [
+                                                                {
+                                                                    "node":  "Autoryzacja-Shoper",
+                                                                    "type":  "main",
+                                                                    "index":  0
+                                                                }
+                                                            ]
+                                                        ]
+                                           },
+                        "Autoryzacja-Shoper":  {
+                                                   "main":  [
+                                                                [
+                                                                    {
+                                                                        "node":  "Pobierz-Zamowienia-Shoper",
+                                                                        "type":  "main",
+                                                                        "index":  0
+                                                                    }
+                                                                ]
+                                                            ]
+                                               },
+                        "Pobierz-Zamowienia-Shoper":  {
+                                                          "main":  [
+                                                                       [
+                                                                           {
+                                                                               "node":  "Filtruj-Kandydatow",
+                                                                               "type":  "main",
+                                                                               "index":  0
+                                                                           }
+                                                                       ]
+                                                                   ]
+                                                      },
+                        "Filtruj-Kandydatow":  {
+                                                   "main":  [
+                                                                [
+                                                                    {
+                                                                        "node":  "Pobierz-Zamowienie-BL",
+                                                                        "type":  "main",
+                                                                        "index":  0
+                                                                    }
+                                                                ]
+                                                            ]
+                                               },
+                        "Pobierz-Zamowienie-BL":  {
+                                                      "main":  [
+                                                                   [
+                                                                       {
+                                                                           "node":  "Rozpakuj-Zamowienie-BL",
+                                                                           "type":  "main",
+                                                                           "index":  0
+                                                                       }
+                                                                   ]
+                                                               ]
+                                                  },
+                        "Rozpakuj-Zamowienie-BL":  {
+                                                       "main":  [
+                                                                    [
+                                                                        {
+                                                                            "node":  "Sprawdz-Duplikat",
+                                                                            "type":  "main",
+                                                                            "index":  0
+                                                                        }
+                                                                    ]
+                                                                ]
+                                                   },
+                        "Sprawdz-Duplikat":  {
+                                                 "main":  [
+                                                              [
+                                                                  {
+                                                                      "node":  "Buduj-Payload",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ],
+                                                              [
+
+                                                              ]
+                                                          ]
+                                             },
+                        "Buduj-Payload":  {
+                                              "main":  [
+                                                           [
+                                                               {
+                                                                   "node":  "Utworz-Proforme",
+                                                                   "type":  "main",
+                                                                   "index":  0
+                                                               }
+                                                           ]
+                                                       ]
+                                          },
+                        "Utworz-Proforme":  {
+                                                "main":  [
+                                                             [
+                                                                 {
+                                                                     "node":  "Pobierz-PDF",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ],
+                                                             [
+                                                                 {
+                                                                     "node":  "Buduj-Blad",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ]
+                                                         ]
+                                            },
+                        "Pobierz-PDF":  {
+                                            "main":  [
+                                                         [
+                                                             {
+                                                                 "node":  "Nazwij-PDF",
+                                                                 "type":  "main",
+                                                                 "index":  0
+                                                             }
+                                                         ],
+                                                         [
+                                                             {
+                                                                 "node":  "Buduj-Blad",
+                                                                 "type":  "main",
+                                                                 "index":  0
+                                                             }
+                                                         ]
+                                                     ]
+                                        },
+                        "Nazwij-PDF":  {
+                                           "main":  [
+                                                        [
+                                                            {
+                                                                "node":  "Konwertuj-PDF",
+                                                                "type":  "main",
+                                                                "index":  0
+                                                            }
+                                                        ]
+                                                    ]
+                                       },
+                        "Konwertuj-PDF":  {
+                                              "main":  [
+                                                           [
+                                                               {
+                                                                   "node":  "Wyslij-Maila",
+                                                                   "type":  "main",
+                                                                   "index":  0
+                                                               }
+                                                           ]
+                                                       ]
+                                          },
+                        "Wyslij-Maila":  {
+                                             "main":  [
+                                                          [
+                                                              {
+                                                                  "node":  "Zapisz-Link",
+                                                                  "type":  "main",
+                                                                  "index":  0
+                                                              }
+                                                          ],
+                                                          [
+                                                              {
+                                                                  "node":  "Buduj-Blad",
+                                                                  "type":  "main",
+                                                                  "index":  0
+                                                              }
+                                                          ]
+                                                      ]
+                                         },
+                        "Buduj-Blad":  {
+                                           "main":  [
+                                                        [
+                                                            {
+                                                                "node":  "Utworz-Task",
+                                                                "type":  "main",
+                                                                "index":  0
+                                                            }
+                                                        ]
+                                                    ]
+                                       }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1",
+                     "timezone":  "Europe/Warsaw"
+                 },
+    "staticData":  null,
+    "meta":  null,
+    "nodeGroups":  [
+
+                   ],
+    "pinData":  null,
+    "versionId":  "f21ad121-fe8c-43c0-b8bb-9ff96ce3cefe",
+    "activeVersionId":  null,
+    "versionCounter":  4,
+    "triggerCount":  0,
+    "shared":  [
+                   {
+                       "updatedAt":  "2026-05-12T19:12:06.069Z",
+                       "createdAt":  "2026-05-12T19:12:06.069Z",
+                       "role":  "workflow:owner",
+                       "workflowId":  "geMC21BzGax401zf",
+                       "projectId":  "9rVJoULaKk30HdBB",
+                       "project":  {
+                                       "updatedAt":  "2025-06-26T00:18:14.615Z",
+                                       "createdAt":  "2025-06-25T23:37:35.363Z",
+                                       "id":  "9rVJoULaKk30HdBB",
+                                       "name":  "Nicolas Bednarz \u003cowner@example.com\u003e",
+                                       "type":  "personal",
+                                       "icon":  null,
+                                       "description":  null,
+                                       "creatorId":  "af23e566-dd44-45a3-ac35-e15a8cdef3f2"
+                                   }
+                   }
+               ],
+    "tags":  [
+
+             ],
+    "activeVersion":  null
+}

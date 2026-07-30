@@ -1,0 +1,223 @@
+{
+    "updatedAt":  "2026-07-30T21:41:28.907Z",
+    "createdAt":  "2026-05-01T18:39:57.453Z",
+    "id":  "55LKSD8G95afMEMI",
+    "name":  "MB_Publish_Scheduler",
+    "description":  null,
+    "active":  false,
+    "isArchived":  false,
+    "nodes":  [
+                  {
+                      "parameters":  {
+                                         "rule":  {
+                                                      "interval":  [
+                                                                       {
+                                                                           "field":  "minutes",
+                                                                           "minutesInterval":  15
+                                                                       }
+                                                                   ]
+                                                  }
+                                     },
+                      "id":  "12d4182e-51cc-4e9a-8408-674979e81040",
+                      "name":  "Cron Trigger (15 min)",
+                      "type":  "n8n-nodes-base.scheduleTrigger",
+                      "typeVersion":  1.2,
+                      "position":  [
+                                       -16,
+                                       -96
+                                   ],
+                      "notes":  "Co 15 min sprawdza zaplanowane publikacje."
+                  },
+                  {
+                      "parameters":  {
+                                         "operation":  "search",
+                                         "base":  {
+                                                      "__rl":  true,
+                                                      "value":  "appcf067e6003c219",
+                                                      "mode":  "id"
+                                                  },
+                                         "table":  {
+                                                       "__rl":  true,
+                                                       "value":  "tblKtzgKI89ab4UjD",
+                                                       "mode":  "id"
+                                                   },
+                                         "filterByFormula":  "=AND({Status}=\u0027Zaplanowane\u0027, IS_BEFORE({Data Publikacji}, NOW()))",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "79b0b197-a465-45c8-812f-51b5d56ecc9c",
+                      "name":  "Search Scheduled",
+                      "type":  "n8n-nodes-base.airtable",
+                      "typeVersion":  2.1,
+                      "position":  [
+                                       192,
+                                       -96
+                                   ],
+                      "notes":  "Filter: Status=Zaplanowane AND Data \u003c= NOW(). Zwraca rekordy gotowe do publikacji."
+                  },
+                  {
+                      "parameters":  {
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "f224a81f-42d0-4572-a413-313fbff71572",
+                      "name":  "Iterate Each Pub",
+                      "type":  "n8n-nodes-base.splitInBatches",
+                      "typeVersion":  3,
+                      "position":  [
+                                       384,
+                                       -96
+                                   ],
+                      "notes":  "Iterate jeden po jednym (zeby uniknac rate limit Meta)."
+                  },
+                  {
+                      "parameters":  {
+                                         "workflowId":  {
+                                                            "__rl":  true,
+                                                            "value":  "wQaFPEOnLDLQZWgq",
+                                                            "mode":  "list",
+                                                            "cachedResultUrl":  "/workflow/wQaFPEOnLDLQZWgq",
+                                                            "cachedResultName":  "MB_Publish"
+                                                        },
+                                         "workflowInputs":  {
+                                                                "mappingMode":  "defineBelow",
+                                                                "value":  {
+                                                                              "publication_id":  "={{ $json.id }}",
+                                                                              "platform":  "Wszystkie",
+                                                                              "chat_id":  "={{ $json[\u0027Sesje Telegram\u0027] \u0026\u0026 $json[\u0027Sesje Telegram\u0027][0] ? $json[\u0027Sesje Telegram\u0027][0][\u0027ID chatu Telegram\u0027] : \u0027\u0027 }}"
+                                                                          },
+                                                                "matchingColumns":  [
+
+                                                                                    ],
+                                                                "schema":  [
+
+                                                                           ]
+                                                            },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "6fcb5388-cbbd-4a94-974e-ca4c82b86765",
+                      "name":  "Execute MB_Publish (Wszystkie)",
+                      "type":  "n8n-nodes-base.executeWorkflow",
+                      "typeVersion":  1.2,
+                      "position":  [
+                                       576,
+                                       16
+                                   ],
+                      "notes":  "TODO: per platform Switch zamiast Wszystkie? Na razie Wszystkie - MB_Publish bedzie ogarnial wewnetrznie. Albo loop platform tu."
+                  },
+                  {
+                      "parameters":  {
+
+                                     },
+                      "id":  "b78a9207-56dd-4a33-bbb4-065e5f7a10b7",
+                      "name":  "Loop Back",
+                      "type":  "n8n-nodes-base.noOp",
+                      "typeVersion":  1,
+                      "position":  [
+                                       784,
+                                       -96
+                                   ],
+                      "notes":  "Loop kontynuacja - wraca do Iterate Each Pub."
+                  }
+              ],
+    "connections":  {
+                        "Cron Trigger (15 min)":  {
+                                                      "main":  [
+                                                                   [
+                                                                       {
+                                                                           "node":  "Search Scheduled",
+                                                                           "type":  "main",
+                                                                           "index":  0
+                                                                       }
+                                                                   ]
+                                                               ]
+                                                  },
+                        "Search Scheduled":  {
+                                                 "main":  [
+                                                              [
+                                                                  {
+                                                                      "node":  "Iterate Each Pub",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ]
+                                                          ]
+                                             },
+                        "Iterate Each Pub":  {
+                                                 "main":  [
+                                                              [
+                                                                  {
+                                                                      "node":  "Loop Back",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ],
+                                                              [
+                                                                  {
+                                                                      "node":  "Execute MB_Publish (Wszystkie)",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ]
+                                                          ]
+                                             },
+                        "Execute MB_Publish (Wszystkie)":  {
+                                                               "main":  [
+                                                                            [
+                                                                                {
+                                                                                    "node":  "Iterate Each Pub",
+                                                                                    "type":  "main",
+                                                                                    "index":  0
+                                                                                }
+                                                                            ]
+                                                                        ]
+                                                           }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1",
+                     "timezone":  "Europe/Warsaw",
+                     "binaryMode":  "separate"
+                 },
+    "staticData":  null,
+    "meta":  {
+                 "templateCredsSetupCompleted":  true
+             },
+    "nodeGroups":  [
+
+                   ],
+    "versionId":  "7b475cc3-e23e-487c-9e99-c4edd2c07d8f",
+    "activeVersionId":  null,
+    "versionCounter":  6,
+    "triggerCount":  0,
+    "sourceWorkflowId":  null,
+    "shared":  [
+                   {
+                       "updatedAt":  "2026-05-01T18:39:57.453Z",
+                       "createdAt":  "2026-05-01T18:39:57.453Z",
+                       "role":  "workflow:owner",
+                       "workflowId":  "55LKSD8G95afMEMI",
+                       "projectId":  "9rVJoULaKk30HdBB",
+                       "project":  {
+                                       "updatedAt":  "2025-06-26T00:18:14.615Z",
+                                       "createdAt":  "2025-06-25T23:37:35.363Z",
+                                       "id":  "9rVJoULaKk30HdBB",
+                                       "name":  "Nicolas Bednarz \u003cowner@example.com\u003e",
+                                       "type":  "personal",
+                                       "icon":  null,
+                                       "description":  null,
+                                       "customTelemetryTags":  [
+
+                                                               ],
+                                       "creatorId":  "af23e566-dd44-45a3-ac35-e15a8cdef3f2"
+                                   }
+                   }
+               ],
+    "tags":  [
+
+             ],
+    "activeVersion":  null
+}

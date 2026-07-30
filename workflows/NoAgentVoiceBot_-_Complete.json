@@ -1,0 +1,1036 @@
+{
+    "updatedAt":  "2025-10-27T02:52:41.631Z",
+    "createdAt":  "2025-06-29T14:04:06.918Z",
+    "id":  "yR9GyCDO8UTkmqPS",
+    "name":  "NoAgentVoiceBot - Complete",
+    "description":  null,
+    "active":  false,
+    "isArchived":  false,
+    "nodes":  [
+                  {
+                      "parameters":  {
+                                         "httpMethod":  "POST",
+                                         "path":  "35303579-3b88-4b22-a392-682d6eb18202",
+                                         "responseMode":  "responseNode",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "f6e7acbc-d6fc-4d03-85a9-18b6c672b89e",
+                      "name":  "Webhook Trigger",
+                      "type":  "n8n-nodes-base.webhook",
+                      "typeVersion":  2.1,
+                      "position":  [
+                                       -816,
+                                       144
+                                   ],
+                      "webhookId":  "f0e61930-6390-4c4e-8774-6b38a45b189d",
+                      "onError":  "continueRegularOutput"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// Parse incoming VAPI request and extract toolCallId\nconst body = $input.item.json.body;\nconst message = body.message;\nconst toolWithToolCallList = message.toolWithToolCallList || [];\nconst toolCall = toolWithToolCallList[0]?.toolCall;\n\nif (!toolCall) {\n  return [{\n    json: {\n      error: true,\n      message: \"No tool call found\",\n      results: [{\n        toolCallId: \u0027unknown\u0027,\n        error: \u0027No tool call found in request\u0027\n      }]\n    }\n  }];\n}\n\nconst args = toolCall.function.arguments;\nconst toolCallId = toolCall.id;\n\nconst barberCalendars = {\n  \"Ania\": \"cal-3b99b575@group.calendar.google.com\",\n  \"Borys\": \"cal-a5a747c6@group.calendar.google.com\",\n  \"Andrzej\": \"cal-5052a5da@group.calendar.google.com\",\n  \"Bartek\": \"cal-1192ec64@group.calendar.google.com\",\n  \"Magda\": \"cal-5465f5f8@group.calendar.google.com\"\n};\n\nconst serviceDurations = {\"Strzyżenie krótkie\": 60, \"Strzyżenie średnie\": 60, \"Strzyżenie długie\": 90, \"Maszynką\": 30, \"Broda\": 30, \"Strzyżenie brody\": 30, \"Golenie\": 60, \"Combo\": 90, \"Repigmentacja\": 60, \"Koloryzacja\": 90};\n\nfunction normalizePhone(phone) {\n  if (!phone) return null;\n  const digits = phone.replace(/\\D/g, \u0027\u0027);\n  if (digits.length === 9) return \u0027+48\u0027 + digits;\n  if (digits.length === 11 \u0026\u0026 digits.startsWith(\u002748\u0027)) return \u0027+\u0027 + digits;\n  if (digits.length === 12 \u0026\u0026 phone.startsWith(\u0027+48\u0027)) return phone;\n  return null;\n}\n\nfunction isValidEmail(email) {\n  if (!email) return false;\n  return /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email);\n}\n\nconst request = args.Request;\nconst barberName = args.Barber;\nconst service = args.Usluga;\nconst date = args.Data_Wizyty;\nconst time = args.Godzina_Wizyty;\nconst name = args.Imie_Nazwisko;\nconst email = args.Adres_Email;\nconst phone = args.Numer_Telefonu;\nconst calendarId = barberName ? barberCalendars[barberName] : null;\nconst duration = service ? serviceDurations[service] : 60;\nconst normalizedPhone = normalizePhone(phone);\nconst emailValid = isValidEmail(email);\nconst errors = [];\n\nif (request === \u0027Rezerwacja_Wizyty\u0027) {\n  if (!name || name.split(\u0027 \u0027).length \u003c 2) errors.push(\u0027Imię i nazwisko wymagane\u0027);\n  if (!emailValid) errors.push(\u0027Nieprawidłowy email\u0027);\n  if (!normalizedPhone) errors.push(\u0027Nieprawidłowy telefon\u0027);\n  if (!barberName) errors.push(\u0027Barber wymagany\u0027);\n  if (!service) errors.push(\u0027Usługa wymagana\u0027);\n  if (!date) errors.push(\u0027Data wymagana\u0027);\n  if (!time) errors.push(\u0027Godzina wymagana\u0027);\n}\n\nif (request === \u0027Znajdz_Rezerwacje\u0027 || request === \u0027Anuluj_Rezerwacje\u0027) {\n  if (!name) errors.push(\u0027Imię wymagane\u0027);\n  if (!emailValid) errors.push(\u0027Nieprawidłowy email\u0027);\n}\n\nreturn [{json: {request, barberName, calendarId, service, duration, date, time, name, email, emailValid, phone: normalizedPhone, toolCallId, errors, hasErrors: errors.length \u003e 0, allBarbers: Object.keys(barberCalendars), barberCalendars, body}}];"
+                                     },
+                      "id":  "d719d720-0ed0-4409-81f2-f437f1554f24",
+                      "name":  "Parse and Validate Request",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       -608,
+                                       144
+                                   ],
+                      "onError":  "continueRegularOutput"
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "version":  2,
+                                                                            "leftValue":  "",
+                                                                            "caseSensitive":  true,
+                                                                            "typeValidation":  "strict"
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "id":  "validation-check",
+                                                                                   "leftValue":  "={{ $json.hasErrors }}",
+                                                                                   "rightValue":  true,
+                                                                                   "operator":  {
+                                                                                                    "type":  "boolean",
+                                                                                                    "operation":  "equals"
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "64f8fa5d-b8b1-4dd4-bbf5-52d6a3130bd7",
+                      "name":  "Has Validation Errors",
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       -384,
+                                       144
+                                   ],
+                      "onError":  "continueErrorOutput"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const errors = $input.item.json.errors || [];\nconst toolCallId = $input.item.json.toolCallId || \u0027unknown\u0027;\nreturn [{json: {results: [{toolCallId, result: `Błąd: ${errors.join(\u0027, \u0027)}`}]}}];"
+                                     },
+                      "id":  "0bb1555b-686e-4e33-b259-e6c1c0d1c205",
+                      "name":  "Return Validation Error",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       336,
+                                       -208
+                                   ],
+                      "onError":  "continueRegularOutput"
+                  },
+                  {
+                      "parameters":  {
+                                         "rules":  {
+                                                       "values":  [
+                                                                      {
+                                                                          "conditions":  {
+                                                                                             "options":  {
+                                                                                                             "caseSensitive":  true,
+                                                                                                             "leftValue":  "",
+                                                                                                             "typeValidation":  "strict",
+                                                                                                             "version":  2
+                                                                                                         },
+                                                                                             "conditions":  [
+                                                                                                                {
+                                                                                                                    "leftValue":  "={{ $json.request }}",
+                                                                                                                    "rightValue":  "Sprawdzenie_Dostepnosci",
+                                                                                                                    "operator":  {
+                                                                                                                                     "type":  "string",
+                                                                                                                                     "operation":  "equals"
+                                                                                                                                 },
+                                                                                                                    "id":  "0a6cb390-00d8-4b90-9bbc-e5c25d528c99"
+                                                                                                                }
+                                                                                                            ],
+                                                                                             "combinator":  "and"
+                                                                                         },
+                                                                          "renameOutput":  true,
+                                                                          "outputKey":  "Check Availability"
+                                                                      },
+                                                                      {
+                                                                          "conditions":  {
+                                                                                             "options":  {
+                                                                                                             "caseSensitive":  true,
+                                                                                                             "leftValue":  "",
+                                                                                                             "typeValidation":  "strict",
+                                                                                                             "version":  2
+                                                                                                         },
+                                                                                             "conditions":  [
+                                                                                                                {
+                                                                                                                    "leftValue":  "={{ $json.request }}",
+                                                                                                                    "rightValue":  "Rezerwacja_Wizyty",
+                                                                                                                    "operator":  {
+                                                                                                                                     "type":  "string",
+                                                                                                                                     "operation":  "equals"
+                                                                                                                                 },
+                                                                                                                    "id":  "30aacffa-a60b-478d-a6d9-06a3b8e8bdaa"
+                                                                                                                }
+                                                                                                            ],
+                                                                                             "combinator":  "and"
+                                                                                         },
+                                                                          "renameOutput":  true,
+                                                                          "outputKey":  "Book Appointment"
+                                                                      },
+                                                                      {
+                                                                          "conditions":  {
+                                                                                             "options":  {
+                                                                                                             "caseSensitive":  true,
+                                                                                                             "leftValue":  "",
+                                                                                                             "typeValidation":  "strict",
+                                                                                                             "version":  2
+                                                                                                         },
+                                                                                             "conditions":  [
+                                                                                                                {
+                                                                                                                    "leftValue":  "={{ $json.request }}",
+                                                                                                                    "rightValue":  "Znajdz_Rezerwacje",
+                                                                                                                    "operator":  {
+                                                                                                                                     "type":  "string",
+                                                                                                                                     "operation":  "equals"
+                                                                                                                                 },
+                                                                                                                    "id":  "850d53bc-f4e5-4b8c-8980-7a5c97d80f1f"
+                                                                                                                }
+                                                                                                            ],
+                                                                                             "combinator":  "and"
+                                                                                         },
+                                                                          "renameOutput":  true,
+                                                                          "outputKey":  "Find Booking"
+                                                                      },
+                                                                      {
+                                                                          "conditions":  {
+                                                                                             "options":  {
+                                                                                                             "caseSensitive":  true,
+                                                                                                             "leftValue":  "",
+                                                                                                             "typeValidation":  "strict",
+                                                                                                             "version":  2
+                                                                                                         },
+                                                                                             "conditions":  [
+                                                                                                                {
+                                                                                                                    "leftValue":  "={{ $json.request }}",
+                                                                                                                    "rightValue":  "Anuluj_Rezerwacje",
+                                                                                                                    "operator":  {
+                                                                                                                                     "type":  "string",
+                                                                                                                                     "operation":  "equals"
+                                                                                                                                 },
+                                                                                                                    "id":  "8dfafdff-91b5-4dc1-a3f4-8c557d9955b2"
+                                                                                                                }
+                                                                                                            ],
+                                                                                             "combinator":  "and"
+                                                                                         },
+                                                                          "renameOutput":  true,
+                                                                          "outputKey":  "Cancel Booking"
+                                                                      }
+                                                                  ]
+                                                   },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "9bb3090c-ed37-4f3a-9321-9cc1a44fa895",
+                      "name":  "Route by Request Type",
+                      "type":  "n8n-nodes-base.switch",
+                      "typeVersion":  3.3,
+                      "position":  [
+                                       -320,
+                                       512
+                                   ],
+                      "onError":  "continueErrorOutput"
+                  },
+                  {
+                      "parameters":  {
+                                         "respondWith":  "allIncomingItems",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "b74f9f2e-825e-4528-8229-46b7fa9068f2",
+                      "name":  "Respond to Webhook",
+                      "type":  "n8n-nodes-base.respondToWebhook",
+                      "typeVersion":  1.4,
+                      "position":  [
+                                       2112,
+                                       144
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const {date, time, barberName, calendarId, service, duration, toolCallId} = $input.item.json;\nif (!barberName || !date || !time) return [{json: {error: true, results: [{toolCallId, result: \"Proszę podać barbera, datę i godzinę\"}]}}];\nconst startDateTime = new Date(`${date}T${time}:00`);\nconst endDateTime = new Date(startDateTime.getTime() + duration * 60000);\nconst endTime = endDateTime.toTimeString().split(\u0027 \u0027)[0].substring(0, 5);\nconst endDateTimeISO = endDateTime.toISOString().split(\u0027.\u0027)[0];\nreturn [{json: {error: false, searchMode: \u0027check_specific\u0027, calendarId, barberName, date, time, endTime, endDateTime: endDateTimeISO, service, duration, toolCallId}}];"
+                                     },
+                      "id":  "2b5a3241-2b83-4b11-ad04-aacfe9336b5b",
+                      "name":  "Availability Logic",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       64,
+                                       144
+                                   ],
+                      "onError":  "continueRegularOutput"
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "version":  2,
+                                                                            "leftValue":  "",
+                                                                            "caseSensitive":  true,
+                                                                            "typeValidation":  "strict"
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "leftValue":  "={{ $json.searchMode }}",
+                                                                                   "rightValue":  "find_next_slots",
+                                                                                   "operator":  {
+                                                                                                    "type":  "string",
+                                                                                                    "operation":  "equals"
+                                                                                                },
+                                                                                   "id":  "6a26411d-b7ca-4c7a-8657-8c2b838cf485"
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "ea3fd226-7b6d-4e21-a6d2-9f46aafa7ee5",
+                      "name":  "Find Next Slots",
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       496,
+                                       32
+                                   ],
+                      "onError":  "continueErrorOutput"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const {service, duration, toolCallId, barberCalendars} = $input.item.json;\nconst now = new Date();\nconst startDate = now.toISOString().split(\u0027T\u0027)[0];\nconst startTime = now.toTimeString().split(\u0027 \u0027)[0].substring(0, 5);\nconst businessHours = {1:{start:\u002709:00\u0027,end:\u002719:00\u0027},2:{start:\u002709:00\u0027,end:\u002719:00\u0027},3:{start:\u002709:00\u0027,end:\u002721:00\u0027},4:{start:\u002709:00\u0027,end:\u002721:00\u0027},5:{start:\u002709:00\u0027,end:\u002721:00\u0027},6:{start:\u002709:00\u0027,end:\u002721:00\u0027},0:{start:\u002710:00\u0027,end:\u002719:00\u0027}};\nreturn [{json: {searchMode: \u0027find_next_slots\u0027, service: service || \u0027Strzyżenie krótkie\u0027, duration, toolCallId, startDate, startTime, businessHours, barberCalendars, barbersToCheck: Object.keys(barberCalendars), slotsFound: [], maxSlots: 3}}];"
+                                     },
+                      "id":  "b924fcb6-8b61-49b3-b373-19c5bb491cc9",
+                      "name":  "Prepare Slot Search",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       720,
+                                       48
+                                   ],
+                      "onError":  "continueRegularOutput"
+                  },
+                  {
+                      "parameters":  {
+                                         "operation":  "getAll",
+                                         "calendar":  {
+                                                          "__rl":  true,
+                                                          "value":  "={{ $json.calendarId }}",
+                                                          "mode":  "id"
+                                                      },
+                                         "options":  {
+                                                         "timeMin":  "={{ $json.date }}T{{ $json.time }}:00Z",
+                                                         "timeMax":  "={{ $json.date }}T{{ $json.endTime }}:00Z",
+                                                         "timeZone":  {
+                                                                          "__rl":  true,
+                                                                          "value":  "Europe/Warsaw",
+                                                                          "mode":  "list",
+                                                                          "cachedResultName":  "Europe/Warsaw"
+                                                                      }
+                                                     }
+                                     },
+                      "id":  "c7f2095d-a989-4754-ad82-881f71c99c89",
+                      "name":  "Check Google Calendar",
+                      "type":  "n8n-nodes-base.googleCalendar",
+                      "typeVersion":  1.2,
+                      "position":  [
+                                       720,
+                                       240
+                                   ],
+                      "alwaysOutputData":  true,
+                      "credentials":  {
+                                          "googleCalendarOAuth2Api":  {
+                                                                          "id":  "w1wfFqW1WZeOSC2o",
+                                                                          "name":  "Kalendarz Testowe"
+                                                                      }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "calendar":  {
+                                                          "__rl":  true,
+                                                          "value":  "={{ $json.calendarId }}",
+                                                          "mode":  "id"
+                                                      },
+                                         "start":  "={{ $json.date }}T{{ $json.time }}:00",
+                                         "end":  "={{ $json.endDateTime }}",
+                                         "additionalFields":  {
+                                                                  "description":  "=Rezerwacja VAPI.\nKlient: {{ $json.name }}\nEmail: {{ $json.email }}\nTelefon: {{ $json.phone }}\nUsługa: {{ $json.service }}",
+                                                                  "summary":  "={{ $json.summary }}"
+                                                              }
+                                     },
+                      "id":  "b01cccad-a1ea-4b51-b33c-045a3f078e9c",
+                      "name":  "Create Calendar Event",
+                      "type":  "n8n-nodes-base.googleCalendar",
+                      "typeVersion":  1.3,
+                      "position":  [
+                                       288,
+                                       336
+                                   ],
+                      "credentials":  {
+                                          "googleCalendarOAuth2Api":  {
+                                                                          "id":  "w1wfFqW1WZeOSC2o",
+                                                                          "name":  "Kalendarz Testowe"
+                                                                      }
+                                      },
+                      "onError":  "continueRegularOutput"
+                  },
+                  {
+                      "parameters":  {
+                                         "operation":  "upsert",
+                                         "base":  {
+                                                      "__rl":  true,
+                                                      "value":  "app3716f86b248f6e",
+                                                      "mode":  "id"
+                                                  },
+                                         "table":  {
+                                                       "__rl":  true,
+                                                       "value":  "tblFrLu73yTE8uVL7",
+                                                       "mode":  "id"
+                                                   },
+                                         "columns":  {
+                                                         "mappingMode":  "defineBelow",
+                                                         "value":  {
+                                                                       "Imię i nazwisko":  "={{ $json.name }}",
+                                                                       "Numer telefonu":  "={{ $json.phone }}",
+                                                                       "Podsumowanie rozmowy":  "={{ $json.summary }}",
+                                                                       "Liczba Wizyt":  0,
+                                                                       "Adres Email":  "={{ $json.email }}"
+                                                                   },
+                                                         "matchingColumns":  [
+                                                                                 "Adres E-Mail"
+                                                                             ],
+                                                         "schema":  [
+                                                                        {
+                                                                            "id":  "id",
+                                                                            "displayName":  "id",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Imię i nazwisko",
+                                                                            "displayName":  "Imię i nazwisko",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Numer telefonu",
+                                                                            "displayName":  "Numer telefonu",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Adres Email",
+                                                                            "displayName":  "Adres Email",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Podsumowanie rozmowy",
+                                                                            "displayName":  "Podsumowanie rozmowy",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Data ostatniego kontaktu",
+                                                                            "displayName":  "Data ostatniego kontaktu",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "dateTime",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Notatki dodatkowe",
+                                                                            "displayName":  "Notatki dodatkowe",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Liczba Wizyt",
+                                                                            "displayName":  "Liczba Wizyt",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "number",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        }
+                                                                    ],
+                                                         "attemptToConvertTypes":  false,
+                                                         "convertFieldsToString":  false
+                                                     },
+                                         "options":  {
+                                                         "typecast":  true
+                                                     }
+                                     },
+                      "id":  "88e67d89-37b9-4d7b-8e14-233fc350ba9a",
+                      "name":  "Update Airtable",
+                      "type":  "n8n-nodes-base.airtable",
+                      "typeVersion":  2.1,
+                      "position":  [
+                                       512,
+                                       400
+                                   ],
+                      "credentials":  {
+                                          "airtableTokenApi":  {
+                                                                   "id":  "vvYRmbNw8TcJq6FF",
+                                                                   "name":  "Airtable Personal Access Token account"
+                                                               }
+                                      },
+                      "onError":  "continueRegularOutput"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const {date, time, duration, barberName, calendarId, service, name, email, phone, toolCallId} = $input.item.json;\nconst startDateTime = new Date(`${date}T${time}:00`);\nconst endDateTime = new Date(startDateTime.getTime() + duration * 60000);\nconst endTime = endDateTime.toTimeString().split(\u0027 \u0027)[0].substring(0, 5);\nconst endDateTimeISO = endDateTime.toISOString().split(\u0027.\u0027)[0];\nreturn [{json: {calendarId, barberName, service, date, time, endTime, endDateTime: endDateTimeISO, duration, name, email, phone, toolCallId, summary: `${service} - ${name}`}}];"
+                                     },
+                      "id":  "0a1158ee-26c6-497c-b770-7907d81a308d",
+                      "name":  "Prepare Booking Data",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       64,
+                                       336
+                                   ],
+                      "onError":  "continueRegularOutput"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const {barberName, service, date, time, toolCallId, name} = $input.item.json;\nreturn [{json: {results: [{toolCallId, result: `Gotowe! ${name}, ${service} u ${barberName}, ${date} o ${time}. Mail wysłany.`}]}}];"
+                                     },
+                      "id":  "9b60d1ec-6c27-439d-a972-ab36ee959bb7",
+                      "name":  "Format Booking Success",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       720,
+                                       400
+                                   ],
+                      "onError":  "continueRegularOutput"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const {name, email, toolCallId, barberCalendars} = $input.item.json;\nconst calendars = Object.entries(barberCalendars).map(([barber, calId]) =\u003e ({barber, calendarId: calId, name, email, toolCallId}));\nreturn calendars.map(cal =\u003e ({json: cal}));"
+                                     },
+                      "id":  "1e8e4557-9927-4c81-87e6-3b12fa3dec21",
+                      "name":  "Prepare Booking Search",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       80,
+                                       528
+                                   ],
+                      "onError":  "continueRegularOutput"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const toolCallId = $input.first().json.toolCallId;\nconst allEvents = $input.all();\nconst validEvents = allEvents.filter(e =\u003e e.json.id \u0026\u0026 e.json.summary);\nif (validEvents.length === 0) return [{json: {results: [{toolCallId, result: \"Nie znaleziono rezerwacji\"}]}}];\nconst booking = validEvents[0].json;\nconst summary = booking.summary;\nconst startTime = booking.start?.dateTime || booking.start?.date;\nreturn [{json: {results: [{toolCallId, result: `Znaleziono: ${summary}, ${startTime}`}]}}];"
+                                     },
+                      "id":  "ffc7f37e-60ac-42fd-a660-687113200b83",
+                      "name":  "Format Found Booking",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       720,
+                                       544
+                                   ],
+                      "onError":  "continueRegularOutput"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const {name, email, toolCallId, barberCalendars} = $input.item.json;\nconst calendars = Object.entries(barberCalendars).map(([barber, calId]) =\u003e ({barber, calendarId: calId, name, email, toolCallId}));\nreturn calendars.map(cal =\u003e ({json: cal}));"
+                                     },
+                      "id":  "a5c548a1-7de7-46c9-b143-57ac414d6cbd",
+                      "name":  "Prepare Cancellation",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       80,
+                                       688
+                                   ],
+                      "onError":  "continueRegularOutput"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const toolCallId = $input.first().json.toolCallId;\nconst deleted = $input.all().length \u003e 0;\nconst msg = deleted ? \"Wizyta anulowana\" : \"Nie znaleziono wizyty\";\nreturn [{json: {results: [{toolCallId, result: msg}]}}];"
+                                     },
+                      "id":  "a31c2a98-2047-4920-93dd-2f1eb27a3469",
+                      "name":  "Format Cancellation Response",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       720,
+                                       704
+                                   ],
+                      "onError":  "continueRegularOutput"
+                  },
+                  {
+                      "parameters":  {
+                                         "operation":  "getAll",
+                                         "calendar":  {
+                                                          "__rl":  true,
+                                                          "value":  "={{ $json.calendarId }}",
+                                                          "mode":  "id"
+                                                      },
+                                         "limit":  10,
+                                         "timeMin":  "={{ new Date().toISOString() }}",
+                                         "options":  {
+                                                         "query":  "={{ $json.name }}"
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.googleCalendar",
+                      "typeVersion":  1.3,
+                      "position":  [
+                                       288,
+                                       528
+                                   ],
+                      "id":  "c7c61c8c-4f82-4345-b51b-0033b6b74243",
+                      "name":  "Search Calendar Events",
+                      "credentials":  {
+                                          "googleCalendarOAuth2Api":  {
+                                                                          "id":  "w1wfFqW1WZeOSC2o",
+                                                                          "name":  "Kalendarz Testowe"
+                                                                      }
+                                      },
+                      "onError":  "continueRegularOutput"
+                  },
+                  {
+                      "parameters":  {
+                                         "operation":  "delete",
+                                         "calendar":  {
+                                                          "__rl":  true,
+                                                          "value":  "={{ $json.calendarId }}",
+                                                          "mode":  "id"
+                                                      },
+                                         "eventId":  "={{ $json.id }}",
+                                         "options":  {
+                                                         "sendUpdates":  "all"
+                                                     }
+                                     },
+                      "id":  "88925a57-0c13-4901-9d68-4f572b6d1152",
+                      "name":  "Delete Calendar Event",
+                      "type":  "n8n-nodes-base.googleCalendar",
+                      "typeVersion":  1.3,
+                      "position":  [
+                                       512,
+                                       688
+                                   ],
+                      "credentials":  {
+                                          "googleCalendarOAuth2Api":  {
+                                                                          "id":  "w1wfFqW1WZeOSC2o",
+                                                                          "name":  "Kalendarz Testowe"
+                                                                      }
+                                      },
+                      "onError":  "continueRegularOutput"
+                  },
+                  {
+                      "parameters":  {
+                                         "operation":  "getAll",
+                                         "calendar":  {
+                                                          "__rl":  true,
+                                                          "value":  "={{ $json.calendarId }}",
+                                                          "mode":  "id"
+                                                      },
+                                         "limit":  10,
+                                         "timeMin":  "={{ new Date().toISOString() }}",
+                                         "options":  {
+                                                         "query":  "={{ $json.name }}"
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.googleCalendar",
+                      "typeVersion":  1.3,
+                      "position":  [
+                                       288,
+                                       688
+                                   ],
+                      "id":  "e55586e1-fb7c-4ed6-901b-2201524491ed",
+                      "name":  "Get many events",
+                      "credentials":  {
+                                          "googleCalendarOAuth2Api":  {
+                                                                          "id":  "w1wfFqW1WZeOSC2o",
+                                                                          "name":  "Kalendarz Testowe"
+                                                                      }
+                                      },
+                      "onError":  "continueRegularOutput"
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "version":  2,
+                                                                            "leftValue":  "",
+                                                                            "caseSensitive":  true,
+                                                                            "typeValidation":  "strict"
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "id":  "44fef4a4-ad13-4c32-8724-b4db6ef887f2",
+                                                                                   "leftValue":  "={{ $json.error }}",
+                                                                                   "rightValue":  true,
+                                                                                   "operator":  {
+                                                                                                    "type":  "boolean",
+                                                                                                    "operation":  "equals"
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       272,
+                                       144
+                                   ],
+                      "id":  "a5afc57e-3cc3-4386-82c4-bd8fd3899a05",
+                      "name":  "If",
+                      "onError":  "continueErrorOutput"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const events = $input.all();\nconst {barberName, date, time, service, toolCallId} = $input.first().json;\nconst validEvents = events.filter(e =\u003e e.json.id);\nconst msg = validEvents.length \u003e 0 ? `Zajęte. ${barberName} niedostępny ${date} o ${time}` : `Wolne! ${barberName} dostępny ${date} o ${time} na ${service}`;\nreturn [{json: {results: [{toolCallId, result: msg}]}}];"
+                                     },
+                      "id":  "ecc87410-324b-49c3-8299-2520316699b1",
+                      "name":  "Format Availability Response",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       928,
+                                       240
+                                   ],
+                      "onError":  "continueRegularOutput"
+                  }
+              ],
+    "connections":  {
+                        "Webhook Trigger":  {
+                                                "main":  [
+                                                             [
+                                                                 {
+                                                                     "node":  "Parse and Validate Request",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ]
+                                                         ]
+                                            },
+                        "Parse and Validate Request":  {
+                                                           "main":  [
+                                                                        [
+                                                                            {
+                                                                                "node":  "Has Validation Errors",
+                                                                                "type":  "main",
+                                                                                "index":  0
+                                                                            }
+                                                                        ]
+                                                                    ]
+                                                       },
+                        "Has Validation Errors":  {
+                                                      "main":  [
+                                                                   [
+                                                                       {
+                                                                           "node":  "Return Validation Error",
+                                                                           "type":  "main",
+                                                                           "index":  0
+                                                                       }
+                                                                   ],
+                                                                   [
+                                                                       {
+                                                                           "node":  "Route by Request Type",
+                                                                           "type":  "main",
+                                                                           "index":  0
+                                                                       }
+                                                                   ]
+                                                               ]
+                                                  },
+                        "Return Validation Error":  {
+                                                        "main":  [
+                                                                     [
+                                                                         {
+                                                                             "node":  "Respond to Webhook",
+                                                                             "type":  "main",
+                                                                             "index":  0
+                                                                         }
+                                                                     ]
+                                                                 ]
+                                                    },
+                        "Route by Request Type":  {
+                                                      "main":  [
+                                                                   [
+                                                                       {
+                                                                           "node":  "Availability Logic",
+                                                                           "type":  "main",
+                                                                           "index":  0
+                                                                       }
+                                                                   ],
+                                                                   [
+                                                                       {
+                                                                           "node":  "Prepare Booking Data",
+                                                                           "type":  "main",
+                                                                           "index":  0
+                                                                       }
+                                                                   ],
+                                                                   [
+                                                                       {
+                                                                           "node":  "Prepare Booking Search",
+                                                                           "type":  "main",
+                                                                           "index":  0
+                                                                       }
+                                                                   ],
+                                                                   [
+                                                                       {
+                                                                           "node":  "Prepare Cancellation",
+                                                                           "type":  "main",
+                                                                           "index":  0
+                                                                       }
+                                                                   ]
+                                                               ]
+                                                  },
+                        "Availability Logic":  {
+                                                   "main":  [
+                                                                [
+                                                                    {
+                                                                        "node":  "If",
+                                                                        "type":  "main",
+                                                                        "index":  0
+                                                                    }
+                                                                ]
+                                                            ]
+                                               },
+                        "Find Next Slots":  {
+                                                "main":  [
+                                                             [
+                                                                 {
+                                                                     "node":  "Prepare Slot Search",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ]
+                                                         ]
+                                            },
+                        "Prepare Slot Search":  {
+                                                    "main":  [
+                                                                 [
+                                                                     {
+                                                                         "node":  "Respond to Webhook",
+                                                                         "type":  "main",
+                                                                         "index":  0
+                                                                     }
+                                                                 ]
+                                                             ]
+                                                },
+                        "Check Google Calendar":  {
+                                                      "main":  [
+                                                                   [
+                                                                       {
+                                                                           "node":  "Format Availability Response",
+                                                                           "type":  "main",
+                                                                           "index":  0
+                                                                       }
+                                                                   ]
+                                                               ]
+                                                  },
+                        "Prepare Booking Data":  {
+                                                     "main":  [
+                                                                  [
+                                                                      {
+                                                                          "node":  "Create Calendar Event",
+                                                                          "type":  "main",
+                                                                          "index":  0
+                                                                      }
+                                                                  ]
+                                                              ]
+                                                 },
+                        "Create Calendar Event":  {
+                                                      "main":  [
+                                                                   [
+                                                                       {
+                                                                           "node":  "Update Airtable",
+                                                                           "type":  "main",
+                                                                           "index":  0
+                                                                       }
+                                                                   ]
+                                                               ]
+                                                  },
+                        "Update Airtable":  {
+                                                "main":  [
+                                                             [
+                                                                 {
+                                                                     "node":  "Format Booking Success",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ]
+                                                         ]
+                                            },
+                        "Format Booking Success":  {
+                                                       "main":  [
+                                                                    [
+                                                                        {
+                                                                            "node":  "Respond to Webhook",
+                                                                            "type":  "main",
+                                                                            "index":  0
+                                                                        }
+                                                                    ]
+                                                                ]
+                                                   },
+                        "Prepare Booking Search":  {
+                                                       "main":  [
+                                                                    [
+                                                                        {
+                                                                            "node":  "Search Calendar Events",
+                                                                            "type":  "main",
+                                                                            "index":  0
+                                                                        }
+                                                                    ]
+                                                                ]
+                                                   },
+                        "Format Found Booking":  {
+                                                     "main":  [
+                                                                  [
+                                                                      {
+                                                                          "node":  "Respond to Webhook",
+                                                                          "type":  "main",
+                                                                          "index":  0
+                                                                      }
+                                                                  ]
+                                                              ]
+                                                 },
+                        "Prepare Cancellation":  {
+                                                     "main":  [
+                                                                  [
+                                                                      {
+                                                                          "node":  "Get many events",
+                                                                          "type":  "main",
+                                                                          "index":  0
+                                                                      }
+                                                                  ]
+                                                              ]
+                                                 },
+                        "Format Cancellation Response":  {
+                                                             "main":  [
+                                                                          [
+                                                                              {
+                                                                                  "node":  "Respond to Webhook",
+                                                                                  "type":  "main",
+                                                                                  "index":  0
+                                                                              }
+                                                                          ]
+                                                                      ]
+                                                         },
+                        "Search Calendar Events":  {
+                                                       "main":  [
+                                                                    [
+                                                                        {
+                                                                            "node":  "Format Found Booking",
+                                                                            "type":  "main",
+                                                                            "index":  0
+                                                                        }
+                                                                    ]
+                                                                ]
+                                                   },
+                        "Delete Calendar Event":  {
+                                                      "main":  [
+                                                                   [
+                                                                       {
+                                                                           "node":  "Format Cancellation Response",
+                                                                           "type":  "main",
+                                                                           "index":  0
+                                                                       }
+                                                                   ]
+                                                               ]
+                                                  },
+                        "Get many events":  {
+                                                "main":  [
+                                                             [
+                                                                 {
+                                                                     "node":  "Delete Calendar Event",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ]
+                                                         ]
+                                            },
+                        "If":  {
+                                   "main":  [
+                                                [
+                                                    {
+                                                        "node":  "Find Next Slots",
+                                                        "type":  "main",
+                                                        "index":  0
+                                                    }
+                                                ],
+                                                [
+                                                    {
+                                                        "node":  "Respond to Webhook",
+                                                        "type":  "main",
+                                                        "index":  0
+                                                    }
+                                                ]
+                                            ]
+                               },
+                        "Format Availability Response":  {
+                                                             "main":  [
+                                                                          [
+                                                                              {
+                                                                                  "node":  "Respond to Webhook",
+                                                                                  "type":  "main",
+                                                                                  "index":  0
+                                                                              }
+                                                                          ]
+                                                                      ]
+                                                         }
+                    },
+    "settings":  {
+
+                 },
+    "staticData":  null,
+    "meta":  {
+                 "templateCredsSetupCompleted":  true
+             },
+    "nodeGroups":  [
+
+                   ],
+    "versionId":  "89b8cd3f-a82a-440c-b4a8-41dd58d06da7",
+    "activeVersionId":  null,
+    "versionCounter":  76,
+    "triggerCount":  1,
+    "sourceWorkflowId":  null,
+    "shared":  [
+                   {
+                       "updatedAt":  "2025-06-29T14:04:06.918Z",
+                       "createdAt":  "2025-06-29T14:04:06.918Z",
+                       "role":  "workflow:owner",
+                       "workflowId":  "yR9GyCDO8UTkmqPS",
+                       "projectId":  "9rVJoULaKk30HdBB",
+                       "project":  {
+                                       "updatedAt":  "2025-06-26T00:18:14.615Z",
+                                       "createdAt":  "2025-06-25T23:37:35.363Z",
+                                       "id":  "9rVJoULaKk30HdBB",
+                                       "name":  "Nicolas Bednarz \u003cowner@example.com\u003e",
+                                       "type":  "personal",
+                                       "icon":  null,
+                                       "description":  null,
+                                       "customTelemetryTags":  [
+
+                                                               ],
+                                       "creatorId":  "af23e566-dd44-45a3-ac35-e15a8cdef3f2"
+                                   }
+                   }
+               ],
+    "tags":  [
+
+             ],
+    "activeVersion":  null
+}

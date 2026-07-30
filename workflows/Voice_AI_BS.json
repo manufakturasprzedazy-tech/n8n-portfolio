@@ -1,0 +1,632 @@
+{
+    "updatedAt":  "2025-10-22T02:29:00.753Z",
+    "createdAt":  "2025-10-07T16:11:42.421Z",
+    "id":  "4aPn3hn6SLKwZfUX",
+    "name":  "Voice AI BS",
+    "description":  null,
+    "active":  false,
+    "isArchived":  false,
+    "nodes":  [
+                  {
+                      "parameters":  {
+                                         "httpMethod":  "POST",
+                                         "path":  "6ccd37a9-ec05-4b49-8b48-d075a7c30c19",
+                                         "responseMode":  "responseNode",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.webhook",
+                      "typeVersion":  2.1,
+                      "position":  [
+                                       -16,
+                                       -64
+                                   ],
+                      "id":  "dd5ea6de-b829-48bf-877e-8554ff537d57",
+                      "name":  "Webhook",
+                      "webhookId":  "a4bf25f8-dd47-4e58-8108-ed234bd51878"
+                  },
+                  {
+                      "parameters":  {
+                                         "promptType":  "define",
+                                         "text":  "={{ $(\u0027Webhook\u0027).item.json.body }}",
+                                         "options":  {
+                                                         "systemMessage":  "=Zarządzaj rezerwacjami barbershopu. Obsługuj 3 typy żądań: SPRAWDZANIE DOSTĘPNOŚCI, REZERWACJA WIZYTY i ZAPISYWANIE DANYCH KLIENTA DO CRM.\n\nAktualny czas i data: {{ $now }}\n\nDANE WEJŚCIOWE z webhooka:\n- instruction: {{ $(\u0027Webhook\u0027).item.json.body.instruction }}\n- Request: {{ $(\u0027Webhook\u0027).item.json.body.Request }}\n- Usługa: {{ $(\u0027Webhook\u0027).item.json.body.Usluga }}\n- Data: {{ $(\u0027Webhook\u0027).item.json.body.Data_Wizyty }}\n- Godzina: {{ $(\u0027Webhook\u0027).item.json.body.Godzina_Wizyty }}\n- Barber: {{ $(\u0027Webhook\u0027).item.json.body.Barber }}\n- Imię nazwisko: {{ $(\u0027Webhook\u0027).item.json.body.Imie_Nazwisko }}\n- Email: {{ $(\u0027Webhook\u0027).item.json.body.Adres_Email }}\n- Telefon: {{ $(\u0027Webhook\u0027).item.json.body.Numer_Telefonu }}\n- Podsumowanie: {{ $(\u0027Webhook\u0027).item.json.body.Podsumowanie }}\n\nMAPOWANIE BARBERÓW DO CALENDAR IDs:\n- Ania: {{ $json.Ania_Barber }}\n- Bartek: {{ $json.Bartek_Barber }}\n- Andrzej: {{ $json.Andrzej_Barber }}\n- Magda: {{ $json.Magda_Barber }}\n- Borys: {{ $json.Borys_Barber }}\n\nROZPOZNAWANIE TYPU ŻĄDANIA:\n\nTYPE 1: SPRAWDZANIE DOSTĘPNOŚCI (bez danych osobowych)\nGdy instruction zawiera którekolwiek z:\n- \"znajdź najbliższe\"\n- \"wolne terminy\"\n- \"sprawdź dostępność\"\n- \"najszybciej\"\n- \"kiedy wolne\"\n- \"pierwszy wolny\"\n\nI NIE zawiera WSZYSTKICH trzech: email, telefon, imię nazwisko\n\nAKCJA DLA TYPE 1:\n1. Użyj narzędzia \"SprawdzenieDostepnosci\" dla każdego barbera (lub konkretnego jeśli podany)\n2. Znajdź najbliższe 3 wolnych barberów sloty\n3. Sprawdź czy barberzy są zajęci w danych dniach i godzinach w kalendarzu Google\n4. Zwróć format: \"DOSTĘPNE: [dzień] o [godzina] u [barber] | ALT1: [opcja2] | ALT2: [opcja3]\"\n\nKRYTYCZNE: Dla TYPE 1 NIE WYMAGAJ ani NIE SPRAWDZAJ czy są: imię, email, telefon\nTe dane są potrzebne DOPIERO przy rezerwacji lub zapisie do CRM, nie przy sprawdzaniu!\n\nTYPE 2: REZERWACJA WIZYTY (wymaga danych osobowych + zapis do CRM)\nGdy instruction zawiera:\n- \"zarezerwuj\"\n- \"umów\"\n- \"book\"\n\nI zawiera WSZYSTKIE trzy: email, telefon, imię nazwisko\n\nAKCJA DLA TYPE 2:\n1. Najpierw użyj \"SprawdzenieDostepnosci\" aby potwierdzić że termin wolny\n2. Jeśli wolny, użyj \"UmowienieWizyty\" z:\n   - Calendar: odpowiedni ID dla barbera z mapowania\n   - Start: {{ $(\u0027Webhook\u0027).item.json.body.Data_Wizyty }}T{{ $(\u0027Webhook\u0027).item.json.body.Godzina_Wizyty }}:00\n   - End: Start + 60 minut (lub 90 dla Combo/Długie)\n   - Title: {{ $(\u0027Webhook\u0027).item.json.body.Usluga }} - {{ $(\u0027Webhook\u0027).item.json.body.Imie_Nazwisko }}\n   - Attendees: {{ $(\u0027Webhook\u0027).item.json.body.Adres_Email }}\n3. ZAWSZE użyj \"Create a record in Airtable\" z:\n   - Imię i nazwisko: {{ $(\u0027Webhook\u0027).item.json.body.Imie_Nazwisko }}\n   - Numer telefonu: {{ $(\u0027Webhook\u0027).item.json.body.Numer_Telefonu }}\n   - Adres Email: {{ $(\u0027Webhook\u0027).item.json.body.Adres_Email }}\n   - Podsumowanie rozmowy: {{ $(\u0027Webhook\u0027).item.json.body.Podsumowanie }}\n   - Status klienta: \"Nowy\" (jeśli pierwszy kontakt) lub \"Aktywny\"\n   - Data ostatniego kontaktu: data obecna\n   - Notatki dodatkowe: \"Rezerwacja: {{ $(\u0027Webhook\u0027).item.json.body.Data_Wizyty }} {{ $(\u0027Webhook\u0027).item.json.body.Godzina_Wizyty }}, {{ $(\u0027Webhook\u0027).item.json.body.Usluga }}, barber {{ $(\u0027Webhook\u0027).item.json.body.Barber }}\"\n4. Zwróć: \"ZAREZERWOWANE: [data] [godzina] [usługa] u [barber] dla [imię]\"\n\nKRYTYCZNE: Dla TYPE 2 WYMAGANE są: imię, email, telefon, data, godzina, barber, usługa\nJeśli czegoś brakuje, zwróć: \"BŁĄD_DANYCH: Brakuje [czego]. Nie można zarezerwować.\"\n\nTYPE 3: ZAPISYWANIE DANYCH KLIENTA DO CRM (bez rezerwacji)\nGdy instruction zawiera:\n- \"zapisz dane\"\n- \"dodaj do CRM\"\n- \"zanotuj\"\n- \"klient podał dane\"\n\nLUB gdy dostępne są: imię, email lub telefon (przynajmniej jedno)\nALE instruction NIE zawiera \"zarezerwuj\" ani \"umów\"\n\nAKCJA DLA TYPE 3:\n1. ZAWSZE użyj \"Create a record in Airtable\" z dostępnymi danymi:\n   - Imię i nazwisko: {{ $(\u0027Webhook\u0027).item.json.body.Imie_Nazwisko }} (jeśli dostępne)\n   - Numer telefonu: {{ $(\u0027Webhook\u0027).item.json.body.Numer_Telefonu }} (jeśli dostępne)\n   - Adres Email: {{ $(\u0027Webhook\u0027).item.json.body.Adres_Email }} (jeśli dostępne)\n   - Podsumowanie rozmowy: {{ $(\u0027Webhook\u0027).item.json.body.Podsumowanie }} (zawsze jeśli dostępne)\n   - Status klienta: \"Potencjalny\" (jeśli nie ma rezerwacji) lub \"Nowy\"\n   - Data ostatniego kontaktu: data obecna\n   - Notatki dodatkowe: szczegóły z instruction lub podsumowania\n2. Zwróć: \"ZAPISANE_CRM: Dane klienta zapisane w systemie\"\n\nPRZYKŁAD TYPE 3:\nScenariusz: Klient dzwoni, pyta o ceny, nie rezerwuje ale podaje dane kontaktowe\nInput: instruction = \"Klient pytał o ceny. Podał: Jan Kowalski, jan@example.com, 501234567. Nie zarezerwował.\"\nAkcja: Zapisz do Airtable wszystkie dostępne dane\nOutput: \"ZAPISANE_CRM: Dane klienta zapisane w systemie\"\n\nTYPE 4: SZUKANIE REZERWACJI\nGdy instruction zawiera:\n- \"znajdź rezerwację\"\n- \"sprawdź rezerwację\"\n- \"moja wizyta\"\n\nAKCJA:\n1. Użyj \"SprawdzenieDostepnosci\" we WSZYSTKICH kalendarzach barberów\n2. Szukaj wydarzeń gdzie attendees zawiera email ORAZ title zawiera imię\n3. Jeśli znaleziono: \"ZNALEZIONO: [data] [godzina] [usługa] u [barber] dla [imię]\"\n4. Jeśli nie znaleziono: \"BRAK_REZERWACJI: Nie znaleziono rezerwacji. Sprawdź mail z potwierdzeniem.\"\n\nTYPE 5: ANULOWANIE\nGdy instruction zawiera \"anuluj\":\n1. Najpierw znajdź rezerwację (jak TYPE 4)\n2. Jeśli znaleziono, użyj \"UsuniecieWizyty\" z eventId\n3. OPCJONALNIE: zaktualizuj Airtable - zmień status na \"Anulowana wizyta\"\n4. Zwróć potwierdzenie\n\nALGORYTM ZNAJDOWANIA WOLNYCH SLOTÓW:\n\nDla każdego barbera (lub konkretnego jeśli podany):\n1. Pobierz wszystkie wydarzenia z Google Calendar dla zakresu dat\n2. Godziny pracy:\n   - Poniedziałek-Wtorek: 9:00-19:00\n   - Środa-Sobota: 9:00-21:00\n   - Niedziela: 10:00-19:00\n3. Czas trwania usług:\n   - Strzyżenie krótkie/średnie/Broda: 60 min\n   - Strzyżenie długie/Combo: 90 min\n   - Maszynką: 30 min\n4. Dla każdej godziny w zakresie:\n   - Sprawdź czy slot (godzina do godzina+czas trwania) jest wolny\n   - Jeśli wolny, dodaj do listy\n5. Zwróć 3 najbliższe wolne sloty\n\nAIRTABLE CRM - POLA DO UZUPEŁNIENIA:\n\nZAWSZE wypełniaj gdy dostępne:\n- Imię i nazwisko (required dla zapisu)\n- Numer telefonu (jeśli dostępny)\n- Adres Email (jeśli dostępny)\n- Podsumowanie rozmowy (zawsze z webhooka)\n- Data ostatniego kontaktu (zawsze obecna data)\n\nStatus klienta (wybierz odpowiedni):\n- \"Nowy\" - pierwszy kontakt z rezerwacją\n- \"Potencjalny\" - pierwszy kontakt bez rezerwacji (tylko zapytanie)\n- \"Aktywny\" - klient z historią wizyt\n- \"Nieaktywny\" - dawno nie było kontaktu\n\nNotatki dodatkowe (opcjonalnie, ale zalecane):\n- Dla rezerwacji: \"Rezerwacja: [data] [godzina], [usługa], barber [barber]\"\n- Dla zapytań: \"Zapytanie o: [temat]. Nie zarezerwował.\"\n- Dla anulacji: \"Anulacja wizyty z [data]\"\n\nZASADA CRM:\nZAWSZE zapisuj do Airtable gdy masz PRZYNAJMNIEJ JEDNO z:\n- Imię i nazwisko\n- Email\n- Telefon\n\nNawet jeśli to tylko zapytanie bez rezerwacji - każdy kontakt jest cenny dla CRM!\n\nFORMATY ODPOWIEDZI (ZAWSZE używaj tych prefiksów):\n\nDOSTĘPNE: [data] o [godzina] u [barber] | ALT1: [data] o [godzina] u [barber] | ALT2: [data] o [godzina] u [barber]\n\nZAJĘTE: [data] o [godzina] zajęte. ALT1: [alternatywa], ALT2: [alternatywa]\n\nZAREZERWOWANE: [data] [godzina] [usługa] u [barber] dla [imię nazwisko]\n\nZAPISANE_CRM: Dane klienta zapisane w systemie\n\nZNALEZIONO: [data] [godzina] [usługa] u [barber] dla [imię nazwisko]\n\nBRAK_REZERWACJI: Nie znaleziono rezerwacji dla [dane]. Sprawdź mail z potwierdzeniem.\n\nBRAK_WOLNYCH: Brak wolnych terminów w zakresie [zakres]. Najbliższy wolny: [data] o [godzina] u [barber]\n\nBŁĄD_DANYCH: Brakuje [czego konkretnie] do [jakiej akcji]. Nie można przetworzyć.\n\nPRZYKŁADY UŻYCIA:\n\nPrzykład 1 - Sprawdzanie dostępności (bez danych, bez zapisu do CRM):\nInput: instruction = \"Znajdź najbliższe 3 wolne terminy na strzyżenie krótkie\"\nBrak: imię, email, telefon\nAkcja: TYPE 1 - tylko SprawdzenieDostepnosci, NIE zapisuj do CRM\nOutput: \"DOSTĘPNE: dziś o 17:00 u Bartek | ALT1: jutro o 10:00 u Ania | ALT2: jutro o 14:00 u Magda\"\n\nPrzykład 2 - Rezerwacja z danymi (zapis do kalendarza + CRM):\nInput: instruction = \"Zarezerwuj: Jan Kowalski, jan@example.com, +48 000 000 000, strzyżenie, Ania, 2025-10-15, 10:00\"\nDane: Wszystkie wypełnione\nAkcja: TYPE 2 - SprawdzenieDostepnosci + UmowienieWizyty + Create Airtable Record\nOutput: \"ZAREZERWOWANE: 2025-10-15 10:00 Strzyżenie u Ania dla Jan Kowalski\"\n\nPrzykład 3 - Zapytanie z danymi, bez rezerwacji (tylko CRM):\nInput: instruction = \"Klient pytał o ceny. Nie zarezerwował. Dane: Piotr Nowak, piotr@example.com, 600123456\"\nDane: Imię = \"Piotr Nowak\", Email = \"piotr@example.com\", Telefon = \"+48 000 000 000\", Podsumowanie = \"Zapytanie o ceny\"\nAkcja: TYPE 3 - tylko Create Airtable Record ze statusem \"Potencjalny\"\nOutput: \"ZAPISANE_CRM: Dane klienta zapisane w systemie\"\n\nPrzykład 4 - Klient dzwoni ponownie (update CRM):\nInput: instruction = \"Zarezerwuj: Jan Kowalski (już w bazie), jan@example.com...\"\nAkcja: TYPE 2 - sprawdź czy istnieje w Airtable:\n- Jeśli istnieje: UPDATE rekordu (zmień status na \"Aktywny\", dodaj nową wizytę do notatek)\n- Jeśli nie istnieje: CREATE nowy rekord\nOutput: \"ZAREZERWOWANE: [szczegóły]\"\n\nDEDUPLIKACJA W AIRTABLE:\n\nPrzed utworzeniem nowego rekordu, ZAWSZE sprawdź czy klient już istnieje:\n1. Szukaj po email (najdokładniejsze)\n2. Jeśli brak email, szukaj po telefonie\n3. Jeśli brak obu, szukaj po imieniu i nazwisku\n\nJeśli znaleziono istniejący rekord:\n- UPDATE: Data ostatniego kontaktu, Notatki (dodaj nową), Status (jeśli potrzeba)\n- NIE twórz duplikatu\n\nJeśli nie znaleziono:\n- CREATE: Nowy rekord z wszystkimi dostępnymi danymi\n\nKRYTYCZNE ZASADY:\n\n1. NIGDY nie wymagaj danych osobowych dla TYPE 1 (sprawdzanie dostępności)\n2. ZAWSZE zapisuj do Airtable dla TYPE 2 (rezerwacja) i TYPE 3 (dane bez rezerwacji)\n3. ZAWSZE sprawdzaj duplikaty przed utworzeniem rekordu w Airtable\n4. ZAWSZE używaj prefiksów: DOSTĘPNE, ZAJĘTE, ZAREZERWOWANE, ZAPISANE_CRM, ZNALEZIONO, BRAK_REZERWACJI, BRAK_WOLNYCH, BŁĄD_DANYCH\n5. NIGDY nie pisz: \"Proszę podać\", \"Potrzebuję\" bez prefiksu BŁĄD_DANYCH\n6. Dla TYPE 3 wystarczy JEDNO z: imię, email lub telefon (nie wszystkie)\n7. Podsumowanie rozmowy ZAWSZE dodawaj do Airtable jeśli dostępne\n8. Status klienta dobieraj inteligentnie: Potencjalny (bez rezerwacji), Nowy (pierwsza rezerwacja), Aktywny (kolejne wizyty)\n\nPRZEPŁYW DECYZYJNY:\n\nCzy instruction zawiera \"najszybciej\" / \"wolne terminy\" BEZ danych osobowych?\n→ TAK: TYPE 1 (tylko sprawdzenie, bez CRM)\n→ NIE: sprawdź dalej\n\nCzy instruction zawiera \"zarezerwuj\" I wszystkie dane (imię+email+telefon)?\n→ TAK: TYPE 2 (kalendarz + CRM)\n→ NIE: sprawdź dalej\n\nCzy dostępne są jakiekolwiek dane kontaktowe (imię LUB email LUB telefon)?\n→ TAK: TYPE 3 (tylko CRM, bez kalendarza)\n→ NIE: TYPE 1 lub błąd\n\nCzy instruction zawiera \"znajdź rezerwację\"?\n→ TAK: TYPE 4 (szukanie)\n\nCzy instruction zawiera \"anuluj\"?\n→ TAK: TYPE 5 (anulowanie)"
+                                                     }
+                                     },
+                      "type":  "@n8n/n8n-nodes-langchain.agent",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       304,
+                                       -64
+                                   ],
+                      "id":  "f281dc3e-6bdd-4d70-a1a6-4f9c13cac43e",
+                      "name":  "AI Agent"
+                  },
+                  {
+                      "parameters":  {
+                                         "model":  {
+                                                       "__rl":  true,
+                                                       "mode":  "list",
+                                                       "value":  "gpt-4.1-mini"
+                                                   },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+                      "typeVersion":  1.2,
+                      "position":  [
+                                       96,
+                                       128
+                                   ],
+                      "id":  "d5290633-416a-4ebe-bd58-c8313c27e58d",
+                      "name":  "OpenAI Chat Model",
+                      "credentials":  {
+                                          "openAiApi":  {
+                                                            "id":  "CevclqSiRa9VJGwm",
+                                                            "name":  "OpenAi Manufaktura"
+                                                        }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "sessionIdType":  "customKey",
+                                         "sessionKey":  "={{ $(\u0027Webhook\u0027).item.json.headers[\u0027sentry-trace\u0027] }}"
+                                     },
+                      "type":  "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+                      "typeVersion":  1.3,
+                      "position":  [
+                                       -800,
+                                       208
+                                   ],
+                      "id":  "0ff55089-a06b-431c-8506-cf95249e247a",
+                      "name":  "Postgres Chat Memory",
+                      "credentials":  {
+                                          "postgres":  {
+                                                           "id":  "MLINqPwwywhCobTH",
+                                                           "name":  "Postgres RAG"
+                                                       }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "respondWith":  "allIncomingItems",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.respondToWebhook",
+                      "typeVersion":  1.4,
+                      "position":  [
+                                       608,
+                                       -64
+                                   ],
+                      "id":  "02b50362-73eb-459a-9e92-aa9d5ff5e284",
+                      "name":  "Respond to Webhook"
+                  },
+                  {
+                      "parameters":  {
+                                         "assignments":  {
+                                                             "assignments":  [
+                                                                                 {
+                                                                                     "id":  "8f2accf8-b76c-4fbe-b2b8-08ab872754a3",
+                                                                                     "name":  "Andrzej_Barber",
+                                                                                     "value":  "cal-5052a5da@group.calendar.google.com",
+                                                                                     "type":  "string"
+                                                                                 },
+                                                                                 {
+                                                                                     "id":  "f0fd8200-b7f8-4486-861d-355a04815486",
+                                                                                     "name":  "Ania_Barber",
+                                                                                     "value":  "cal-3b99b575@group.calendar.google.com",
+                                                                                     "type":  "string"
+                                                                                 },
+                                                                                 {
+                                                                                     "id":  "96ba3548-69bf-4b5c-8b67-8a09ac127342",
+                                                                                     "name":  "Bartek_Barber",
+                                                                                     "value":  "cal-1192ec64@group.calendar.google.com",
+                                                                                     "type":  "string"
+                                                                                 },
+                                                                                 {
+                                                                                     "id":  "e484fbc2-ec28-4ce2-9744-ec9ccbc894dc",
+                                                                                     "name":  "Borys_Barber",
+                                                                                     "value":  "cal-a5a747c6@group.calendar.google.com",
+                                                                                     "type":  "string"
+                                                                                 },
+                                                                                 {
+                                                                                     "id":  "352c6c76-0b0d-4b49-b9bc-d84377297042",
+                                                                                     "name":  "Magda_Barber",
+                                                                                     "value":  "cal-5465f5f8@group.calendar.google.com",
+                                                                                     "type":  "string"
+                                                                                 }
+                                                                             ]
+                                                         },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.set",
+                      "typeVersion":  3.4,
+                      "position":  [
+                                       144,
+                                       -64
+                                   ],
+                      "id":  "9a8cec6b-9296-4347-bc26-a9c7f2540deb",
+                      "name":  "Edit Fields"
+                  },
+                  {
+                      "parameters":  {
+                                         "descriptionType":  "manual",
+                                         "toolDescription":  "Użyj tego narzędzia do sprawdzania wolnych terminów z kalendarza google danego barbera. Możesz używać poniższych zmiennych do pozyskania informacji:\nstartTime: data początkowa od której są wyszukiwane wydarzenia w kalendarzu.\nendTime: data końcowa do której są wyszukiwane wydarzenia w kalendarzu.",
+                                         "operation":  "getAll",
+                                         "calendar":  {
+                                                          "__rl":  true,
+                                                          "mode":  "id",
+                                                          "value":  "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI(\u0027Calendar\u0027, ``, \u0027string\u0027) }}",
+                                                          "__regex":  "(^[a-zA-Z0-9.!#$%\u0026’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*)"
+                                                      },
+                                         "returnAll":  true,
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.googleCalendarTool",
+                      "typeVersion":  1.3,
+                      "position":  [
+                                       -112,
+                                       560
+                                   ],
+                      "id":  "685ea2b1-7902-49b1-8132-167aba5f494d",
+                      "name":  "SprawdzenieDostepnosci",
+                      "credentials":  {
+                                          "googleCalendarOAuth2Api":  {
+                                                                          "id":  "w1wfFqW1WZeOSC2o",
+                                                                          "name":  "Kalendarz Testowe"
+                                                                      }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "descriptionType":  "manual",
+                                         "toolDescription":  "Użyj tego narzędzia do edytowanie wydarzenia w kalendarzu. W zależności od kontekstu, możesz skorzystać z poniższych zmiennych:\n- eventId - unikalna wartość reprezentujący pojedyncze wydarzenie w kalendarzu\n  type: string\n  Obowiązkowe\n- attendees - mail klienta\n  type: string\n  Nieobowiązkowe\n- eventTitle - nazwa wydarzenia, którą należy samodzielnie określić na podstawie kontekstu wiadomości użytkownika\n  type: string\n  Obowiązkowe\n- eventDesc - opis wydarzenia wynikający z kontekstu wiadomości użytkownika\n  type: string\n  Nieobowiązkowe\n- startTime - data i godzina rozpoczęcia wydarzenia\n  type: date\n  Obowiązkowe\n- endTime - data i godzina zakończenia wydarzenia\n  type: date\n  Nieobowiązkowe\n  Wartość domyślna: startTime + 60 minut",
+                                         "operation":  "update",
+                                         "calendar":  {
+                                                          "__rl":  true,
+                                                          "mode":  "id",
+                                                          "value":  "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI(\u0027Calendar\u0027, ``, \u0027string\u0027) }}",
+                                                          "__regex":  "(^[a-zA-Z0-9.!#$%\u0026’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*)"
+                                                      },
+                                         "eventId":  "={{ $fromAI(\"eventId\") }}",
+                                         "updateFields":  {
+                                                              "attendeesUi":  {
+                                                                                  "values":  {
+                                                                                                 "mode":  "replace",
+                                                                                                 "attendees":  [
+                                                                                                                   "={{ $fromAI(\"attendees\") }}"
+                                                                                                               ]
+                                                                                             }
+                                                                              },
+                                                              "description":  "={{ $fromAI(\"eventDesc\") }}",
+                                                              "end":  "={{ $fromAI(\"endTime\") }}",
+                                                              "start":  "={{ $fromAI(\"startTime\") }}",
+                                                              "summary":  "={{ $fromAI(\"eventTitle\") }}"
+                                                          }
+                                     },
+                      "type":  "n8n-nodes-base.googleCalendarTool",
+                      "typeVersion":  1.3,
+                      "position":  [
+                                       48,
+                                       560
+                                   ],
+                      "id":  "16c3dcf6-e8e7-4477-a34e-17136b0a40e1",
+                      "name":  "EdytowanieWizyty",
+                      "credentials":  {
+                                          "googleCalendarOAuth2Api":  {
+                                                                          "id":  "w1wfFqW1WZeOSC2o",
+                                                                          "name":  "Kalendarz Testowe"
+                                                                      }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "descriptionType":  "manual",
+                                         "toolDescription":  "Użyj tego narzędzia do stworzenia nowego wydarzenia stacjonarnego w kalendarzu. W zależności od kontekstu, możesz skorzystać z poniższych zmiennych:\n- attendees - mail klienta\n  type: string\n  Obowiązkowe\n- eventTitle - nazwa wydarzenia, którą należy samodzielnie określić na podstawie kontekstu wiadomości użytkownika\n  type: string\n  Obowiązkowe\n- eventDesc - opis wydarzenia wynikający z kontekstu wiadomości użytkownika\n  type: string\n  Nieobowiązkowe\n- startTime - data i godzina rozpoczęcia wydarzenia\n  type: date\n  Obowiązkowe\n- endTime - data i godzina zakończenia wydarzenia\n  type: date\n  Nieobowiązkowe\n  Wartość domyślna: startTime + 60 minut",
+                                         "calendar":  {
+                                                          "__rl":  true,
+                                                          "mode":  "id",
+                                                          "value":  "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI(\u0027Calendar\u0027, ``, \u0027string\u0027) }}",
+                                                          "__regex":  "(^[a-zA-Z0-9.!#$%\u0026’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*)"
+                                                      },
+                                         "start":  "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI(\u0027Start\u0027, ``, \u0027string\u0027) }}",
+                                         "end":  "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI(\u0027End\u0027, ``, \u0027string\u0027) }}",
+                                         "additionalFields":  {
+                                                                  "attendees":  [
+                                                                                    "={{ $fromAI(\"attendees\") }}"
+                                                                                ],
+                                                                  "description":  "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI(\u0027Description\u0027, ``, \u0027string\u0027) }}"
+                                                              }
+                                     },
+                      "type":  "n8n-nodes-base.googleCalendarTool",
+                      "typeVersion":  1.3,
+                      "position":  [
+                                       -112,
+                                       720
+                                   ],
+                      "id":  "7cfd17a7-8700-45b5-89c0-9c8aba2dec5d",
+                      "name":  "UmowienieWizyty",
+                      "credentials":  {
+                                          "googleCalendarOAuth2Api":  {
+                                                                          "id":  "w1wfFqW1WZeOSC2o",
+                                                                          "name":  "Kalendarz Testowe"
+                                                                      }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "descriptionType":  "manual",
+                                         "toolDescription":  "Użyj tego narzędzia do wykasowania wydarzenia w kalendarzu. Musisz skorzystać z poniższej zmiennej:\n- eventId - unikalna wartość reprezentujący pojedyncze wydarzenie w kalendarzu\n  type: string\n  Obowiązkowe",
+                                         "operation":  "delete",
+                                         "calendar":  {
+                                                          "__rl":  true,
+                                                          "mode":  "id",
+                                                          "value":  "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI(\u0027Calendar\u0027, ``, \u0027string\u0027) }}",
+                                                          "__regex":  "(^[a-zA-Z0-9.!#$%\u0026’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*)"
+                                                      },
+                                         "eventId":  "={{ $fromAI(\"eventId\") }}",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.googleCalendarTool",
+                      "typeVersion":  1.3,
+                      "position":  [
+                                       48,
+                                       720
+                                   ],
+                      "id":  "caa7b931-094d-437b-8279-6dc0c9eecc76",
+                      "name":  "UsuniecieWizyty",
+                      "credentials":  {
+                                          "googleCalendarOAuth2Api":  {
+                                                                          "id":  "w1wfFqW1WZeOSC2o",
+                                                                          "name":  "Kalendarz Testowe"
+                                                                      }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "@n8n/n8n-nodes-langchain.chatTrigger",
+                      "typeVersion":  1.3,
+                      "position":  [
+                                       -864,
+                                       16
+                                   ],
+                      "id":  "4c4d7f36-c1b1-4485-a878-2ee8481f48dd",
+                      "name":  "When chat message received",
+                      "webhookId":  "ed0f769f-fa37-41d8-8b10-de23649ddf1f"
+                  },
+                  {
+                      "parameters":  {
+                                         "descriptionType":  "manual",
+                                         "toolDescription":  "Używasz tego narzędzia do uzupełniania danych o kliencie takich jak Imię i nazwisko, Adres email, Podsumowanie oraz numer telefonu",
+                                         "operation":  "create",
+                                         "base":  {
+                                                      "__rl":  true,
+                                                      "value":  "app3716f86b248f6e",
+                                                      "mode":  "list",
+                                                      "cachedResultName":  "Barber",
+                                                      "cachedResultUrl":  "https://airtable.com/app3716f86b248f6e"
+                                                  },
+                                         "table":  {
+                                                       "__rl":  true,
+                                                       "value":  "tblFrLu73yTE8uVL7",
+                                                       "mode":  "list",
+                                                       "cachedResultName":  "Klienci",
+                                                       "cachedResultUrl":  "https://airtable.com/app3716f86b248f6e/tblFrLu73yTE8uVL7"
+                                                   },
+                                         "columns":  {
+                                                         "mappingMode":  "defineBelow",
+                                                         "value":  {
+                                                                       "Data ostatniego kontaktu":  "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI(\u0027Data_ostatniego_kontaktu\u0027, ``, \u0027string\u0027) }}",
+                                                                       "Status klienta":  "Nowy",
+                                                                       "Imię i nazwisko":  "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI(\u0027Imi__i_nazwisko\u0027, ``, \u0027string\u0027) }}",
+                                                                       "Numer telefonu":  "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI(\u0027Numer_telefonu\u0027, ``, \u0027string\u0027) }}",
+                                                                       "Adres Email":  "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI(\u0027Adres_Email\u0027, ``, \u0027string\u0027) }}",
+                                                                       "Podsumowanie rozmowy":  "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI(\u0027Podsumowanie_rozmowy\u0027, ``, \u0027string\u0027) }}",
+                                                                       "Notatki dodatkowe":  "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI(\u0027Notatki_dodatkowe\u0027, ``, \u0027string\u0027) }}",
+                                                                       "Liczba Wizyt":  "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI(\u0027Liczba_Wizyt\u0027, ``, \u0027number\u0027) }}"
+                                                                   },
+                                                         "matchingColumns":  [
+
+                                                                             ],
+                                                         "schema":  [
+                                                                        {
+                                                                            "id":  "Imię i nazwisko",
+                                                                            "displayName":  "Imię i nazwisko",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Numer telefonu",
+                                                                            "displayName":  "Numer telefonu",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Adres Email",
+                                                                            "displayName":  "Adres Email",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Podsumowanie rozmowy",
+                                                                            "displayName":  "Podsumowanie rozmowy",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Status klienta",
+                                                                            "displayName":  "Status klienta",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "options",
+                                                                            "options":  [
+                                                                                            {
+                                                                                                "name":  "Aktywny",
+                                                                                                "value":  "Aktywny"
+                                                                                            },
+                                                                                            {
+                                                                                                "name":  "Nieaktywny",
+                                                                                                "value":  "Nieaktywny"
+                                                                                            },
+                                                                                            {
+                                                                                                "name":  "Nowy",
+                                                                                                "value":  "Nowy"
+                                                                                            },
+                                                                                            {
+                                                                                                "name":  "Potencjalny",
+                                                                                                "value":  "Potencjalny"
+                                                                                            }
+                                                                                        ],
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Data ostatniego kontaktu",
+                                                                            "displayName":  "Data ostatniego kontaktu",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "dateTime",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Notatki dodatkowe",
+                                                                            "displayName":  "Notatki dodatkowe",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Liczba Wizyt",
+                                                                            "displayName":  "Liczba Wizyt",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "number",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        }
+                                                                    ],
+                                                         "attemptToConvertTypes":  false,
+                                                         "convertFieldsToString":  false
+                                                     },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.airtableTool",
+                      "typeVersion":  2.1,
+                      "position":  [
+                                       544,
+                                       144
+                                   ],
+                      "id":  "8ba15309-0361-48b7-8ae1-0a7af39c3a0c",
+                      "name":  "Create a record in Airtable",
+                      "credentials":  {
+                                          "airtableTokenApi":  {
+                                                                   "id":  "vvYRmbNw8TcJq6FF",
+                                                                   "name":  "Airtable Personal Access Token account"
+                                                               }
+                                      }
+                  }
+              ],
+    "connections":  {
+                        "Webhook":  {
+                                        "main":  [
+                                                     [
+                                                         {
+                                                             "node":  "Edit Fields",
+                                                             "type":  "main",
+                                                             "index":  0
+                                                         }
+                                                     ]
+                                                 ]
+                                    },
+                        "OpenAI Chat Model":  {
+                                                  "ai_languageModel":  [
+                                                                           [
+                                                                               {
+                                                                                   "node":  "AI Agent",
+                                                                                   "type":  "ai_languageModel",
+                                                                                   "index":  0
+                                                                               }
+                                                                           ]
+                                                                       ]
+                                              },
+                        "Postgres Chat Memory":  {
+                                                     "ai_memory":  [
+                                                                       [
+
+                                                                       ]
+                                                                   ]
+                                                 },
+                        "AI Agent":  {
+                                         "main":  [
+                                                      [
+                                                          {
+                                                              "node":  "Respond to Webhook",
+                                                              "type":  "main",
+                                                              "index":  0
+                                                          }
+                                                      ]
+                                                  ]
+                                     },
+                        "Edit Fields":  {
+                                            "main":  [
+                                                         [
+                                                             {
+                                                                 "node":  "AI Agent",
+                                                                 "type":  "main",
+                                                                 "index":  0
+                                                             }
+                                                         ]
+                                                     ]
+                                        },
+                        "SprawdzenieDostepnosci":  {
+                                                       "ai_tool":  [
+                                                                       [
+                                                                           {
+                                                                               "node":  "AI Agent",
+                                                                               "type":  "ai_tool",
+                                                                               "index":  0
+                                                                           }
+                                                                       ]
+                                                                   ]
+                                                   },
+                        "EdytowanieWizyty":  {
+                                                 "ai_tool":  [
+                                                                 [
+                                                                     {
+                                                                         "node":  "AI Agent",
+                                                                         "type":  "ai_tool",
+                                                                         "index":  0
+                                                                     }
+                                                                 ]
+                                                             ]
+                                             },
+                        "UmowienieWizyty":  {
+                                                "ai_tool":  [
+                                                                [
+                                                                    {
+                                                                        "node":  "AI Agent",
+                                                                        "type":  "ai_tool",
+                                                                        "index":  0
+                                                                    }
+                                                                ]
+                                                            ]
+                                            },
+                        "UsuniecieWizyty":  {
+                                                "ai_tool":  [
+                                                                [
+                                                                    {
+                                                                        "node":  "AI Agent",
+                                                                        "type":  "ai_tool",
+                                                                        "index":  0
+                                                                    }
+                                                                ]
+                                                            ]
+                                            },
+                        "When chat message received":  {
+                                                           "main":  [
+                                                                        [
+
+                                                                        ]
+                                                                    ]
+                                                       },
+                        "Create a record in Airtable":  {
+                                                            "ai_tool":  [
+                                                                            [
+                                                                                {
+                                                                                    "node":  "AI Agent",
+                                                                                    "type":  "ai_tool",
+                                                                                    "index":  0
+                                                                                }
+                                                                            ]
+                                                                        ]
+                                                        }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1"
+                 },
+    "staticData":  null,
+    "meta":  {
+                 "templateCredsSetupCompleted":  true
+             },
+    "nodeGroups":  [
+
+                   ],
+    "versionId":  "beaf31d7-56a6-4b03-a169-ee6e7fad3885",
+    "activeVersionId":  null,
+    "versionCounter":  76,
+    "triggerCount":  2,
+    "sourceWorkflowId":  null,
+    "shared":  [
+                   {
+                       "updatedAt":  "2025-10-07T16:11:42.421Z",
+                       "createdAt":  "2025-10-07T16:11:42.421Z",
+                       "role":  "workflow:owner",
+                       "workflowId":  "4aPn3hn6SLKwZfUX",
+                       "projectId":  "9rVJoULaKk30HdBB",
+                       "project":  {
+                                       "updatedAt":  "2025-06-26T00:18:14.615Z",
+                                       "createdAt":  "2025-06-25T23:37:35.363Z",
+                                       "id":  "9rVJoULaKk30HdBB",
+                                       "name":  "Nicolas Bednarz \u003cowner@example.com\u003e",
+                                       "type":  "personal",
+                                       "icon":  null,
+                                       "description":  null,
+                                       "customTelemetryTags":  [
+
+                                                               ],
+                                       "creatorId":  "af23e566-dd44-45a3-ac35-e15a8cdef3f2"
+                                   }
+                   }
+               ],
+    "tags":  [
+
+             ],
+    "activeVersion":  null
+}

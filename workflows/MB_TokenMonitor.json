@@ -1,0 +1,464 @@
+{
+    "updatedAt":  "2026-05-14T21:13:21.320Z",
+    "createdAt":  "2026-05-01T18:40:02.583Z",
+    "id":  "PVTvwhoKcwtafWVP",
+    "name":  "MB_TokenMonitor",
+    "description":  null,
+    "active":  false,
+    "isArchived":  false,
+    "nodes":  [
+                  {
+                      "parameters":  {
+                                         "rule":  {
+                                                      "interval":  [
+                                                                       {
+                                                                           "field":  "hours",
+                                                                           "hoursInterval":  6
+                                                                       }
+                                                                   ]
+                                                  }
+                                     },
+                      "id":  "3e86fdb4-f1f1-4ac2-bdae-57c38ecc11bd",
+                      "name":  "Cron Trigger (6h)",
+                      "type":  "n8n-nodes-base.scheduleTrigger",
+                      "typeVersion":  1.2,
+                      "position":  [
+                                       -1136,
+                                       0
+                                   ],
+                      "notes":  "Co 6h health check 7 platnych uslug."
+                  },
+                  {
+                      "parameters":  {
+                                         "url":  "https://api.openai.com/v1/usage",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "Authorization",
+                                                                                         "value":  "Bearer PLACEHOLDER_OPENAI_KEY"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "options":  {
+                                                         "timeout":  30000
+                                                     }
+                                     },
+                      "id":  "d581aaad-51da-4583-a253-8472745fe5e5",
+                      "name":  "Check OpenAI Usage",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       -928,
+                                       -400
+                                   ],
+                      "notes":  "OpenAI - sprawdza usage. Placeholder credential. Zwraca data z usage."
+                  },
+                  {
+                      "parameters":  {
+                                         "url":  "https://api.perplexity.ai/usage",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "Authorization",
+                                                                                         "value":  "Bearer PLACEHOLDER_PERPLEXITY_KEY"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "options":  {
+                                                         "timeout":  30000
+                                                     }
+                                     },
+                      "id":  "c3337659-fd9d-4302-b222-6f1748838da8",
+                      "name":  "Check Perplexity Usage",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       -928,
+                                       -256
+                                   ],
+                      "notes":  "Perplexity usage check. TODO Phase 9 verify endpoint via Perplexity."
+                  },
+                  {
+                      "parameters":  {
+                                         "url":  "https://api.json2video.com/v2/account",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "x-api-key",
+                                                                                         "value":  "PLACEHOLDER_JSON2VIDEO_KEY"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "options":  {
+                                                         "timeout":  30000
+                                                     }
+                                     },
+                      "id":  "07b3fce7-b2ca-4718-89c5-4334e7e15e71",
+                      "name":  "Check json2video",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       -928,
+                                       -112
+                                   ],
+                      "notes":  "json2video - account info z balance/limit."
+                  },
+                  {
+                      "parameters":  {
+                                         "url":  "=https://graph.facebook.com/v25.0/me?access_token=PLACEHOLDER_META_PAGE_TOKEN",
+                                         "options":  {
+                                                         "timeout":  30000
+                                                     }
+                                     },
+                      "id":  "709ba964-8260-421f-9144-a406bf1ad47a",
+                      "name":  "Check Meta Token",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       -928,
+                                       48
+                                   ],
+                      "notes":  "Meta token - prosty health check (zwraca Page Name jak token dziala). Jak 401 -\u003e token uniewazniony."
+                  },
+                  {
+                      "parameters":  {
+                                         "url":  "https://api.bufferapp.com/1/profiles.json",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "Authorization",
+                                                                                         "value":  "Bearer PLACEHOLDER_BUFFER_TOKEN"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "options":  {
+                                                         "timeout":  30000
+                                                     }
+                                     },
+                      "id":  "d90ae925-6a2b-4f34-a31d-c7e2ecf56c70",
+                      "name":  "Check Buffer",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       -928,
+                                       192
+                                   ],
+                      "notes":  "Buffer profiles list. Jak 401 -\u003e trzeba reauthorize."
+                  },
+                  {
+                      "parameters":  {
+                                         "url":  "=https://api.airtable.com/v0/meta/bases/appcf067e6003c219/tables",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "Authorization",
+                                                                                         "value":  "Bearer PLACEHOLDER_AIRTABLE_TOKEN"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "options":  {
+                                                         "timeout":  30000
+                                                     }
+                                     },
+                      "id":  "a90f1f9a-b4d9-41db-9e88-af3db83ae3a6",
+                      "name":  "Check Airtable",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       -928,
+                                       352
+                                   ],
+                      "notes":  "Airtable - list tables. Health check. Brak limitu monitoringu (Airtable dostepny zawsze)."
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// Aggreguje wyniki wszystkich health checks i identyfikuje problemy.\n// Threshold values configurable here.\n\nconst openai = $(\u0027Check OpenAI Usage\u0027).first().json;\nconst perplexity = $(\u0027Check Perplexity Usage\u0027).first().json;\nconst json2video = $(\u0027Check json2video\u0027).first().json;\nconst meta = $(\u0027Check Meta Token\u0027).first().json;\nconst buffer = $(\u0027Check Buffer\u0027).first().json;\nconst airtable = $(\u0027Check Airtable\u0027).first().json;\n\nconst alerts = [];\n\n// OpenAI - check spending vs limit (TODO konkretne progi)\nif (openai.error) alerts.push({service: \u0027OpenAI\u0027, issue: \u0027API error\u0027, deeplink: \u0027https://platform.openai.com/account/billing\u0027});\n\n// Perplexity\nif (perplexity.error) alerts.push({service: \u0027Perplexity\u0027, issue: \u0027API error\u0027, deeplink: \u0027https://www.perplexity.ai/settings/api\u0027});\n\n// json2video - watch for low credits\nif (json2video.error) alerts.push({service: \u0027json2video\u0027, issue: \u0027API error\u0027, deeplink: \u0027https://json2video.com/dashboard\u0027});\nelse if (json2video.credits \u0026\u0026 json2video.credits \u003c 50) {\n  alerts.push({service: \u0027json2video\u0027, issue: `Niski balans: ${json2video.credits} kredytow`, deeplink: \u0027https://json2video.com/dashboard\u0027});\n}\n\n// Meta token - 401 means token revoked\nif (meta.error || (meta.error \u0026\u0026 meta.error.code === 190)) {\n  alerts.push({service: \u0027Meta (FB/IG)\u0027, issue: \u0027Token uniewazniony!\u0027, deeplink: \u0027https://business.facebook.com/settings/system-users\u0027});\n}\n\n// Buffer\nif (buffer.error || (Array.isArray(buffer) === false \u0026\u0026 !buffer[0])) {\n  alerts.push({service: \u0027Buffer\u0027, issue: \u0027Token wygasl/blad\u0027, deeplink: \u0027https://publish.buffer.com/\u0027});\n}\n\n// Airtable\nif (airtable.error) alerts.push({service: \u0027Airtable\u0027, issue: \u0027API error\u0027, deeplink: \u0027https://airtable.com/create/tokens\u0027});\n\nreturn [{\n  json: {\n    has_alerts: alerts.length \u003e 0,\n    alerts,\n    total_services: 6,\n    issues_count: alerts.length,\n    timestamp: new Date().toISOString()\n  }\n}];"
+                                     },
+                      "id":  "66f4e648-5509-4457-ab3d-ec339fcef90f",
+                      "name":  "Evaluate All Services",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       -656,
+                                       0
+                                   ],
+                      "notes":  "Aggreguje status wszystkich uslug. Buduje liste alertow z deeplinkami. Phase 9: dopracowac thresholds per service."
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  true,
+                                                                            "leftValue":  "",
+                                                                            "typeValidation":  "loose",
+                                                                            "version":  2
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "id":  "alerts",
+                                                                                   "leftValue":  "={{ $json.has_alerts }}",
+                                                                                   "rightValue":  true,
+                                                                                   "operator":  {
+                                                                                                    "type":  "boolean",
+                                                                                                    "operation":  "true",
+                                                                                                    "singleValue":  true
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "370082c2-1720-4ab5-a745-db4444ed606d",
+                      "name":  "Has Alerts?",
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       -448,
+                                       0
+                                   ],
+                      "notes":  "TRUE = wysylamy alert. FALSE = wszystko OK, log only."
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// Builduje Telegram message z inline keyboard \u0027Doladuj teraz\u0027 deeplinkami.\nconst data = $input.first().json;\n\nlet text = `⚠️ *Monitoring uslug M\u0026B Investment*\n\nWykryto problemy z ${data.issues_count} z ${data.total_services} uslug:\n\n`;\n\nconst inlineKeyboard = [];\n\ndata.alerts.forEach(a =\u003e {\n  text += `• *${a.service}*: ${a.issue}\\n`;\n  inlineKeyboard.push([{text: `💳 Doladuj/napraw ${a.service}`, url: a.deeplink}]);\n});\n\ntext += `\\n_Sprawdzono: ${data.timestamp}_`;\n\nreturn [{\n  json: {\n    chat_id: \u0027PLACEHOLDER_NICOLAS_CHAT_ID\u0027,\n    text,\n    reply_markup: JSON.stringify({inline_keyboard: inlineKeyboard})\n  }\n}];"
+                                     },
+                      "id":  "bbf36216-3f8f-4a52-8d7a-2b4c5d0878f1",
+                      "name":  "Build Telegram Alert",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       -256,
+                                       -160
+                                   ],
+                      "notes":  "Builduje czytelny komunikat po polsku z deeplinkami. PLACEHOLDER_NICOLAS_CHAT_ID - dodac chat id Nicolas (albo klientki)."
+                  },
+                  {
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "=https://api.telegram.org/botPLACEHOLDER_BOT_TOKEN/sendMessage",
+                                         "sendBody":  true,
+                                         "specifyBody":  "json",
+                                         "jsonBody":  "={\n  \"chat_id\": {{ JSON.stringify($json.chat_id) }},\n  \"text\": {{ JSON.stringify($json.text) }},\n  \"parse_mode\": \"Markdown\",\n  \"reply_markup\": {{ $json.reply_markup }}\n}",
+                                         "options":  {
+                                                         "timeout":  30000
+                                                     }
+                                     },
+                      "id":  "cc3ffa2c-a952-40a4-b517-280680353782",
+                      "name":  "Send Telegram Alert",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       -48,
+                                       -160
+                                   ],
+                      "notes":  "Direct Telegram Bot API call (bez nodu Telegram bo trudne z dynamic inline_keyboard). PLACEHOLDER_BOT_TOKEN - replace z real."
+                  },
+                  {
+                      "parameters":  {
+
+                                     },
+                      "id":  "f26b5106-8cc5-4a1d-8a0b-173bdc99b85c",
+                      "name":  "Log: All OK",
+                      "type":  "n8n-nodes-base.noOp",
+                      "typeVersion":  1,
+                      "position":  [
+                                       -256,
+                                       144
+                                   ],
+                      "notes":  "Wszystko OK, brak alertu. Logujemy execution dla historii."
+                  }
+              ],
+    "connections":  {
+                        "Cron Trigger (6h)":  {
+                                                  "main":  [
+                                                               [
+                                                                   {
+                                                                       "node":  "Check OpenAI Usage",
+                                                                       "type":  "main",
+                                                                       "index":  0
+                                                                   },
+                                                                   {
+                                                                       "node":  "Check Perplexity Usage",
+                                                                       "type":  "main",
+                                                                       "index":  0
+                                                                   },
+                                                                   {
+                                                                       "node":  "Check json2video",
+                                                                       "type":  "main",
+                                                                       "index":  0
+                                                                   },
+                                                                   {
+                                                                       "node":  "Check Meta Token",
+                                                                       "type":  "main",
+                                                                       "index":  0
+                                                                   },
+                                                                   {
+                                                                       "node":  "Check Buffer",
+                                                                       "type":  "main",
+                                                                       "index":  0
+                                                                   },
+                                                                   {
+                                                                       "node":  "Check Airtable",
+                                                                       "type":  "main",
+                                                                       "index":  0
+                                                                   }
+                                                               ]
+                                                           ]
+                                              },
+                        "Check OpenAI Usage":  {
+                                                   "main":  [
+                                                                [
+                                                                    {
+                                                                        "node":  "Evaluate All Services",
+                                                                        "type":  "main",
+                                                                        "index":  0
+                                                                    }
+                                                                ]
+                                                            ]
+                                               },
+                        "Check Perplexity Usage":  {
+                                                       "main":  [
+                                                                    [
+                                                                        {
+                                                                            "node":  "Evaluate All Services",
+                                                                            "type":  "main",
+                                                                            "index":  0
+                                                                        }
+                                                                    ]
+                                                                ]
+                                                   },
+                        "Check json2video":  {
+                                                 "main":  [
+                                                              [
+                                                                  {
+                                                                      "node":  "Evaluate All Services",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ]
+                                                          ]
+                                             },
+                        "Check Meta Token":  {
+                                                 "main":  [
+                                                              [
+                                                                  {
+                                                                      "node":  "Evaluate All Services",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ]
+                                                          ]
+                                             },
+                        "Check Buffer":  {
+                                             "main":  [
+                                                          [
+                                                              {
+                                                                  "node":  "Evaluate All Services",
+                                                                  "type":  "main",
+                                                                  "index":  0
+                                                              }
+                                                          ]
+                                                      ]
+                                         },
+                        "Check Airtable":  {
+                                               "main":  [
+                                                            [
+                                                                {
+                                                                    "node":  "Evaluate All Services",
+                                                                    "type":  "main",
+                                                                    "index":  0
+                                                                }
+                                                            ]
+                                                        ]
+                                           },
+                        "Evaluate All Services":  {
+                                                      "main":  [
+                                                                   [
+                                                                       {
+                                                                           "node":  "Has Alerts?",
+                                                                           "type":  "main",
+                                                                           "index":  0
+                                                                       }
+                                                                   ]
+                                                               ]
+                                                  },
+                        "Has Alerts?":  {
+                                            "main":  [
+                                                         [
+                                                             {
+                                                                 "node":  "Build Telegram Alert",
+                                                                 "type":  "main",
+                                                                 "index":  0
+                                                             }
+                                                         ],
+                                                         [
+                                                             {
+                                                                 "node":  "Log: All OK",
+                                                                 "type":  "main",
+                                                                 "index":  0
+                                                             }
+                                                         ]
+                                                     ]
+                                        },
+                        "Build Telegram Alert":  {
+                                                     "main":  [
+                                                                  [
+                                                                      {
+                                                                          "node":  "Send Telegram Alert",
+                                                                          "type":  "main",
+                                                                          "index":  0
+                                                                      }
+                                                                  ]
+                                                              ]
+                                                 }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1",
+                     "timezone":  "Europe/Warsaw",
+                     "binaryMode":  "separate"
+                 },
+    "staticData":  null,
+    "meta":  null,
+    "nodeGroups":  [
+
+                   ],
+    "versionId":  "98a55579-1039-4b5d-b7e4-f08acd8738bb",
+    "activeVersionId":  null,
+    "versionCounter":  4,
+    "triggerCount":  0,
+    "sourceWorkflowId":  null,
+    "shared":  [
+                   {
+                       "updatedAt":  "2026-05-01T18:40:02.583Z",
+                       "createdAt":  "2026-05-01T18:40:02.583Z",
+                       "role":  "workflow:owner",
+                       "workflowId":  "PVTvwhoKcwtafWVP",
+                       "projectId":  "9rVJoULaKk30HdBB",
+                       "project":  {
+                                       "updatedAt":  "2025-06-26T00:18:14.615Z",
+                                       "createdAt":  "2025-06-25T23:37:35.363Z",
+                                       "id":  "9rVJoULaKk30HdBB",
+                                       "name":  "Nicolas Bednarz \u003cowner@example.com\u003e",
+                                       "type":  "personal",
+                                       "icon":  null,
+                                       "description":  null,
+                                       "customTelemetryTags":  [
+
+                                                               ],
+                                       "creatorId":  "af23e566-dd44-45a3-ac35-e15a8cdef3f2"
+                                   }
+                   }
+               ],
+    "tags":  [
+
+             ],
+    "activeVersion":  null
+}

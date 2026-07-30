@@ -1,0 +1,1233 @@
+{
+    "updatedAt":  "2025-07-07T22:27:13.150Z",
+    "createdAt":  "2025-06-29T14:24:29.678Z",
+    "id":  "g4a0sDJ8edYNbKmA",
+    "name":  "Tiktok scraper content",
+    "description":  null,
+    "active":  false,
+    "isArchived":  false,
+    "nodes":  [
+                  {
+                      "parameters":  {
+
+                                     },
+                      "type":  "n8n-nodes-base.manualTrigger",
+                      "typeVersion":  1,
+                      "position":  [
+                                       0,
+                                       0
+                                   ],
+                      "id":  "de57afb0-a25a-4952-bfbe-6f8b0c90087d",
+                      "name":  "When clicking ‘Execute workflow’"
+                  },
+                  {
+                      "parameters":  {
+                                         "operation":  "search",
+                                         "base":  {
+                                                      "__rl":  true,
+                                                      "value":  "app7e287553c7085b",
+                                                      "mode":  "list",
+                                                      "cachedResultName":  "TikTok\u0027s Viral Video Creator",
+                                                      "cachedResultUrl":  "https://airtable.com/app7e287553c7085b"
+                                                  },
+                                         "table":  {
+                                                       "__rl":  true,
+                                                       "value":  "tblmQMJURqN6bDDI4",
+                                                       "mode":  "list",
+                                                       "cachedResultName":  "Search Requests",
+                                                       "cachedResultUrl":  "https://airtable.com/app7e287553c7085b/tblmQMJURqN6bDDI4"
+                                                   },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.airtable",
+                      "typeVersion":  2.1,
+                      "position":  [
+                                       220,
+                                       0
+                                   ],
+                      "id":  "b98dd286-5527-4707-8a5f-48cb580ca8dd",
+                      "name":  "Search records",
+                      "credentials":  {
+                                          "airtableTokenApi":  {
+                                                                   "id":  "vvYRmbNw8TcJq6FF",
+                                                                   "name":  "Airtable Personal Access Token account"
+                                                               }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "base":  {
+                                                      "__rl":  true,
+                                                      "value":  "app7e287553c7085b",
+                                                      "mode":  "list",
+                                                      "cachedResultName":  "TikTok\u0027s Viral Video Creator",
+                                                      "cachedResultUrl":  "https://airtable.com/app7e287553c7085b"
+                                                  },
+                                         "table":  {
+                                                       "__rl":  true,
+                                                       "value":  "tblmQMJURqN6bDDI4",
+                                                       "mode":  "list",
+                                                       "cachedResultName":  "Search Requests",
+                                                       "cachedResultUrl":  "https://airtable.com/app7e287553c7085b/tblmQMJURqN6bDDI4"
+                                                   },
+                                         "id":  "={{ $json.id }}",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.airtable",
+                      "typeVersion":  2.1,
+                      "position":  [
+                                       440,
+                                       0
+                                   ],
+                      "id":  "0687b3ea-4f8c-49b0-a1f1-cf35c399bfa7",
+                      "name":  "Get a record",
+                      "credentials":  {
+                                          "airtableTokenApi":  {
+                                                                   "id":  "vvYRmbNw8TcJq6FF",
+                                                                   "name":  "Airtable Personal Access Token account"
+                                                               }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  true,
+                                                                            "leftValue":  "",
+                                                                            "typeValidation":  "loose",
+                                                                            "version":  2
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "id":  "269da383-ecef-49d1-a551-b7030442e0c9",
+                                                                                   "leftValue":  "={{ $json[\"videoMeta\"][\"subtitleLinks\"]?.find(l =\u003e l.language?.includes(\"\"))?.downloadLink }}",
+                                                                                   "rightValue":  "",
+                                                                                   "operator":  {
+                                                                                                    "type":  "boolean",
+                                                                                                    "operation":  "notEmpty",
+                                                                                                    "singleValue":  true
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        },
+                                         "looseTypeValidation":  true,
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       1100,
+                                       -100
+                                   ],
+                      "id":  "ad993412-4c98-4afb-808a-11a93c657248",
+                      "name":  "Ma transkrypcje?"
+                  },
+                  {
+                      "parameters":  {
+                                         "operation":  "create",
+                                         "base":  {
+                                                      "__rl":  true,
+                                                      "value":  "app7e287553c7085b",
+                                                      "mode":  "list",
+                                                      "cachedResultName":  "TikTok\u0027s Viral Video Creator",
+                                                      "cachedResultUrl":  "https://airtable.com/app7e287553c7085b"
+                                                  },
+                                         "table":  {
+                                                       "__rl":  true,
+                                                       "value":  "tblBslptBwdfKEMF1",
+                                                       "mode":  "list",
+                                                       "cachedResultName":  "Scraped Content",
+                                                       "cachedResultUrl":  "https://airtable.com/app7e287553c7085b/tblBslptBwdfKEMF1"
+                                                   },
+                                         "columns":  {
+                                                         "mappingMode":  "defineBelow",
+                                                         "value":  {
+                                                                       "ANALYZE":  true,
+                                                                       "Followers":  "={{ $(\u0027ApifyKeyword\u0027).item.json.authorMeta.fans }}",
+                                                                       "Views":  "={{ $(\u0027ApifyKeyword\u0027).item.json.playCount }}",
+                                                                       "Likes":  "={{ $(\u0027ApifyKeyword\u0027).item.json.diggCount }}",
+                                                                       "Comments":  "={{ $(\u0027ApifyKeyword\u0027).item.json.commentCount }}",
+                                                                       "Shares":  "={{ $(\u0027ApifyKeyword\u0027).item.json.shareCount }}",
+                                                                       "Bookmarks":  "={{ $(\u0027ApifyKeyword\u0027).item.json.collectCount }}",
+                                                                       "Duration":  "={{ $(\u0027ApifyKeyword\u0027).item.json.videoMeta.duration }}",
+                                                                       "ID":  "={{ $(\u0027ApifyKeyword\u0027).item.json.id }}",
+                                                                       "Keyword":  "={{ $(\u0027Get a record\u0027).item.json.Keywords }}",
+                                                                       "User":  "={{ $(\u0027ApifyKeyword\u0027).item.json.authorMeta.name }}",
+                                                                       "Publish Date":  "={{ $(\u0027ApifyKeyword\u0027).item.json.createTimeISO }}",
+                                                                       "Caption":  "={{ $(\u0027ApifyKeyword\u0027).item.json.text }}",
+                                                                       "Transcript":  "={{ $json.message.content }}",
+                                                                       "Video URL":  "={{ $(\u0027ApifyKeyword\u0027).item.json.webVideoUrl }}",
+                                                                       "Cover Image":  "=[{ \"url\": \"{{ $(\u0027ApifyKeyword\u0027).item.json.videoMeta.coverUrl }}\" }]"
+                                                                   },
+                                                         "matchingColumns":  [
+
+                                                                             ],
+                                                         "schema":  [
+                                                                        {
+                                                                            "id":  "ID",
+                                                                            "displayName":  "ID",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Keyword",
+                                                                            "displayName":  "Keyword",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "User",
+                                                                            "displayName":  "User",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Followers",
+                                                                            "displayName":  "Followers",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "number",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Publish Date",
+                                                                            "displayName":  "Publish Date",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "dateTime",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Virality Score",
+                                                                            "displayName":  "Virality Score",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  true,
+                                                                            "removed":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "Views",
+                                                                            "displayName":  "Views",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "number",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Likes",
+                                                                            "displayName":  "Likes",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "number",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Comments",
+                                                                            "displayName":  "Comments",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "number",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Shares",
+                                                                            "displayName":  "Shares",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "number",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Bookmarks",
+                                                                            "displayName":  "Bookmarks",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "number",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Caption",
+                                                                            "displayName":  "Caption",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Transcript",
+                                                                            "displayName":  "Transcript",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Video URL",
+                                                                            "displayName":  "Video URL",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Cover Image",
+                                                                            "displayName":  "Cover Image",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "array",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Duration",
+                                                                            "displayName":  "Duration",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "number",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "ANALYZE",
+                                                                            "displayName":  "ANALYZE",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "boolean",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Time Factor Score",
+                                                                            "displayName":  "Time Factor Score",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  true,
+                                                                            "removed":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "Base Engagement Score",
+                                                                            "displayName":  "Base Engagement Score",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  true,
+                                                                            "removed":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "Follower Tier Multiplier",
+                                                                            "displayName":  "Follower Tier Multiplier",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  true,
+                                                                            "removed":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "Common Questions",
+                                                                            "displayName":  "Common Questions",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Key Insights",
+                                                                            "displayName":  "Key Insights",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        }
+                                                                    ],
+                                                         "attemptToConvertTypes":  false,
+                                                         "convertFieldsToString":  false
+                                                     },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.airtable",
+                      "typeVersion":  2.1,
+                      "position":  [
+                                       2060,
+                                       -120
+                                   ],
+                      "id":  "71b2376a-24d6-46e7-93a8-788307823369",
+                      "name":  "Create a record",
+                      "credentials":  {
+                                          "airtableTokenApi":  {
+                                                                   "id":  "vvYRmbNw8TcJq6FF",
+                                                                   "name":  "Airtable Personal Access Token account"
+                                                               }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "https://api.apify.com/v2/acts/GdWCkxBtKWOsKjdch/run-sync-get-dataset-items",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "Accept",
+                                                                                         "value":  "application/json"
+                                                                                     },
+                                                                                     {
+                                                                                         "name":  "Authorization",
+                                                                                         "value":  "Bearer apify_api_YOUR_TOKEN_HERE"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "sendBody":  true,
+                                         "specifyBody":  "json",
+                                         "jsonBody":  "={\n  \"excludePinnedPosts\": false,\n  \"proxyCountryCode\": \"None\",\n  \"resultsPerPage\": {{ $json[\u0027Max Results\u0027] }},\n  \"searchQueries\": [\n    \"{{ $json.Keywords }}\"\n  ],\n  \"oldestPostDateUnified\": \"{{ $json[\u0027Date Range\u0027] === \u0027Last 7 Days\u0027 ? \u00277 days\u0027 : $json[\u0027Date Range\u0027] === \u0027Last 30 Days\u0027 ? \u002730 days\u0027 : \u002790 days\u0027 }}\",\n  \"searchSection\": \"/video\",\n  \"shouldDownloadAvatars\": false,\n  \"shouldDownloadCovers\": false,\n  \"shouldDownloadMusicCovers\": false,\n  \"shouldDownloadSlideshowImages\": false,\n  \"shouldDownloadSubtitles\": true,\n  \"shouldDownloadVideos\": false\n}",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       880,
+                                       -100
+                                   ],
+                      "id":  "44d9d88a-b4cb-4aed-bcd7-3d51bc93ad5e",
+                      "name":  "ApifyKeyword"
+                  },
+                  {
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "https://api.apify.com/v2/acts/GdWCkxBtKWOsKjdch/run-sync-get-dataset-items",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "Accept",
+                                                                                         "value":  "application/json"
+                                                                                     },
+                                                                                     {
+                                                                                         "name":  "Authorization",
+                                                                                         "value":  "Bearer apify_api_YOUR_TOKEN_HERE"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "sendBody":  true,
+                                         "specifyBody":  "json",
+                                         "jsonBody":  "={\n    \"excludePinnedPosts\": false,\n    \"profileScrapeSections\": [\n        \"videos\"\n    ],\n    \"profileSorting\": \"latest\",\n    \"profiles\": [\n        \"{{ $json[\u0027TikTok Accounts\u0027] }}\"\n    ],\n    \"oldestPostDateUnified\": \"{{ $json[\u0027Date Range\u0027] === \u0027Last 7 Days\u0027 ? \u00277 days\u0027 : $json[\u0027Date Range\u0027] === \u0027Last 30 Days\u0027 ? \u002730 days\u0027 : \u002790 days\u0027 }}\",\n    \"proxyCountryCode\": \"None\",\n    \"resultsPerPage\": {{ $json[\u0027Max Results\u0027] }},\n    \"shouldDownloadAvatars\": false,\n    \"shouldDownloadCovers\": false,\n    \"shouldDownloadMusicCovers\": false,\n    \"shouldDownloadSlideshowImages\": false,\n    \"shouldDownloadSubtitles\": true,\n    \"shouldDownloadVideos\": false\n}",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       880,
+                                       100
+                                   ],
+                      "id":  "96b3197c-f624-4410-8ffe-a59a4e9e1205",
+                      "name":  "ApifyAccount"
+                  },
+                  {
+                      "parameters":  {
+                                         "modelId":  {
+                                                         "__rl":  true,
+                                                         "value":  "gpt-3.5-turbo",
+                                                         "mode":  "list",
+                                                         "cachedResultName":  "GPT-3.5-TURBO"
+                                                     },
+                                         "messages":  {
+                                                          "values":  [
+                                                                         {
+                                                                             "content":  "=Przetłumacz to na język angielski. Jeśli jest w języku angielskim to nie tłumacz:{{ $json.text }}"
+                                                                         }
+                                                                     ]
+                                                      },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "@n8n/n8n-nodes-langchain.openAi",
+                      "typeVersion":  1.8,
+                      "position":  [
+                                       1700,
+                                       -200
+                                   ],
+                      "id":  "194e0906-5b4f-4a54-af55-6c02cbd8f5a3",
+                      "name":  "Translate",
+                      "credentials":  {
+                                          "openAiApi":  {
+                                                            "id":  "CevclqSiRa9VJGwm",
+                                                            "name":  "OpenAi Manufaktura"
+                                                        }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "mode":  "runOnceForEachItem",
+                                         "jsCode":  "// Prosty dekoder WebVTT - tylko wyciąga tekst\nconst webvttString = $input.item.json.body || $input.item.body || \u0027\u0027;\n\n// Sprawdź czy mamy dane\nif (!webvttString) {\n    return { json: { text: \u0027\u0027 } };\n}\n\n// Usuń nagłówek WEBVTT\nconst content = webvttString.replace(/^WEBVTT\\n*/m, \u0027\u0027).trim();\n\n// Podziel na bloki\nconst blocks = content.split(/\\n\\s*\\n/).filter(block =\u003e block.trim() !== \u0027\u0027);\n\nconst textParts = [];\n\n// Wyciągnij tekst z każdego bloku\nblocks.forEach(block =\u003e {\n    const lines = block.split(\u0027\\n\u0027).map(line =\u003e line.trim()).filter(line =\u003e line);\n    \n    // Znajdź linię z czasem (zawiera \"--\u003e\")\n    let timeLineIndex = -1;\n    for (let i = 0; i \u003c lines.length; i++) {\n        if (lines[i].includes(\u0027--\u003e\u0027)) {\n            timeLineIndex = i;\n            break;\n        }\n    }\n    \n    // Weź tekst po linii czasu\n    if (timeLineIndex !== -1) {\n        const textLines = lines.slice(timeLineIndex + 1);\n        const text = textLines.join(\u0027 \u0027).trim();\n        if (text) {\n            textParts.push(text);\n        }\n    }\n});\n\n// Zwróć połączony tekst\nreturn {\n    json: {\n        text: textParts.join(\u0027 \u0027)\n    }\n};"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       1540,
+                                       -200
+                                   ],
+                      "id":  "fd855936-1aeb-4788-945e-e7b7e059d796",
+                      "name":  "Uncode Script"
+                  },
+                  {
+                      "parameters":  {
+                                         "url":  "={{ $json[\"videoMeta\"][\"subtitleLinks\"]?.find(l =\u003e l.language?.includes(\"\"))?.downloadLink }}",
+                                         "options":  {
+                                                         "response":  {
+                                                                          "response":  {
+                                                                                           "responseFormat":  "text",
+                                                                                           "outputPropertyName":  "body"
+                                                                                       }
+                                                                      }
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       1320,
+                                       -198.5
+                                   ],
+                      "id":  "99f2432e-9fd3-4f62-bbe3-404679a4f271",
+                      "name":  "DownloadTranscript"
+                  },
+                  {
+                      "parameters":  {
+                                         "rules":  {
+                                                       "values":  [
+                                                                      {
+                                                                          "conditions":  {
+                                                                                             "options":  {
+                                                                                                             "caseSensitive":  true,
+                                                                                                             "leftValue":  "",
+                                                                                                             "typeValidation":  "strict",
+                                                                                                             "version":  2
+                                                                                                         },
+                                                                                             "conditions":  [
+                                                                                                                {
+                                                                                                                    "leftValue":  "={{ $json[\u0027Search Type\u0027] }}",
+                                                                                                                    "rightValue":  "Keyword Search",
+                                                                                                                    "operator":  {
+                                                                                                                                     "type":  "string",
+                                                                                                                                     "operation":  "equals"
+                                                                                                                                 },
+                                                                                                                    "id":  "a9b40dc0-a823-4fde-8537-84ccb35b713b"
+                                                                                                                }
+                                                                                                            ],
+                                                                                             "combinator":  "and"
+                                                                                         }
+                                                                      },
+                                                                      {
+                                                                          "conditions":  {
+                                                                                             "options":  {
+                                                                                                             "caseSensitive":  true,
+                                                                                                             "leftValue":  "",
+                                                                                                             "typeValidation":  "strict",
+                                                                                                             "version":  2
+                                                                                                         },
+                                                                                             "conditions":  [
+                                                                                                                {
+                                                                                                                    "id":  "ffce53ae-2b38-4ea2-adca-eae3d4f4df5e",
+                                                                                                                    "leftValue":  "={{ $json[\u0027Search Type\u0027] }}",
+                                                                                                                    "rightValue":  "Account Search",
+                                                                                                                    "operator":  {
+                                                                                                                                     "type":  "string",
+                                                                                                                                     "operation":  "equals",
+                                                                                                                                     "name":  "filter.operator.equals"
+                                                                                                                                 }
+                                                                                                                }
+                                                                                                            ],
+                                                                                             "combinator":  "and"
+                                                                                         }
+                                                                      }
+                                                                  ]
+                                                   },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.switch",
+                      "typeVersion":  3.2,
+                      "position":  [
+                                       660,
+                                       0
+                                   ],
+                      "id":  "c0037622-1f2c-430a-83fe-db3dad38fb1d",
+                      "name":  "AccountOrKeyword"
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  true,
+                                                                            "leftValue":  "",
+                                                                            "typeValidation":  "loose",
+                                                                            "version":  2
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "id":  "269da383-ecef-49d1-a551-b7030442e0c9",
+                                                                                   "leftValue":  "={{ $json[\"videoMeta\"][\"subtitleLinks\"]?.find(l =\u003e l.language?.includes(\"\"))?.downloadLink }}",
+                                                                                   "rightValue":  "",
+                                                                                   "operator":  {
+                                                                                                    "type":  "boolean",
+                                                                                                    "operation":  "notEmpty",
+                                                                                                    "singleValue":  true
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        },
+                                         "looseTypeValidation":  true,
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       1100,
+                                       100
+                                   ],
+                      "id":  "ef80a6a0-444e-4034-b24a-92284b10f3ae",
+                      "name":  "Ma transkrypcje?1"
+                  },
+                  {
+                      "parameters":  {
+                                         "operation":  "create",
+                                         "base":  {
+                                                      "__rl":  true,
+                                                      "value":  "app7e287553c7085b",
+                                                      "mode":  "list",
+                                                      "cachedResultName":  "TikTok\u0027s Viral Video Creator",
+                                                      "cachedResultUrl":  "https://airtable.com/app7e287553c7085b"
+                                                  },
+                                         "table":  {
+                                                       "__rl":  true,
+                                                       "value":  "tblBslptBwdfKEMF1",
+                                                       "mode":  "list",
+                                                       "cachedResultName":  "Scraped Content",
+                                                       "cachedResultUrl":  "https://airtable.com/app7e287553c7085b/tblBslptBwdfKEMF1"
+                                                   },
+                                         "columns":  {
+                                                         "mappingMode":  "defineBelow",
+                                                         "value":  {
+                                                                       "ANALYZE":  false,
+                                                                       "Followers":  "={{ $(\u0027ApifyAccount\u0027).item.json.authorMeta.fans }}",
+                                                                       "Views":  "={{ $(\u0027ApifyAccount\u0027).item.json.playCount }}",
+                                                                       "Likes":  "={{ $(\u0027ApifyAccount\u0027).item.json.diggCount }}",
+                                                                       "Comments":  "={{ $(\u0027ApifyAccount\u0027).item.json.commentCount }}",
+                                                                       "Shares":  "={{ $(\u0027ApifyAccount\u0027).item.json.shareCount }}",
+                                                                       "Bookmarks":  "={{ $(\u0027ApifyAccount\u0027).item.json.collectCount }}",
+                                                                       "Duration":  "={{ $(\u0027ApifyAccount\u0027).item.json.videoMeta.duration }}",
+                                                                       "ID":  "={{ $(\u0027ApifyAccount\u0027).item.json.id }}",
+                                                                       "User":  "={{ $(\u0027ApifyAccount\u0027).item.json.authorMeta.name }}",
+                                                                       "Publish Date":  "={{ $(\u0027ApifyAccount\u0027).item.json.createTimeISO }}",
+                                                                       "Caption":  "={{ $(\u0027ApifyAccount\u0027).item.json.text }}",
+                                                                       "Transcript":  "={{ $json.text }}",
+                                                                       "Video URL":  "={{ $(\u0027ApifyAccount\u0027).item.json.webVideoUrl }}",
+                                                                       "Cover Image":  "=[{ \"url\": \"{{ $(\u0027ApifyAccount\u0027).item.json.videoMeta.coverUrl }}\" }]"
+                                                                   },
+                                                         "matchingColumns":  [
+
+                                                                             ],
+                                                         "schema":  [
+                                                                        {
+                                                                            "id":  "ID",
+                                                                            "displayName":  "ID",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Keyword",
+                                                                            "displayName":  "Keyword",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "User",
+                                                                            "displayName":  "User",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Followers",
+                                                                            "displayName":  "Followers",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "number",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Publish Date",
+                                                                            "displayName":  "Publish Date",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "dateTime",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Virality Score",
+                                                                            "displayName":  "Virality Score",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  true,
+                                                                            "removed":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "Views",
+                                                                            "displayName":  "Views",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "number",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Likes",
+                                                                            "displayName":  "Likes",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "number",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Comments",
+                                                                            "displayName":  "Comments",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "number",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Shares",
+                                                                            "displayName":  "Shares",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "number",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Bookmarks",
+                                                                            "displayName":  "Bookmarks",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "number",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Caption",
+                                                                            "displayName":  "Caption",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Transcript",
+                                                                            "displayName":  "Transcript",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Video URL",
+                                                                            "displayName":  "Video URL",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Cover Image",
+                                                                            "displayName":  "Cover Image",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "array",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Duration",
+                                                                            "displayName":  "Duration",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "number",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "ANALYZE",
+                                                                            "displayName":  "ANALYZE",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "boolean",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Time Factor Score",
+                                                                            "displayName":  "Time Factor Score",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  true,
+                                                                            "removed":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "Base Engagement Score",
+                                                                            "displayName":  "Base Engagement Score",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  true,
+                                                                            "removed":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "Follower Tier Multiplier",
+                                                                            "displayName":  "Follower Tier Multiplier",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  true,
+                                                                            "removed":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "Common Questions",
+                                                                            "displayName":  "Common Questions",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Key Insights",
+                                                                            "displayName":  "Key Insights",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        }
+                                                                    ],
+                                                         "attemptToConvertTypes":  false,
+                                                         "convertFieldsToString":  false
+                                                     },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.airtable",
+                      "typeVersion":  2.1,
+                      "position":  [
+                                       2040,
+                                       100
+                                   ],
+                      "id":  "a764368d-2090-43e3-bc70-a53b1e13b196",
+                      "name":  "Create a record1",
+                      "credentials":  {
+                                          "airtableTokenApi":  {
+                                                                   "id":  "vvYRmbNw8TcJq6FF",
+                                                                   "name":  "Airtable Personal Access Token account"
+                                                               }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "mode":  "runOnceForEachItem",
+                                         "jsCode":  "// Prosty dekoder WebVTT - tylko wyciąga tekst\nconst webvttString = $input.item.json.body || $input.item.body || \u0027\u0027;\n\n// Sprawdź czy mamy dane\nif (!webvttString) {\n    return { json: { text: \u0027\u0027 } };\n}\n\n// Usuń nagłówek WEBVTT\nconst content = webvttString.replace(/^WEBVTT\\n*/m, \u0027\u0027).trim();\n\n// Podziel na bloki\nconst blocks = content.split(/\\n\\s*\\n/).filter(block =\u003e block.trim() !== \u0027\u0027);\n\nconst textParts = [];\n\n// Wyciągnij tekst z każdego bloku\nblocks.forEach(block =\u003e {\n    const lines = block.split(\u0027\\n\u0027).map(line =\u003e line.trim()).filter(line =\u003e line);\n    \n    // Znajdź linię z czasem (zawiera \"--\u003e\")\n    let timeLineIndex = -1;\n    for (let i = 0; i \u003c lines.length; i++) {\n        if (lines[i].includes(\u0027--\u003e\u0027)) {\n            timeLineIndex = i;\n            break;\n        }\n    }\n    \n    // Weź tekst po linii czasu\n    if (timeLineIndex !== -1) {\n        const textLines = lines.slice(timeLineIndex + 1);\n        const text = textLines.join(\u0027 \u0027).trim();\n        if (text) {\n            textParts.push(text);\n        }\n    }\n});\n\n// Zwróć połączony tekst\nreturn {\n    json: {\n        text: textParts.join(\u0027 \u0027)\n    }\n};"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       1540,
+                                       0
+                                   ],
+                      "id":  "05385e6e-8408-433b-b842-88b4ea6ecb7f",
+                      "name":  "Uncode Script1"
+                  },
+                  {
+                      "parameters":  {
+                                         "url":  "={{ $json[\"videoMeta\"][\"subtitleLinks\"]?.find(l =\u003e l.language?.includes(\"\"))?.downloadLink }}",
+                                         "options":  {
+                                                         "response":  {
+                                                                          "response":  {
+                                                                                           "responseFormat":  "text",
+                                                                                           "outputPropertyName":  "body"
+                                                                                       }
+                                                                      }
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       1320,
+                                       20
+                                   ],
+                      "id":  "e8a9e138-91a9-4eea-bcd7-40fdde9acab8",
+                      "name":  "DownloadTranscript1"
+                  }
+              ],
+    "connections":  {
+                        "When clicking ‘Execute workflow’":  {
+                                                                 "main":  [
+                                                                              [
+                                                                                  {
+                                                                                      "node":  "Search records",
+                                                                                      "type":  "main",
+                                                                                      "index":  0
+                                                                                  }
+                                                                              ]
+                                                                          ]
+                                                             },
+                        "Search records":  {
+                                               "main":  [
+                                                            [
+                                                                {
+                                                                    "node":  "Get a record",
+                                                                    "type":  "main",
+                                                                    "index":  0
+                                                                }
+                                                            ]
+                                                        ]
+                                           },
+                        "Get a record":  {
+                                             "main":  [
+                                                          [
+                                                              {
+                                                                  "node":  "AccountOrKeyword",
+                                                                  "type":  "main",
+                                                                  "index":  0
+                                                              }
+                                                          ]
+                                                      ]
+                                         },
+                        "Ma transkrypcje?":  {
+                                                 "main":  [
+                                                              [
+                                                                  {
+                                                                      "node":  "DownloadTranscript",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ],
+                                                              [
+                                                                  {
+                                                                      "node":  "Create a record",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ]
+                                                          ]
+                                             },
+                        "ApifyKeyword":  {
+                                             "main":  [
+                                                          [
+                                                              {
+                                                                  "node":  "Ma transkrypcje?",
+                                                                  "type":  "main",
+                                                                  "index":  0
+                                                              }
+                                                          ]
+                                                      ]
+                                         },
+                        "Translate":  {
+                                          "main":  [
+                                                       [
+                                                           {
+                                                               "node":  "Create a record",
+                                                               "type":  "main",
+                                                               "index":  0
+                                                           }
+                                                       ]
+                                                   ]
+                                      },
+                        "Uncode Script":  {
+                                              "main":  [
+                                                           [
+                                                               {
+                                                                   "node":  "Translate",
+                                                                   "type":  "main",
+                                                                   "index":  0
+                                                               }
+                                                           ]
+                                                       ]
+                                          },
+                        "DownloadTranscript":  {
+                                                   "main":  [
+                                                                [
+                                                                    {
+                                                                        "node":  "Uncode Script",
+                                                                        "type":  "main",
+                                                                        "index":  0
+                                                                    }
+                                                                ]
+                                                            ]
+                                               },
+                        "AccountOrKeyword":  {
+                                                 "main":  [
+                                                              [
+                                                                  {
+                                                                      "node":  "ApifyKeyword",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ],
+                                                              [
+                                                                  {
+                                                                      "node":  "ApifyAccount",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ]
+                                                          ]
+                                             },
+                        "Ma transkrypcje?1":  {
+                                                  "main":  [
+                                                               [
+                                                                   {
+                                                                       "node":  "DownloadTranscript1",
+                                                                       "type":  "main",
+                                                                       "index":  0
+                                                                   }
+                                                               ],
+                                                               [
+                                                                   {
+                                                                       "node":  "Create a record1",
+                                                                       "type":  "main",
+                                                                       "index":  0
+                                                                   }
+                                                               ]
+                                                           ]
+                                              },
+                        "Uncode Script1":  {
+                                               "main":  [
+                                                            [
+                                                                {
+                                                                    "node":  "Create a record1",
+                                                                    "type":  "main",
+                                                                    "index":  0
+                                                                }
+                                                            ]
+                                                        ]
+                                           },
+                        "DownloadTranscript1":  {
+                                                    "main":  [
+                                                                 [
+                                                                     {
+                                                                         "node":  "Uncode Script1",
+                                                                         "type":  "main",
+                                                                         "index":  0
+                                                                     }
+                                                                 ]
+                                                             ]
+                                                },
+                        "ApifyAccount":  {
+                                             "main":  [
+                                                          [
+                                                              {
+                                                                  "node":  "Ma transkrypcje?1",
+                                                                  "type":  "main",
+                                                                  "index":  0
+                                                              }
+                                                          ]
+                                                      ]
+                                         }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1"
+                 },
+    "staticData":  null,
+    "meta":  {
+                 "templateCredsSetupCompleted":  true
+             },
+    "nodeGroups":  [
+
+                   ],
+    "versionId":  "7d20f432-3f9b-4fa6-892d-1f105f643c87",
+    "activeVersionId":  null,
+    "versionCounter":  1,
+    "triggerCount":  0,
+    "sourceWorkflowId":  null,
+    "shared":  [
+                   {
+                       "updatedAt":  "2025-06-29T14:24:29.678Z",
+                       "createdAt":  "2025-06-29T14:24:29.678Z",
+                       "role":  "workflow:owner",
+                       "workflowId":  "g4a0sDJ8edYNbKmA",
+                       "projectId":  "9rVJoULaKk30HdBB",
+                       "project":  {
+                                       "updatedAt":  "2025-06-26T00:18:14.615Z",
+                                       "createdAt":  "2025-06-25T23:37:35.363Z",
+                                       "id":  "9rVJoULaKk30HdBB",
+                                       "name":  "Nicolas Bednarz \u003cowner@example.com\u003e",
+                                       "type":  "personal",
+                                       "icon":  null,
+                                       "description":  null,
+                                       "customTelemetryTags":  [
+
+                                                               ],
+                                       "creatorId":  "af23e566-dd44-45a3-ac35-e15a8cdef3f2"
+                                   }
+                   }
+               ],
+    "tags":  [
+                 {
+                     "updatedAt":  "2025-07-07T22:27:02.520Z",
+                     "createdAt":  "2025-07-07T22:27:02.520Z",
+                     "id":  "g7LfX5N2NFXjDTVk",
+                     "name":  "TikTok"
+                 },
+                 {
+                     "updatedAt":  "2025-07-07T22:27:09.391Z",
+                     "createdAt":  "2025-07-07T22:27:09.391Z",
+                     "id":  "4yVtrQGQtxuVmGPQ",
+                     "name":  "Scraping"
+                 }
+             ],
+    "activeVersion":  null
+}

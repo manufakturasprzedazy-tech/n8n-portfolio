@@ -1,0 +1,278 @@
+{
+    "updatedAt":  "2026-01-08T01:50:18.397Z",
+    "createdAt":  "2026-01-08T01:12:37.764Z",
+    "id":  "iubF2ILkOwFgSlo5",
+    "name":  "SystemSAM - Daily Summary v2",
+    "description":  null,
+    "active":  false,
+    "isArchived":  false,
+    "nodes":  [
+                  {
+                      "parameters":  {
+                                         "rule":  {
+                                                      "interval":  [
+                                                                       {
+                                                                           "field":  "cronExpression",
+                                                                           "expression":  "30 5 * * *"
+                                                                       }
+                                                                   ]
+                                                  }
+                                     },
+                      "id":  "schedule-trigger",
+                      "name":  "Schedule Trigger",
+                      "type":  "n8n-nodes-base.scheduleTrigger",
+                      "position":  [
+                                       0,
+                                       0
+                                   ],
+                      "typeVersion":  1.3
+                  },
+                  {
+                      "parameters":  {
+                                         "url":  "https://api.clickup.com/api/v2/list/901519287429/task",
+                                         "authentication":  "predefinedCredentialType",
+                                         "nodeCredentialType":  "clickUpApi",
+                                         "sendQuery":  true,
+                                         "queryParameters":  {
+                                                                 "parameters":  [
+                                                                                    {
+                                                                                        "name":  "include_closed",
+                                                                                        "value":  "false"
+                                                                                    }
+                                                                                ]
+                                                             },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "get-today-task",
+                      "name":  "Get Today Task",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "position":  [
+                                       224,
+                                       0
+                                   ],
+                      "typeVersion":  4.3,
+                      "credentials":  {
+                                          "clickUpApi":  {
+                                                             "id":  "FVDkMa0LpqdXzbIQ",
+                                                             "name":  "ClickUp_ADHD_V2"
+                                                         }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "version":  2,
+                                                                            "leftValue":  "",
+                                                                            "caseSensitive":  true,
+                                                                            "typeValidation":  "strict"
+                                                                        },
+                                                            "combinator":  "and",
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "operator":  {
+                                                                                                    "type":  "number",
+                                                                                                    "operation":  "gt"
+                                                                                                },
+                                                                                   "leftValue":  "={{ $json.tasks.length }}",
+                                                                                   "rightValue":  0
+                                                                               }
+                                                                           ]
+                                                        },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "check-task-exists",
+                      "name":  "Check Task Exists",
+                      "type":  "n8n-nodes-base.if",
+                      "position":  [
+                                       448,
+                                       0
+                                   ],
+                      "typeVersion":  2.2
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const tasks = $input.first().json.tasks || [];\nconst today = new Date().toISOString().split(\u0027T\u0027)[0];\n\n// Znajdź dzisiejszy task\nlet todayTask = tasks.find(t =\u003e t.name.includes(today)) || tasks[0];\n\nif (!todayTask) {\n  return [{json: {error: true, message: \u0027No task found\u0027}}];\n}\n\n// Pobierz checklisty\nconst checklists = todayTask.checklists || [];\nlet allItems = [];\n\nfor (const checklist of checklists) {\n  for (const item of checklist.items || []) {\n    if (!item.name.includes(\u0027───\u0027)) {\n      allItems.push(item.name);\n    }\n  }\n}\n\n// Podziel na taski i nawyki\nconst taskItems = allItems.filter(i =\u003e !i.startsWith(\u0027🎧\u0027) \u0026\u0026 !i.startsWith(\u0027📚\u0027));\nconst habitItems = allItems.filter(i =\u003e i.startsWith(\u0027🎧\u0027) || i.startsWith(\u0027📚\u0027));\n\n// Przygotuj wiadomość\nlet message = \u0027🌙 *Podsumowanie dnia!*\\n\\n\u0027;\nmessage += \u0027📋 *Zaplanowane taski:*\\n\u0027;\nfor (const item of taskItems) {\n  message += `• ${item}\\n`;\n}\nmessage += \u0027\\n🎧 *Nawyki:*\\n\u0027;\nfor (const item of habitItems) {\n  message += `• ${item}\\n`;\n}\nmessage += \u0027\\n_Wpisz wykonane (po przecinku):_\\n\u0027;\nmessage += \u0027_np. 1, 2, 3_\\n\u0027;\nmessage += \u0027_lub \"wszystko\" jeśli wszystko zrobione_\u0027;\n\nreturn [{\n  json: {\n    message: message,\n    taskId: todayTask.id,\n    taskName: todayTask.name\n  }\n}];"
+                                     },
+                      "id":  "prepare-message",
+                      "name":  "Prepare Message",
+                      "type":  "n8n-nodes-base.code",
+                      "position":  [
+                                       672,
+                                       -96
+                                   ],
+                      "typeVersion":  2
+                  },
+                  {
+                      "parameters":  {
+                                         "chatId":  "5532162136",
+                                         "text":  "={{ $json.message }}",
+                                         "additionalFields":  {
+                                                                  "parse_mode":  "Markdown"
+                                                              }
+                                     },
+                      "id":  "send-summary-request",
+                      "name":  "Send Summary Request",
+                      "type":  "n8n-nodes-base.telegram",
+                      "position":  [
+                                       880,
+                                       -96
+                                   ],
+                      "typeVersion":  1.2,
+                      "webhookId":  "ee8b9a62-e56d-434b-8a82-231e86fcdd5c",
+                      "credentials":  {
+                                          "telegramApi":  {
+                                                              "id":  "I7zUJVPP02OEKir8",
+                                                              "name":  "SAM_BOT"
+                                                          }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "chatId":  "5532162136",
+                                         "text":  "❌ Nie znaleziono dzisiejszego Daily Task.\n\nSprawdź czy workflow Daily Plan Generator został uruchomiony.",
+                                         "additionalFields":  {
+
+                                                              }
+                                     },
+                      "id":  "no-task-message",
+                      "name":  "No Task Message",
+                      "type":  "n8n-nodes-base.telegram",
+                      "position":  [
+                                       672,
+                                       112
+                                   ],
+                      "typeVersion":  1.2,
+                      "webhookId":  "c72ae661-edc2-4d75-88a9-a27f045df1ea",
+                      "credentials":  {
+                                          "telegramApi":  {
+                                                              "id":  "I7zUJVPP02OEKir8",
+                                                              "name":  "SAM_BOT"
+                                                          }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "content":  "## 🌙 SystemSAM - Daily Summary\n\n**Trigger:** Codziennie o 05:30\n\n**Co robi:**\n1. Pobiera dzisiejszy Daily Task\n2. Wysyła listę tasków do podsumowania\n3. Czeka na odpowiedź (obsługuje Telegram Handler)"
+                                     },
+                      "id":  "sticky-note",
+                      "name":  "Sticky Note",
+                      "type":  "n8n-nodes-base.stickyNote",
+                      "position":  [
+                                       -96,
+                                       -144
+                                   ],
+                      "typeVersion":  1
+                  }
+              ],
+    "connections":  {
+                        "Schedule Trigger":  {
+                                                 "main":  [
+                                                              [
+                                                                  {
+                                                                      "node":  "Get Today Task",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ]
+                                                          ]
+                                             },
+                        "Get Today Task":  {
+                                               "main":  [
+                                                            [
+                                                                {
+                                                                    "node":  "Check Task Exists",
+                                                                    "type":  "main",
+                                                                    "index":  0
+                                                                }
+                                                            ]
+                                                        ]
+                                           },
+                        "Check Task Exists":  {
+                                                  "main":  [
+                                                               [
+                                                                   {
+                                                                       "node":  "Prepare Message",
+                                                                       "type":  "main",
+                                                                       "index":  0
+                                                                   }
+                                                               ],
+                                                               [
+                                                                   {
+                                                                       "node":  "No Task Message",
+                                                                       "type":  "main",
+                                                                       "index":  0
+                                                                   }
+                                                               ]
+                                                           ]
+                                              },
+                        "Prepare Message":  {
+                                                "main":  [
+                                                             [
+                                                                 {
+                                                                     "node":  "Send Summary Request",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ]
+                                                         ]
+                                            }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1",
+                     "saveDataErrorExecution":  "all",
+                     "saveDataSuccessExecution":  "all",
+                     "saveManualExecutions":  true,
+                     "saveExecutionProgress":  true,
+                     "callerPolicy":  "workflowsFromSameOwner",
+                     "availableInMCP":  false
+                 },
+    "staticData":  {
+                       "node:Schedule Trigger":  {
+                                                     "recurrenceRules":  [
+
+                                                                         ]
+                                                 }
+                   },
+    "meta":  {
+                 "templateCredsSetupCompleted":  true
+             },
+    "nodeGroups":  [
+
+                   ],
+    "versionId":  "882b7b83-f0cb-4584-ba9d-c171157fed34",
+    "activeVersionId":  null,
+    "versionCounter":  52,
+    "triggerCount":  1,
+    "sourceWorkflowId":  null,
+    "shared":  [
+                   {
+                       "updatedAt":  "2026-01-08T01:12:37.764Z",
+                       "createdAt":  "2026-01-08T01:12:37.764Z",
+                       "role":  "workflow:owner",
+                       "workflowId":  "iubF2ILkOwFgSlo5",
+                       "projectId":  "9rVJoULaKk30HdBB",
+                       "project":  {
+                                       "updatedAt":  "2025-06-26T00:18:14.615Z",
+                                       "createdAt":  "2025-06-25T23:37:35.363Z",
+                                       "id":  "9rVJoULaKk30HdBB",
+                                       "name":  "Nicolas Bednarz \u003cowner@example.com\u003e",
+                                       "type":  "personal",
+                                       "icon":  null,
+                                       "description":  null,
+                                       "customTelemetryTags":  [
+
+                                                               ],
+                                       "creatorId":  "af23e566-dd44-45a3-ac35-e15a8cdef3f2"
+                                   }
+                   }
+               ],
+    "tags":  [
+
+             ],
+    "activeVersion":  null
+}

@@ -1,0 +1,259 @@
+{
+    "updatedAt":  "2026-01-09T07:01:00.163Z",
+    "createdAt":  "2026-01-08T00:24:56.535Z",
+    "id":  "qOrOueKohEfx3S6n",
+    "name":  "SystemSAM - Daily Reminder v2",
+    "description":  null,
+    "active":  false,
+    "isArchived":  false,
+    "nodes":  [
+                  {
+                      "parameters":  {
+                                         "rule":  {
+                                                      "interval":  [
+                                                                       {
+                                                                           "field":  "cronExpression",
+                                                                           "expression":  "30 6 * * *"
+                                                                       }
+                                                                   ]
+                                                  }
+                                     },
+                      "id":  "schedule-trigger",
+                      "name":  "Schedule Trigger",
+                      "type":  "n8n-nodes-base.scheduleTrigger",
+                      "typeVersion":  1.3,
+                      "position":  [
+                                       0,
+                                       0
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "url":  "https://api.clickup.com/api/v2/task/86c7ec2db",
+                                         "authentication":  "predefinedCredentialType",
+                                         "nodeCredentialType":  "clickUpApi",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "get-player-stats",
+                      "name":  "Get Player Stats",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.3,
+                      "position":  [
+                                       224,
+                                       0
+                                   ],
+                      "credentials":  {
+                                          "clickUpApi":  {
+                                                             "id":  "FVDkMa0LpqdXzbIQ",
+                                                             "name":  "ClickUp_ADHD_V2"
+                                                         }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const task = $input.first().json;\n\n// Znajdź Last Active Date\nlet lastActiveTimestamp = null;\nfor (const field of task.custom_fields || []) {\n  if (field.name === \u0027Last Active Date\u0027 \u0026\u0026 field.value) {\n    lastActiveTimestamp = parseInt(field.value);\n  }\n}\n\n// Sprawdź czy dzisiaj już zaktualizowano\nconst today = new Date();\ntoday.setHours(0, 0, 0, 0);\nconst todayTimestamp = today.getTime();\n\n// Jeśli last active jest z dzisiaj (po 00:00), znaczy że już odpowiedział\nconst alreadyUpdatedToday = lastActiveTimestamp \u0026\u0026 lastActiveTimestamp \u003e= todayTimestamp;\n\nreturn [{\n  json: {\n    alreadyUpdatedToday: alreadyUpdatedToday,\n    lastActiveTimestamp: lastActiveTimestamp,\n    todayTimestamp: todayTimestamp,\n    needsReminder: !alreadyUpdatedToday\n  }\n}];"
+                                     },
+                      "id":  "check-last-active",
+                      "name":  "Check Last Active",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       448,
+                                       0
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "version":  2,
+                                                                            "leftValue":  "",
+                                                                            "caseSensitive":  true,
+                                                                            "typeValidation":  "strict"
+                                                                        },
+                                                            "combinator":  "and",
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "id":  "condition-1",
+                                                                                   "leftValue":  "={{ $json.needsReminder }}",
+                                                                                   "rightValue":  true,
+                                                                                   "operator":  {
+                                                                                                    "type":  "boolean",
+                                                                                                    "operation":  "equals"
+                                                                                                }
+                                                                               }
+                                                                           ]
+                                                        },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "needs-reminder",
+                      "name":  "Needs Reminder?",
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       672,
+                                       0
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "chatId":  "5532162136",
+                                         "text":  "⏰ *Hej! Czekam na Twoje podsumowanie dnia!*\n\nWpisz wykonane taski, żebym mógł zaktualizować Twój streak.\n\n_(Jeśli nic nie zrobiłeś, napisz \"nic\")_",
+                                         "additionalFields":  {
+                                                                  "parse_mode":  "Markdown"
+                                                              }
+                                     },
+                      "id":  "send-reminder",
+                      "name":  "Send Reminder",
+                      "type":  "n8n-nodes-base.telegram",
+                      "typeVersion":  1.2,
+                      "position":  [
+                                       880,
+                                       -96
+                                   ],
+                      "webhookId":  "96805bd5-888e-437d-8e45-5a68bf30f09d",
+                      "credentials":  {
+                                          "telegramApi":  {
+                                                              "id":  "I7zUJVPP02OEKir8",
+                                                              "name":  "SAM_BOT"
+                                                          }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+
+                                     },
+                      "id":  "no-action",
+                      "name":  "No Action",
+                      "type":  "n8n-nodes-base.noOp",
+                      "typeVersion":  1,
+                      "position":  [
+                                       880,
+                                       112
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "content":  "## ⏰ SystemSAM - Daily Reminder\n\n**Trigger:** Codziennie o 06:30\n\n**Co robi:**\n1. Sprawdza Last Active Date w Player Stats\n2. Jeśli nie zaktualizowano dzisiaj - wysyła reminder\n3. Jeśli już odpowiedział - nic nie robi"
+                                     },
+                      "id":  "sticky-note",
+                      "name":  "Sticky Note",
+                      "type":  "n8n-nodes-base.stickyNote",
+                      "typeVersion":  1,
+                      "position":  [
+                                       -96,
+                                       -144
+                                   ]
+                  }
+              ],
+    "connections":  {
+                        "Schedule Trigger":  {
+                                                 "main":  [
+                                                              [
+                                                                  {
+                                                                      "node":  "Get Player Stats",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ]
+                                                          ]
+                                             },
+                        "Get Player Stats":  {
+                                                 "main":  [
+                                                              [
+                                                                  {
+                                                                      "node":  "Check Last Active",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ]
+                                                          ]
+                                             },
+                        "Check Last Active":  {
+                                                  "main":  [
+                                                               [
+                                                                   {
+                                                                       "node":  "Needs Reminder?",
+                                                                       "type":  "main",
+                                                                       "index":  0
+                                                                   }
+                                                               ]
+                                                           ]
+                                              },
+                        "Needs Reminder?":  {
+                                                "main":  [
+                                                             [
+                                                                 {
+                                                                     "node":  "Send Reminder",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ],
+                                                             [
+                                                                 {
+                                                                     "node":  "No Action",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ]
+                                                         ]
+                                            }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1",
+                     "saveDataErrorExecution":  "all",
+                     "saveDataSuccessExecution":  "all",
+                     "saveManualExecutions":  true,
+                     "saveExecutionProgress":  true,
+                     "callerPolicy":  "workflowsFromSameOwner",
+                     "availableInMCP":  false
+                 },
+    "staticData":  {
+                       "node:Schedule Trigger":  {
+                                                     "recurrenceRules":  [
+
+                                                                         ]
+                                                 }
+                   },
+    "meta":  {
+                 "templateCredsSetupCompleted":  true
+             },
+    "nodeGroups":  [
+
+                   ],
+    "versionId":  "39446100-6005-4cbf-9f5c-91fa02d04e90",
+    "activeVersionId":  null,
+    "versionCounter":  51,
+    "triggerCount":  1,
+    "sourceWorkflowId":  null,
+    "shared":  [
+                   {
+                       "updatedAt":  "2026-01-08T00:24:56.535Z",
+                       "createdAt":  "2026-01-08T00:24:56.535Z",
+                       "role":  "workflow:owner",
+                       "workflowId":  "qOrOueKohEfx3S6n",
+                       "projectId":  "9rVJoULaKk30HdBB",
+                       "project":  {
+                                       "updatedAt":  "2025-06-26T00:18:14.615Z",
+                                       "createdAt":  "2025-06-25T23:37:35.363Z",
+                                       "id":  "9rVJoULaKk30HdBB",
+                                       "name":  "Nicolas Bednarz \u003cowner@example.com\u003e",
+                                       "type":  "personal",
+                                       "icon":  null,
+                                       "description":  null,
+                                       "customTelemetryTags":  [
+
+                                                               ],
+                                       "creatorId":  "af23e566-dd44-45a3-ac35-e15a8cdef3f2"
+                                   }
+                   }
+               ],
+    "tags":  [
+
+             ],
+    "activeVersion":  null
+}

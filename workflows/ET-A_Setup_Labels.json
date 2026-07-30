@@ -1,0 +1,130 @@
+{
+    "updatedAt":  "2026-07-20T14:34:26.505Z",
+    "createdAt":  "2026-07-17T17:12:33.010Z",
+    "id":  "vl1Z1Yw38ORTwJpr",
+    "name":  "ET-A_Setup_Labels",
+    "description":  null,
+    "active":  false,
+    "isArchived":  true,
+    "nodes":  [
+                  {
+                      "parameters":  {
+
+                                     },
+                      "id":  "manual",
+                      "name":  "run-once",
+                      "type":  "n8n-nodes-base.manualTrigger",
+                      "typeVersion":  1,
+                      "position":  [
+                                       0,
+                                       304
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const labels = [\n  { key:\u0027zapytanie_ofertowe\u0027,   name:\u0027AI/Oferty\u0027 },\n  { key:\u0027pytanie_klienta\u0027,      name:\u0027AI/Klient\u0027 },\n  { key:\u0027reklamacja_eskalacja\u0027, name:\u0027AI/Reklamacje\u0027 },\n  { key:\u0027sprawy_fakturowe\u0027,     name:\u0027AI/Faktury\u0027 },\n  { key:\u0027wspolpraca_dostawca\u0027,  name:\u0027AI/Wspolpraca\u0027 },\n  { key:\u0027rekrutacja\u0027,           name:\u0027AI/Rekrutacja\u0027 },\n  { key:\u0027spam\u0027,                 name:\u0027AI/Spam\u0027 },\n  { key:\u0027inne\u0027,                 name:\u0027AI/Inne\u0027 },\n  { key:\u0027URGENT\u0027,               name:\u0027AI/PILNE\u0027 },\n  { key:\u0027INJECTION\u0027,            name:\u0027AI/Injection\u0027 }\n];\nreturn labels.map(l =\u003e ({ json: l }));"
+                                     },
+                      "id":  "names",
+                      "name":  "label-names",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       240,
+                                       304
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "resource":  "label",
+                                         "operation":  "create",
+                                         "name":  "={{ $json.name }}",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "create",
+                      "name":  "create-label",
+                      "type":  "n8n-nodes-base.gmail",
+                      "typeVersion":  2.1,
+                      "position":  [
+                                       480,
+                                       304
+                                   ],
+                      "webhookId":  "9a740dac-561b-42a0-8c88-8570a4bf9b6c",
+                      "credentials":  {
+                                          "gmailOAuth2":  {
+                                                              "id":  "QaEBC5SeQqoHZZ3i",
+                                                              "name":  "Gmail_Ogrodzenia"
+                                                          }
+                                      },
+                      "onError":  "continueRegularOutput"
+                  }
+              ],
+    "connections":  {
+                        "run-once":  {
+                                         "main":  [
+                                                      [
+                                                          {
+                                                              "node":  "label-names",
+                                                              "type":  "main",
+                                                              "index":  0
+                                                          }
+                                                      ]
+                                                  ]
+                                     },
+                        "label-names":  {
+                                            "main":  [
+                                                         [
+                                                             {
+                                                                 "node":  "create-label",
+                                                                 "type":  "main",
+                                                                 "index":  0
+                                                             }
+                                                         ]
+                                                     ]
+                                        }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1",
+                     "timezone":  "Europe/Warsaw",
+                     "binaryMode":  "separate"
+                 },
+    "staticData":  null,
+    "meta":  {
+                 "templateCredsSetupCompleted":  true
+             },
+    "nodeGroups":  [
+
+                   ],
+    "versionId":  "8d56de00-d391-4451-9edd-fc217e7a7b2f",
+    "activeVersionId":  null,
+    "versionCounter":  2,
+    "triggerCount":  0,
+    "sourceWorkflowId":  null,
+    "shared":  [
+                   {
+                       "updatedAt":  "2026-07-17T17:12:33.010Z",
+                       "createdAt":  "2026-07-17T17:12:33.010Z",
+                       "role":  "workflow:owner",
+                       "workflowId":  "vl1Z1Yw38ORTwJpr",
+                       "projectId":  "9rVJoULaKk30HdBB",
+                       "project":  {
+                                       "updatedAt":  "2025-06-26T00:18:14.615Z",
+                                       "createdAt":  "2025-06-25T23:37:35.363Z",
+                                       "id":  "9rVJoULaKk30HdBB",
+                                       "name":  "Nicolas Bednarz \u003cowner@example.com\u003e",
+                                       "type":  "personal",
+                                       "icon":  null,
+                                       "description":  null,
+                                       "customTelemetryTags":  [
+
+                                                               ],
+                                       "creatorId":  "af23e566-dd44-45a3-ac35-e15a8cdef3f2"
+                                   }
+                   }
+               ],
+    "tags":  [
+
+             ],
+    "activeVersion":  null
+}

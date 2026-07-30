@@ -1,0 +1,180 @@
+{
+    "updatedAt":  "2026-07-17T21:11:37.615Z",
+    "createdAt":  "2026-07-17T21:11:37.615Z",
+    "id":  "6poh5ttOU2hTwkig",
+    "name":  "ET-A_Dzienne_Podsumowanie",
+    "description":  null,
+    "active":  false,
+    "isArchived":  false,
+    "nodes":  [
+                  {
+                      "id":  "sched",
+                      "name":  "codziennie-8",
+                      "type":  "n8n-nodes-base.scheduleTrigger",
+                      "typeVersion":  1.2,
+                      "position":  [
+                                       0,
+                                       300
+                                   ],
+                      "parameters":  {
+                                         "rule":  {
+                                                      "interval":  [
+                                                                       {
+                                                                           "field":  "days",
+                                                                           "triggerAtHour":  8,
+                                                                           "triggerAtMinute":  0
+                                                                       }
+                                                                   ]
+                                                  }
+                                     }
+                  },
+                  {
+                      "id":  "gmailget",
+                      "name":  "pobierz-24h",
+                      "type":  "n8n-nodes-base.gmail",
+                      "typeVersion":  2.1,
+                      "position":  [
+                                       240,
+                                       300
+                                   ],
+                      "parameters":  {
+                                         "resource":  "message",
+                                         "operation":  "getAll",
+                                         "returnAll":  true,
+                                         "simple":  true,
+                                         "filters":  {
+                                                         "q":  "newer_than:1d"
+                                                     }
+                                     },
+                      "credentials":  {
+                                          "gmailOAuth2":  {
+                                                              "id":  "QaEBC5SeQqoHZZ3i",
+                                                              "name":  "Gmail_Ogrodzenia"
+                                                          }
+                                      },
+                      "webhookId":  "6eef823d-190a-4699-8afb-0e2c5340414c"
+                  },
+                  {
+                      "id":  "count",
+                      "name":  "policz-kategorie",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       480,
+                                       300
+                                   ],
+                      "parameters":  {
+                                         "mode":  "runOnceForAllItems",
+                                         "jsCode":  "// Zlicza przetworzone maile po etykietach AI/* z ostatnich 24h.\nconst LABELS = { Label_1:\u0027Oferty\u0027, Label_2:\u0027Klient\u0027, Label_3:\u0027Reklamacje\u0027, Label_4:\u0027Faktury\u0027, Label_5:\u0027Wspolpraca\u0027, Label_6:\u0027Rekrutacja\u0027, Label_7:\u0027Spam\u0027, Label_8:\u0027Inne\u0027 };\nconst items = $input.all();\nconst counts = {}; let total = 0, urgent = 0, injection = 0;\nfor (const it of items) {\n  const ids = it.json.labelIds || it.json.labels || [];\n  let isAI = false;\n  for (const [lid, name] of Object.entries(LABELS)) { if (ids.includes(lid)) { counts[name] = (counts[name]||0)+1; isAI = true; } }\n  if (ids.includes(\u0027Label_9\u0027)) urgent++;\n  if (ids.includes(\u0027Label_10\u0027)) injection++;\n  if (isAI || ids.includes(\u0027Label_9\u0027) || ids.includes(\u0027Label_10\u0027)) total++;\n}\nconst order = [\u0027Oferty\u0027,\u0027Klient\u0027,\u0027Reklamacje\u0027,\u0027Faktury\u0027,\u0027Wspolpraca\u0027,\u0027Rekrutacja\u0027,\u0027Spam\u0027,\u0027Inne\u0027];\nconst lines = order.filter(k=\u003ecounts[k]).map(k=\u003e`• ${k}: ${counts[k]}`).join(\u0027\\n\u0027) || \u0027• (brak w tym okresie)\u0027;\nconst text = \u0027:bar_chart: *Dzienne podsumowanie triazu skrzynki* (ostatnie 24h)\\n\u0027 +\n  `*Przetworzone maile:* ${total}\\n` +\n  `*Pilne (AI/PILNE):* ${urgent}\\n` +\n  `*Injection/phishing:* ${injection}\\n` +\n  `*Wg kategorii:*\\n${lines}\\n` +\n  (total === 0 ? \u0027\\n:warning: _Zero maili w 24h — sprawdz czy trigger i skrzynka dzialaja._\u0027 : \u0027\u0027);\nreturn [{ json: { text, total, urgent, injection, counts } }];"
+                                     }
+                  },
+                  {
+                      "id":  "slackdigest",
+                      "name":  "wyslij-podsumowanie",
+                      "type":  "n8n-nodes-base.slack",
+                      "typeVersion":  2.3,
+                      "position":  [
+                                       720,
+                                       300
+                                   ],
+                      "parameters":  {
+                                         "select":  "channel",
+                                         "channelId":  {
+                                                           "__rl":  true,
+                                                           "mode":  "name",
+                                                           "value":  "alerty-n8n"
+                                                       },
+                                         "text":  "={{ $json.text }}",
+                                         "otherOptions":  {
+
+                                                          }
+                                     },
+                      "credentials":  {
+                                          "slackApi":  {
+                                                           "id":  "5CVzetMyusnABbOK",
+                                                           "name":  "Slack Testowe"
+                                                       }
+                                      },
+                      "webhookId":  "ebb492ed-5bf5-4360-892b-1614932fce9e"
+                  }
+              ],
+    "connections":  {
+                        "codziennie-8":  {
+                                             "main":  [
+                                                          [
+                                                              {
+                                                                  "node":  "pobierz-24h",
+                                                                  "type":  "main",
+                                                                  "index":  0
+                                                              }
+                                                          ]
+                                                      ]
+                                         },
+                        "pobierz-24h":  {
+                                            "main":  [
+                                                         [
+                                                             {
+                                                                 "node":  "policz-kategorie",
+                                                                 "type":  "main",
+                                                                 "index":  0
+                                                             }
+                                                         ]
+                                                     ]
+                                        },
+                        "policz-kategorie":  {
+                                                 "main":  [
+                                                              [
+                                                                  {
+                                                                      "node":  "wyslij-podsumowanie",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ]
+                                                          ]
+                                             }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1",
+                     "saveDataErrorExecution":  "all",
+                     "saveDataSuccessExecution":  "all",
+                     "saveManualExecutions":  true,
+                     "saveExecutionProgress":  true
+                 },
+    "staticData":  null,
+    "meta":  null,
+    "nodeGroups":  [
+
+                   ],
+    "pinData":  null,
+    "versionId":  "62577a84-7dcd-44db-808c-0c8cb50e38a1",
+    "activeVersionId":  null,
+    "versionCounter":  1,
+    "triggerCount":  0,
+    "sourceWorkflowId":  null,
+    "shared":  [
+                   {
+                       "updatedAt":  "2026-07-17T21:11:37.615Z",
+                       "createdAt":  "2026-07-17T21:11:37.615Z",
+                       "role":  "workflow:owner",
+                       "workflowId":  "6poh5ttOU2hTwkig",
+                       "projectId":  "9rVJoULaKk30HdBB",
+                       "project":  {
+                                       "updatedAt":  "2025-06-26T00:18:14.615Z",
+                                       "createdAt":  "2025-06-25T23:37:35.363Z",
+                                       "id":  "9rVJoULaKk30HdBB",
+                                       "name":  "Nicolas Bednarz \u003cowner@example.com\u003e",
+                                       "type":  "personal",
+                                       "icon":  null,
+                                       "description":  null,
+                                       "customTelemetryTags":  [
+
+                                                               ],
+                                       "creatorId":  "af23e566-dd44-45a3-ac35-e15a8cdef3f2"
+                                   }
+                   }
+               ],
+    "tags":  [
+
+             ],
+    "activeVersion":  null
+}

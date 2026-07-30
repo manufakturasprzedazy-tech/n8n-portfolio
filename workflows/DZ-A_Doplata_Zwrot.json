@@ -1,0 +1,486 @@
+{
+    "updatedAt":  "2026-05-12T12:38:39.581Z",
+    "createdAt":  "2026-05-12T12:38:39.581Z",
+    "id":  "Rz3B7mWADstVQEUW",
+    "name":  "DZ-A_Doplata_Zwrot",
+    "description":  null,
+    "active":  false,
+    "isArchived":  false,
+    "nodes":  [
+                  {
+                      "id":  "odbierz-webhook",
+                      "name":  "Odbierz-Webhook",
+                      "type":  "n8n-nodes-base.webhook",
+                      "typeVersion":  2,
+                      "position":  [
+                                       -1400,
+                                       400
+                                   ],
+                      "parameters":  {
+                                         "httpMethod":  "HEAD",
+                                         "path":  "dz-a-doplata",
+                                         "responseMode":  "onReceived",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "notes":  "Trigger BL \u0027Wywołaj URL\u0027 (HEAD). Query: ?order_id=[order_id]. BL nie czeka na response.",
+                      "webhookId":  "35ffc2ae-93b7-4b14-8d57-308cb7c91360"
+                  },
+                  {
+                      "id":  "pobierz-zamowienie",
+                      "name":  "Pobierz-Zamowienie",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       -1160,
+                                       400
+                                   ],
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "https://api.baselinker.com/connector.php",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "X-BLToken",
+                                                                                         "value":  "TODO_BL_TOKEN"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "sendBody":  true,
+                                         "contentType":  "form-urlencoded",
+                                         "bodyParameters":  {
+                                                                "parameters":  [
+                                                                                   {
+                                                                                       "name":  "method",
+                                                                                       "value":  "getOrders"
+                                                                                   },
+                                                                                   {
+                                                                                       "name":  "parameters",
+                                                                                       "value":  "={{ JSON.stringify({ order_id: parseInt($json.query.order_id, 10), include_custom_extra_fields: true, get_unconfirmed_orders: true }) }}"
+                                                                                   }
+                                                                               ]
+                                                            },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "notes":  "BL getOrders po order_id z webhooka. include_custom_extra_fields=true (potrzebne do Sprawdz-Duplikat)."
+                  },
+                  {
+                      "id":  "rozpakuj-zamowienie",
+                      "name":  "Rozpakuj-Zamowienie",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       -920,
+                                       400
+                                   ],
+                      "parameters":  {
+                                         "language":  "javaScript",
+                                         "jsCode":  "const orders = $input.first().json.orders || [];\nif (orders.length === 0) {\n  const oid = $(\u0027Odbierz-Webhook\u0027).first().json.query.order_id;\n  throw new Error(\u0027BL getOrders zwrocil pusta liste dla order_id=\u0027 + oid);\n}\nreturn [{ json: orders[0] }];"
+                                     },
+                      "notes":  "Wyciaga orders[0]. Throw jesli puste (token zly albo order nie istnieje)."
+                  },
+                  {
+                      "id":  "sprawdz-duplikat",
+                      "name":  "Sprawdz-Duplikat",
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       -680,
+                                       400
+                                   ],
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  true,
+                                                                            "leftValue":  "",
+                                                                            "typeValidation":  "loose",
+                                                                            "version":  2
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "leftValue":  "={{ ($json.custom_extra_fields \u0026\u0026 $json.custom_extra_fields[\u0027TODO_DZ_PROFORMA_FIELD\u0027]) || \u0027\u0027 }}",
+                                                                                   "rightValue":  "",
+                                                                                   "operator":  {
+                                                                                                    "type":  "string",
+                                                                                                    "operation":  "empty"
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        }
+                                     },
+                      "notes":  "Idempotencja: jesli pole BL \u0027TODO_DZ_PROFORMA_FIELD\u0027 (URL proformy) puste -\u003e kontynuuj. Niepuste -\u003e exit (duplikat webhooka)."
+                  },
+                  {
+                      "id":  "buduj-payload",
+                      "name":  "Buduj-Payload",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       -440,
+                                       400
+                                   ],
+                      "parameters":  {
+                                         "language":  "javaScript",
+                                         "jsCode":  "const order = $input.first().json;\nconst orderId = order.order_id;\nconst orderNumber = order.order_id;\n\nfunction toLocalISO(d) {\n  const fmt = new Intl.DateTimeFormat(\u0027en-CA\u0027, { timeZone: \u0027Europe/Warsaw\u0027, year: \u0027numeric\u0027, month: \u00272-digit\u0027, day: \u00272-digit\u0027 });\n  return fmt.format(d);\n}\nconst today = new Date();\nconst issueDate = toLocalISO(today);\nconst due = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);\nconst paymentTo = toLocalISO(due);\n\nconst buyerName = (order.invoice_company || \u0027\u0027).trim() || order.invoice_fullname || order.delivery_fullname || \u0027Klient\u0027;\nconst buyerEmail = order.email || order.delivery_email || order.invoice_email || \u0027\u0027;\n\nconst payload = {\n  api_token: \u0027TODO_FAKTUROWNIA_TOKEN\u0027,\n  invoice: {\n    kind: \u0027proforma\u0027,\n    place: \u0027Radzionkow\u0027,\n    issue_date: issueDate,\n    sell_date: issueDate,\n    payment_to: paymentTo,\n    buyer_name: buyerName,\n    buyer_tax_no: order.invoice_nip || \u0027\u0027,\n    buyer_post_code: order.invoice_postcode || \u0027\u0027,\n    buyer_city: order.invoice_city || \u0027\u0027,\n    buyer_street: order.invoice_address || \u0027\u0027,\n    buyer_country: order.invoice_country_code || \u0027PL\u0027,\n    buyer_email: buyerEmail,\n    description: \u0027Doplata za ponowna wysylke zamowienia \u0027 + orderNumber,\n    internal_note: \u0027BL: \u0027 + orderId,\n    payment_type: \u0027transfer\u0027,\n    positions: [{\n      name: \u0027Doplata za ponowna wysylke kurierem\u0027,\n      tax: 23,\n      quantity: 1,\n      quantity_unit: \u0027szt\u0027,\n      total_price_gross: 20.00\n    }]\n  },\n  _order_id: orderId,\n  _order_number: orderNumber,\n  _email: buyerEmail\n};\n\nreturn [{ json: payload }];"
+                                     },
+                      "notes":  "Mapping BL -\u003e Fakturownia invoice. kind=proforma, 20 PLN brutto VAT 23%, payment_to=+7 dni. internal_note \u0027BL: \u003corder_id\u003e\u0027 jako slad audytowy."
+                  },
+                  {
+                      "id":  "utworz-proforme",
+                      "name":  "Utworz-Proforme",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       -200,
+                                       400
+                                   ],
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "https://TODO_FAKTUROWNIA_SLUG.fakturownia.pl/invoices.json",
+                                         "sendBody":  true,
+                                         "contentType":  "json",
+                                         "jsonBody":  "={{ JSON.stringify({ api_token: $json.api_token, invoice: $json.invoice }) }}",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "onError":  "continueErrorOutput",
+                      "notes":  "POST do Fakturowni. SLUG = clientcocnc. On Error -\u003e Buduj-Blad."
+                  },
+                  {
+                      "id":  "pobierz-pdf",
+                      "name":  "Pobierz-PDF",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       40,
+                                       300
+                                   ],
+                      "parameters":  {
+                                         "method":  "GET",
+                                         "url":  "=https://TODO_FAKTUROWNIA_SLUG.fakturownia.pl/invoices/{{ $json.id }}.pdf?api_token=TODO_FAKTUROWNIA_TOKEN",
+                                         "options":  {
+                                                         "response":  {
+                                                                          "response":  {
+                                                                                           "responseFormat":  "file",
+                                                                                           "outputPropertyName":  "data"
+                                                                                       }
+                                                                      }
+                                                     }
+                                     },
+                      "onError":  "continueErrorOutput",
+                      "notes":  "GET PDF, binary property \u0027data\u0027. Response Format: File."
+                  },
+                  {
+                      "id":  "nazwij-pdf",
+                      "name":  "Nazwij-PDF",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       280,
+                                       300
+                                   ],
+                      "parameters":  {
+                                         "language":  "javaScript",
+                                         "jsCode":  "const item = $input.first();\nconst orderId = $(\u0027Buduj-Payload\u0027).first().json._order_id;\nif (item.binary \u0026\u0026 item.binary.data) {\n  item.binary.data.fileName = \u0027proforma_doplata_\u0027 + orderId + \u0027.pdf\u0027;\n}\nreturn [item];"
+                                     },
+                      "notes":  "Nazywa PDF czytelnie. Mode: Run Once for All Items (zachowuje binary)."
+                  },
+                  {
+                      "id":  "wyslij-maila",
+                      "name":  "Wyslij-Maila",
+                      "type":  "n8n-nodes-base.emailSend",
+                      "typeVersion":  2.1,
+                      "position":  [
+                                       520,
+                                       300
+                                   ],
+                      "parameters":  {
+                                         "fromEmail":  "TODO_FROM_EMAIL",
+                                         "toEmail":  "={{ $(\u0027Buduj-Payload\u0027).first().json._email }}",
+                                         "subject":  "=Proforma za ponowna wysylke zamowienia {{ $(\u0027Buduj-Payload\u0027).first().json._order_number }} - doplata 20 zl",
+                                         "emailFormat":  "text",
+                                         "text":  "=Dzien dobry,\n\npaczka z zamowienia {{ $(\u0027Buduj-Payload\u0027).first().json._order_number }} wrocila do nas po nieudanej probie doreczenia.\nAby nadac ja ponownie, prosimy o oplacenie zalaczonej proformy (20 zl).\nPo zaksiegowaniu platnosci przesylka zostanie nadana ponownie.\n\nPozdrawiamy,\nZespol ClientCo",
+                                         "options":  {
+                                                         "attachments":  "data"
+                                                     }
+                                     },
+                      "onError":  "continueErrorOutput",
+                      "notes":  "SMTP n8n. Attachment binary property \u0027data\u0027. On Error (np. brak emaila lub SMTP fail) -\u003e Buduj-Blad (task ClickUp).",
+                      "webhookId":  "3792cad9-5b17-4f10-864f-8bc1763c38ff"
+                  },
+                  {
+                      "id":  "zapisz-link",
+                      "name":  "Zapisz-Link",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       760,
+                                       300
+                                   ],
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "https://api.baselinker.com/connector.php",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "X-BLToken",
+                                                                                         "value":  "TODO_BL_TOKEN"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "sendBody":  true,
+                                         "contentType":  "form-urlencoded",
+                                         "bodyParameters":  {
+                                                                "parameters":  [
+                                                                                   {
+                                                                                       "name":  "method",
+                                                                                       "value":  "setOrderExtraFields"
+                                                                                   },
+                                                                                   {
+                                                                                       "name":  "parameters",
+                                                                                       "value":  "={{ JSON.stringify({ order_id: $(\u0027Buduj-Payload\u0027).first().json._order_id, custom_extra_fields: { \u0027TODO_DZ_PROFORMA_FIELD\u0027: $(\u0027Utworz-Proforme\u0027).first().json.view_url } }) }}"
+                                                                                   }
+                                                                               ]
+                                                            },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "notes":  "Zapis view_url proformy do pola BL \u0027TODO_DZ_PROFORMA_FIELD\u0027 (idempotencja)."
+                  },
+                  {
+                      "id":  "buduj-blad",
+                      "name":  "Buduj-Blad",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       280,
+                                       540
+                                   ],
+                      "parameters":  {
+                                         "language":  "javaScript",
+                                         "jsCode":  "const oid = $(\u0027Odbierz-Webhook\u0027).first().json.query.order_id;\nconst raw = $input.first().json;\nconst errMsg = (raw.error \u0026\u0026 (raw.error.message || raw.error)) || raw.message || JSON.stringify(raw).slice(0, 500);\nconst execId = $execution.id;\n\nconst taskName = \u0027[DZ-A BLAD] Proforma doplaty - order BL \u0027 + oid;\nconst taskDescription = [\n  \u0027Workflow DZ-A_Doplata_Zwrot zatrzymal sie na bledzie.\u0027,\n  \u0027\u0027,\n  \u0027Order BL: \u0027 + oid,\n  \u0027Blad: \u0027 + errMsg,\n  \u0027Wykonanie n8n: \u0027 + execId,\n  \u0027\u0027,\n  \u0027Do wykonania recznie:\u0027,\n  \u00271. Sprawdz w Fakturowni czy proforma juz powstala (filtr po internal_note: BL: \u0027 + oid + \u0027).\u0027,\n  \u00272. Jesli nie - wystaw recznie proforme 20 zl, opis \"Doplata za ponowna wysylke zamowienia \u0027 + oid + \u0027\".\u0027,\n  \u00273. Pobierz PDF i wyslij mailem do klienta (sprawdz email w BL).\u0027,\n  \u00274. Zapisz link do PDF w polu BL zamowienia (Proforma doplata zwrot).\u0027\n].join(\u0027\\n\u0027);\n\nreturn [{ json: { taskName, taskDescription, priority: 2, status: \u0027open\u0027 } }];"
+                                     },
+                      "notes":  "Buduje task ClickUp z error info. .first() zamiast .item (paired item broken w error path). taskName zamiast name (Error.name read-only)."
+                  },
+                  {
+                      "id":  "utworz-task",
+                      "name":  "Utworz-Task",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       520,
+                                       540
+                                   ],
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "https://api.clickup.com/api/v2/list/901519277113/task",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "Authorization",
+                                                                                         "value":  "TODO_CLICKUP_TOKEN"
+                                                                                     },
+                                                                                     {
+                                                                                         "name":  "Content-Type",
+                                                                                         "value":  "application/json"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "sendBody":  true,
+                                         "contentType":  "json",
+                                         "jsonBody":  "={{ JSON.stringify({ name: $json.taskName, description: $json.taskDescription, priority: $json.priority, status: $json.status }) }}",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "onError":  "continueRegularOutput",
+                      "notes":  "ClickUp List ID 901519277113 (znane z FZ-B). Bez assignee w MVP."
+                  }
+              ],
+    "connections":  {
+                        "Odbierz-Webhook":  {
+                                                "main":  [
+                                                             [
+                                                                 {
+                                                                     "node":  "Pobierz-Zamowienie",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ]
+                                                         ]
+                                            },
+                        "Pobierz-Zamowienie":  {
+                                                   "main":  [
+                                                                [
+                                                                    {
+                                                                        "node":  "Rozpakuj-Zamowienie",
+                                                                        "type":  "main",
+                                                                        "index":  0
+                                                                    }
+                                                                ]
+                                                            ]
+                                               },
+                        "Rozpakuj-Zamowienie":  {
+                                                    "main":  [
+                                                                 [
+                                                                     {
+                                                                         "node":  "Sprawdz-Duplikat",
+                                                                         "type":  "main",
+                                                                         "index":  0
+                                                                     }
+                                                                 ]
+                                                             ]
+                                                },
+                        "Sprawdz-Duplikat":  {
+                                                 "main":  [
+                                                              [
+                                                                  {
+                                                                      "node":  "Buduj-Payload",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ],
+                                                              [
+
+                                                              ]
+                                                          ]
+                                             },
+                        "Buduj-Payload":  {
+                                              "main":  [
+                                                           [
+                                                               {
+                                                                   "node":  "Utworz-Proforme",
+                                                                   "type":  "main",
+                                                                   "index":  0
+                                                               }
+                                                           ]
+                                                       ]
+                                          },
+                        "Utworz-Proforme":  {
+                                                "main":  [
+                                                             [
+                                                                 {
+                                                                     "node":  "Pobierz-PDF",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ],
+                                                             [
+                                                                 {
+                                                                     "node":  "Buduj-Blad",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ]
+                                                         ]
+                                            },
+                        "Pobierz-PDF":  {
+                                            "main":  [
+                                                         [
+                                                             {
+                                                                 "node":  "Nazwij-PDF",
+                                                                 "type":  "main",
+                                                                 "index":  0
+                                                             }
+                                                         ],
+                                                         [
+                                                             {
+                                                                 "node":  "Buduj-Blad",
+                                                                 "type":  "main",
+                                                                 "index":  0
+                                                             }
+                                                         ]
+                                                     ]
+                                        },
+                        "Nazwij-PDF":  {
+                                           "main":  [
+                                                        [
+                                                            {
+                                                                "node":  "Wyslij-Maila",
+                                                                "type":  "main",
+                                                                "index":  0
+                                                            }
+                                                        ]
+                                                    ]
+                                       },
+                        "Wyslij-Maila":  {
+                                             "main":  [
+                                                          [
+                                                              {
+                                                                  "node":  "Zapisz-Link",
+                                                                  "type":  "main",
+                                                                  "index":  0
+                                                              }
+                                                          ],
+                                                          [
+                                                              {
+                                                                  "node":  "Buduj-Blad",
+                                                                  "type":  "main",
+                                                                  "index":  0
+                                                              }
+                                                          ]
+                                                      ]
+                                         },
+                        "Buduj-Blad":  {
+                                           "main":  [
+                                                        [
+                                                            {
+                                                                "node":  "Utworz-Task",
+                                                                "type":  "main",
+                                                                "index":  0
+                                                            }
+                                                        ]
+                                                    ]
+                                       }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1",
+                     "timezone":  "Europe/Warsaw"
+                 },
+    "staticData":  null,
+    "meta":  null,
+    "nodeGroups":  [
+
+                   ],
+    "pinData":  null,
+    "versionId":  "7a16dbb8-8f8c-41d3-813f-8c40b6d926b5",
+    "activeVersionId":  null,
+    "versionCounter":  1,
+    "triggerCount":  0,
+    "sourceWorkflowId":  null,
+    "shared":  [
+                   {
+                       "updatedAt":  "2026-05-12T12:38:39.581Z",
+                       "createdAt":  "2026-05-12T12:38:39.581Z",
+                       "role":  "workflow:owner",
+                       "workflowId":  "Rz3B7mWADstVQEUW",
+                       "projectId":  "9rVJoULaKk30HdBB",
+                       "project":  {
+                                       "updatedAt":  "2025-06-26T00:18:14.615Z",
+                                       "createdAt":  "2025-06-25T23:37:35.363Z",
+                                       "id":  "9rVJoULaKk30HdBB",
+                                       "name":  "Nicolas Bednarz \u003cowner@example.com\u003e",
+                                       "type":  "personal",
+                                       "icon":  null,
+                                       "description":  null,
+                                       "customTelemetryTags":  [
+
+                                                               ],
+                                       "creatorId":  "af23e566-dd44-45a3-ac35-e15a8cdef3f2"
+                                   }
+                   }
+               ],
+    "tags":  [
+
+             ],
+    "activeVersion":  null
+}

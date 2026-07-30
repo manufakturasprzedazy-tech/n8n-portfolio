@@ -1,0 +1,1280 @@
+{
+    "updatedAt":  "2026-07-30T21:38:10.460Z",
+    "createdAt":  "2026-05-01T18:40:21.696Z",
+    "id":  "k4j96a1FSwQU3oKC",
+    "name":  "MB_Video_Render",
+    "description":  null,
+    "active":  false,
+    "isArchived":  false,
+    "nodes":  [
+                  {
+                      "parameters":  {
+                                         "workflowInputs":  {
+                                                                "values":  [
+                                                                               {
+                                                                                   "name":  "publication_id"
+                                                                               },
+                                                                               {
+                                                                                   "name":  "chat_id"
+                                                                               }
+                                                                           ]
+                                                            }
+                                     },
+                      "id":  "d5ee511a-7006-4b5f-bc1e-9a970a942c70",
+                      "name":  "When called by another workflow",
+                      "type":  "n8n-nodes-base.executeWorkflowTrigger",
+                      "typeVersion":  1.1,
+                      "position":  [
+                                       -13024,
+                                       -1872
+                                   ],
+                      "notes":  "Input: publication_id (Airtable rec...), chat_id (Telegram chat dla error notifications)"
+                  },
+                  {
+                      "parameters":  {
+                                         "base":  {
+                                                      "__rl":  true,
+                                                      "value":  "appcf067e6003c219",
+                                                      "mode":  "list",
+                                                      "cachedResultName":  "Baza",
+                                                      "cachedResultUrl":  "https://airtable.com/appcf067e6003c219"
+                                                  },
+                                         "table":  {
+                                                       "__rl":  true,
+                                                       "value":  "tblKtzgKI89ab4UjD",
+                                                       "mode":  "list",
+                                                       "cachedResultName":  "Publikacje",
+                                                       "cachedResultUrl":  "https://airtable.com/appcf067e6003c219/tblKtzgKI89ab4UjD"
+                                                   },
+                                         "id":  "={{ $json.publication_id }}",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "3425589c-cd52-4c4a-917b-cb8b35815c5a",
+                      "name":  "Get Publikacja",
+                      "type":  "n8n-nodes-base.airtable",
+                      "typeVersion":  2.1,
+                      "position":  [
+                                       -12800,
+                                       -1872
+                                   ],
+                      "notes":  "Czyta publikacja z Airtable. Zwraca m.in. Wygenerowany scenariusz, Status, etc."
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const pub = $input.first().json;\nconst scenarioRaw = pub[\u0027Wygenerowany scenariusz\u0027] || pub.fields?.[\u0027Wygenerowany scenariusz\u0027] || \u0027\u0027;\n\nlet scenario;\ntry {\n  scenario = typeof scenarioRaw === \u0027string\u0027 ? JSON.parse(scenarioRaw) : scenarioRaw;\n} catch (e) {\n  return [{\n    json: {\n      publication_id: pub.id || pub.publication_id,\n      chat_id: $(\u0027When called by another workflow\u0027).first().json.chat_id,\n      valid: false,\n      errors: [\u0027Wygenerowany scenariusz nie jest poprawnym JSON-em: \u0027 + e.message],\n      scenario: null,\n      publikacja: pub\n    }\n  }];\n}\n\nconst errors = [];\nconst warnings = [];\nconst trigger = $(\u0027When called by another workflow\u0027).first().json;\n// R3-1: typ publikacji decyduje o zakazie \"ROD\"\nconst typPub = pub[\u0027Typ publikacji\u0027] || pub.fields?.[\u0027Typ publikacji\u0027] || \u0027\u0027;\nconst isOfertowa = /ofertow/i.test(typPub);\n\n// === FIX 1: Resolution → instagram-story preset ===\nif (scenario.resolution === \u0027custom\u0027 \u0026\u0026 scenario.width === 1080 \u0026\u0026 scenario.height === 1920) {\n  scenario.resolution = \u0027instagram-story\u0027;\n  delete scenario.width;\n  delete scenario.height;\n}\nif (!scenario.resolution) scenario.resolution = \u0027instagram-story\u0027;\n\n// === FIX 2: Root structure (audio + overlay → root elements) ===\nif (!Array.isArray(scenario.elements)) scenario.elements = [];\n\nconst muzykaUrl = scenario.audio?.src || trigger.muzyka_url || \u0027\u0027;\nconst overlayText = isOfertowa ? \u0027\u0027 : (scenario.overlay?.text || trigger.overlay_text || \u0027\u0027);\n\n// AUDIO: znajdz lub dodaj, ZAWSZE override volume:0.08, loop:-1, duration:-2\nlet audioEl = scenario.elements.find(e =\u003e e.type === \u0027audio\u0027);\nif (!audioEl \u0026\u0026 muzykaUrl) {\n  audioEl = {\n    type: \u0027audio\u0027,\n    src: muzykaUrl,\n    \u0027fade-in\u0027: 1.5,\n    \u0027fade-out\u0027: 2.5\n  };\n  scenario.elements.push(audioEl);\n}\nif (audioEl) {\n  audioEl.loop = -1;\n  audioEl.duration = -2;\n  audioEl.volume = 0.04;\n}\n\nif (isOfertowa) { scenario.elements = scenario.elements.filter(e =\u003e e.type !== \u0027text\u0027); }\nlet textEl = scenario.elements.find(e =\u003e e.type === \u0027text\u0027);\nif (!textEl \u0026\u0026 overlayText) {\n  textEl = { type: \u0027text\u0027, text: overlayText };\n  scenario.elements.push(textEl);\n}\nif (textEl) {\n  const oldFontFamily = textEl[\u0027font-family\u0027] || \u0027Roboto\u0027;\n  const oldFontSize = textEl[\u0027font-size\u0027] || 64;\n  const oldFontWeight = textEl[\u0027font-weight\u0027] || 700;\n  const oldColor = textEl.color || \u0027#FFFFFF\u0027;\n  const oldBgColor = textEl[\u0027background-color\u0027] || \u0027rgba(0,0,0,0.6)\u0027;\n  const oldPadding = textEl.padding || 20;\n\n  delete textEl[\u0027font-family\u0027];\n  delete textEl[\u0027font-size\u0027];\n  delete textEl[\u0027font-weight\u0027];\n  delete textEl.color;\n  delete textEl[\u0027background-color\u0027];\n  delete textEl.padding;\n\n  textEl.style = textEl.style || \u0027001\u0027;\n  textEl.settings = textEl.settings || {};\n  textEl.settings[\u0027font-family\u0027] = oldFontFamily;\n  textEl.settings[\u0027font-size\u0027] = typeof oldFontSize === \u0027number\u0027 ? oldFontSize + \u0027px\u0027 : oldFontSize;\n  textEl.settings[\u0027font-weight\u0027] = String(oldFontWeight);\n  textEl.settings.color = oldColor;\n  textEl.settings[\u0027background-color\u0027] = oldBgColor;\n  textEl.settings.padding = typeof oldPadding === \u0027number\u0027 ? oldPadding + \u0027px\u0027 : oldPadding;\n\n  if (textEl.x === \u0027center\u0027 || typeof textEl.x === \u0027string\u0027) {\n    delete textEl.x;\n    textEl.position = \u0027custom\u0027;\n  }\n  if (typeof textEl.y !== \u0027number\u0027) textEl.y = 1700;\n  textEl.duration = -2;\n  textEl.start = textEl.start || 0;\n}\n\ndelete scenario.audio;\ndelete scenario.overlay;\n\n// === FIX 3: Narracja typos ===\nconst narracjaFixes = [\n  [/szesnascie setek/gi, \u0027tysiac szesc set cztery\u0027],\n  [/697 ?276 ?512/g, \u0027szesc dziewiec siedem, dwa siedem szesc, piec jeden dwa\u0027],\n  [/www\\.client-site\\.pl/gi, \u0027wuwuwu kropka embe myslnik dzialki kropka pe el\u0027]\n];\n\n// === FIX 4: Per scene — flux resize + subtitles ===\nlet subtitlesAdded = 0;\nlet fluxResizeFixed = 0;\n\n(scenario.scenes || []).forEach(scene =\u003e {\n  if (!Array.isArray(scene.elements)) scene.elements = [];\n\n  // Apply narracja fixes na voice elements\n  scene.elements.forEach(el =\u003e {\n    if (el.type === \u0027voice\u0027 \u0026\u0026 el.text) {\n      narracjaFixes.forEach(([rx, replacement]) =\u003e {\n        el.text = el.text.replace(rx, replacement);\n      });\n    }\n    // Flux images bez resize/position → auto-dodaj\n    if (el.type === \u0027image\u0027 \u0026\u0026 el.model === \u0027flux-pro\u0027) {\n      if (!el.resize) { el.resize = \u0027cover\u0027; fluxResizeFixed++; }\n      if (!el.position) el.position = \u0027center-center\u0027;\n    }\n  });\n\n  // Subtitles per scena: dodaj jezeli scena ma voice element + brak subtitles\n  const hasVoice = scene.elements.some(el =\u003e el.type === \u0027voice\u0027);\n  const hasSubtitles = scene.elements.some(el =\u003e el.type === \u0027subtitles\u0027);\n  if (hasVoice \u0026\u0026 !hasSubtitles) {\n    scene.elements.push({\n      type: \u0027subtitles\u0027,\n      language: \u0027pl\u0027,\n      settings: {\n        style: \u0027boxed-word\u0027,\n        \u0027font-family\u0027: \u0027NotoSans Bold\u0027,\n        \u0027font-size\u0027: 75,\n        \u0027max-words-per-line\u0027: 4,\n        \u0027word-color\u0027: \u0027#FFFF00\u0027,\n        \u0027line-color\u0027: \u0027#FFFFFF\u0027,\n        \u0027box-color\u0027: \u0027#000000\u0027,\n        \u0027outline-color\u0027: \u0027#000000\u0027,\n        \u0027outline-width\u0027: 10,\n        position: \u0027custom\u0027,\n        x: 540,\n        y: 1500\n      }\n    });\n    subtitlesAdded++;\n  }\n});\n\n// === VALIDATION 1: Root fields ===\nconst validResolutions = [\u0027sd\u0027, \u0027hd\u0027, \u0027full-hd\u0027, \u0027squared\u0027, \u0027instagram-story\u0027, \u0027instagram-feed\u0027, \u0027twitter-landscape\u0027, \u0027twitter-portrait\u0027, \u0027custom\u0027];\nif (!validResolutions.includes(scenario.resolution)) errors.push(\u0027resolution invalid: \u0027 + scenario.resolution);\n\nconst scenes = scenario.scenes || [];\nif (scenes.length === 0) errors.push(\u0027Scenariusz nie ma zadnych scen\u0027);\n\n// === VALIDATION 2: Per-scene checks ===\nscenes.forEach((scene, idx) =\u003e {\n  const slajd = idx + 1;\n  const elements = scene.elements || [];\n\n  const imgEl = elements.find(el =\u003e el.type === \u0027image\u0027 \u0026\u0026 (el.src || (el.prompt \u0026\u0026 el.model)));\n  if (!imgEl) errors.push(\u0027Slajd \u0027 + slajd + \u0027: brak image\u0027);\n  else if (imgEl.src \u0026\u0026 /FOTO|PLACEHOLDER|NAZWA_PLIKU/.test(imgEl.src)) {\n    errors.push(\u0027Slajd \u0027 + slajd + \u0027: src placeholder\u0027);\n  }\n\n  const voiceEl = elements.find(el =\u003e el.type === \u0027voice\u0027);\n  if (voiceEl \u0026\u0026 voiceEl.text) {\n    if (voiceEl.text.length \u003c 30) errors.push(\u0027Slajd \u0027 + slajd + \u0027: voice.text za krotki\u0027);\n    // R3-1: zakazy WSPOLNE dla kazdej rolki (kat. Rolka / Tylko Blog — Wysokie)\n    const bannedAll = [\n      { rx: /idealn[ay]/i,          label: \u0027idealny/idealna\u0027 },\n      { rx: /raj nad/i,             label: \u0027raj nad...\u0027 },\n      { rx: /okazja zycia/i,        label: \u0027okazja zycia\u0027 },\n      { rx: /inwestycj[aię] marzen/i, label: \u0027inwestycja marzen\u0027 }\n    ];\n    // zakazy TYLKO dla OFERTOWEJ (kat. Ofertowe — w tym ABSOLUTNY ZAKAZ \"ROD\")\n    // Edukacyjna/Combo MUSZA moc uzyc \"ROD\" (\"ZD to NIE system ROD\") — NIE banujemy.\n    const bannedOfertowa = [\n      { rx: /\\bROD\\b/i,               label: \u0027ROD\u0027 },\n      { rx: /działk[ai] budowlan/i,   label: \u0027działka budowlana\u0027 },\n      { rx: /promocj[ai]/i,           label: \u0027promocja\u0027 },\n      { rx: /unikaln[ay] szans/i,     label: \u0027unikalna szansa\u0027 },\n      { rx: /wyjatkow[ay] okazj/i,    label: \u0027wyjatkowa okazja\u0027 },\n      { rx: /ostatni[ae] działk/i,    label: \u0027ostatnie działki\u0027 }\n    ];\n    const banned = isOfertowa ? bannedAll.concat(bannedOfertowa) : bannedAll;\n    banned.forEach(({ rx, label }) =\u003e {\n      if (rx.test(voiceEl.text)) errors.push(\u0027Slajd \u0027 + slajd + \u0027: zakazane slowo w narracji — \"\u0027 + label + \u0027\" (popraw tekst i regeneruj)\u0027);\n    });\n  }\n});\n\nconst hasAudio = scenario.elements.some(e =\u003e e.type === \u0027audio\u0027);\nconst hasText = scenario.elements.some(e =\u003e e.type === \u0027text\u0027);\nconst finalAudio = scenario.elements.find(e =\u003e e.type === \u0027audio\u0027);\nconst finalText = scenario.elements.find(e =\u003e e.type === \u0027text\u0027);\n\nreturn [{\n  json: {\n    publication_id: pub.id || pub.publication_id,\n    chat_id: trigger.chat_id,\n    valid: errors.length === 0,\n    errors,\n    warnings,\n    scenario,\n    scenarioJson: JSON.stringify(scenario),\n    stats: {\n      resolution: scenario.resolution,\n      scenes: scenes.length,\n      has_audio: hasAudio,\n      has_overlay: hasText,\n      audio_volume: finalAudio?.volume,\n      audio_loop: finalAudio?.loop,\n      audio_duration: finalAudio?.duration,\n      text_duration: finalText?.duration,\n      text_has_settings: !!finalText?.settings,\n      subtitles_added: subtitlesAdded,\n      flux_resize_fixed: fluxResizeFixed,\n      flux_scenes: scenes.filter(s =\u003e (s.elements || []).some(e =\u003e e.model === \u0027flux-pro\u0027)).length,\n      real_scenes: scenes.filter(s =\u003e (s.elements || []).some(e =\u003e e.type === \u0027image\u0027 \u0026\u0026 e.src \u0026\u0026 !e.model)).length\n    }\n  }\n}];"
+                                     },
+                      "id":  "f98d9370-76eb-4dbc-af32-ae6b4d542b5a",
+                      "name":  "Validate Scenario (BUG FIX #13)",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       -12576,
+                                       -1872
+                                   ],
+                      "notes":  "Bug fix #13. Sprawdza ze kazdy slajd ma image. Jak nie - blokuje render i wysyla error do Telegrama."
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  true,
+                                                                            "leftValue":  "",
+                                                                            "typeValidation":  "strict",
+                                                                            "version":  2
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "id":  "valid",
+                                                                                   "leftValue":  "={{ $json.valid }}",
+                                                                                   "rightValue":  true,
+                                                                                   "operator":  {
+                                                                                                    "type":  "boolean",
+                                                                                                    "operation":  "true",
+                                                                                                    "singleValue":  true
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "e945c2d9-ba8e-420e-a940-03c7a82c81db",
+                      "name":  "Is Valid?",
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       -12352,
+                                       -1872
+                                   ],
+                      "notes":  "TRUE = scenariusz OK, lec do renderu. FALSE = error do Telegrama."
+                  },
+                  {
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "https://api.json2video.com/v2/movies",
+                                         "authentication":  "genericCredentialType",
+                                         "genericAuthType":  "httpHeaderAuth",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "Content-Type",
+                                                                                         "value":  "application/json"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "sendBody":  true,
+                                         "specifyBody":  "json",
+                                         "jsonBody":  "={{ $json.scenarioJson }}",
+                                         "options":  {
+                                                         "timeout":  30000
+                                                     }
+                                     },
+                      "id":  "4c651469-280f-442a-85c8-c5466043b7d1",
+                      "name":  "json2video Start Render",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       -11904,
+                                       -1968
+                                   ],
+                      "notes":  "POST scenariusz do JSON2Video. Zwraca {project: \u0027xxx\u0027, success: true}. PLACEHOLDER_JSON2VIDEO_API_KEY - Nicolas dodaje credential w Phase 9."
+                  },
+                  {
+                      "parameters":  {
+                                         "amount":  90
+                                     },
+                      "id":  "e73ae554-7992-41fe-8c31-dbd538b97f9e",
+                      "name":  "Wait 60s",
+                      "type":  "n8n-nodes-base.wait",
+                      "typeVersion":  1.1,
+                      "position":  [
+                                       -11680,
+                                       -1968
+                                   ],
+                      "webhookId":  "b69d3f32-7267-486e-80f2-8cc92d25fcc0",
+                      "notes":  "Pierwszy render zazwyczaj zajmuje 1-3 min. Czekamy 60s przed pierwszym check."
+                  },
+                  {
+                      "parameters":  {
+                                         "url":  "=https://api.json2video.com/v2/movies?project={{ $(\u0027json2video Start Render\u0027).item.json.project }}",
+                                         "authentication":  "genericCredentialType",
+                                         "genericAuthType":  "httpHeaderAuth",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+
+                                                                                 ]
+                                                              },
+                                         "options":  {
+                                                         "timeout":  30000
+                                                     }
+                                     },
+                      "id":  "59f9a1c0-db6b-473b-a950-151f3fdc64ff",
+                      "name":  "Check Status 1",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       -11456,
+                                       -1968
+                                   ],
+                      "notes":  "GET status renderu. Zwraca {movie: {status: \u0027done|running|error\u0027, url: \u0027...\u0027}}"
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  true,
+                                                                            "leftValue":  "",
+                                                                            "typeValidation":  "loose",
+                                                                            "version":  2
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "id":  "done",
+                                                                                   "leftValue":  "={{ $json.movie?.status }}",
+                                                                                   "rightValue":  "done",
+                                                                                   "operator":  {
+                                                                                                    "type":  "string",
+                                                                                                    "operation":  "equals"
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "5ce6419a-be80-49ad-8369-c637a419e85b",
+                      "name":  "Done 1?",
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       -11232,
+                                       -1968
+                                   ],
+                      "notes":  "TRUE = render gotowy, save URL. FALSE = jeszcze sie renderuje, czekamy."
+                  },
+                  {
+                      "parameters":  {
+                                         "amount":  180
+                                     },
+                      "id":  "f8c4b326-c192-4742-bfa6-a58261951031",
+                      "name":  "Wait 60s (retry 2)",
+                      "type":  "n8n-nodes-base.wait",
+                      "typeVersion":  1.1,
+                      "position":  [
+                                       -11008,
+                                       -1888
+                                   ],
+                      "webhookId":  "616b4c2c-7a8c-4e94-8431-8fa3d60d88d6",
+                      "notes":  "Drugi check po dodatkowych 60s = 2 min total."
+                  },
+                  {
+                      "parameters":  {
+                                         "url":  "=https://api.json2video.com/v2/movies?project={{ $(\u0027json2video Start Render\u0027).item.json.project }}",
+                                         "authentication":  "genericCredentialType",
+                                         "genericAuthType":  "httpHeaderAuth",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+
+                                                                                 ]
+                                                              },
+                                         "options":  {
+                                                         "timeout":  30000
+                                                     }
+                                     },
+                      "id":  "acdd462b-09a8-4c29-b047-5aa24d953f5e",
+                      "name":  "Check Status 2",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       -10784,
+                                       -1888
+                                   ],
+                      "notes":  "GET status (retry 2)."
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  true,
+                                                                            "leftValue":  "",
+                                                                            "typeValidation":  "loose",
+                                                                            "version":  2
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "id":  "done2",
+                                                                                   "leftValue":  "={{ $json.movie?.status }}",
+                                                                                   "rightValue":  "done",
+                                                                                   "operator":  {
+                                                                                                    "type":  "string",
+                                                                                                    "operation":  "equals"
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "31e6e329-d461-427a-ad58-fd453be721fd",
+                      "name":  "Done 2?",
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       -10560,
+                                       -1888
+                                   ],
+                      "notes":  "Retry 2 check."
+                  },
+                  {
+                      "parameters":  {
+                                         "amount":  300
+                                     },
+                      "id":  "86626d9b-c1e3-424f-bf08-ddfcfddf1406",
+                      "name":  "Wait 60s (retry 3)",
+                      "type":  "n8n-nodes-base.wait",
+                      "typeVersion":  1.1,
+                      "position":  [
+                                       -10336,
+                                       -1824
+                                   ],
+                      "webhookId":  "0654b425-ad17-4847-8677-cb6da68d624c",
+                      "notes":  "Trzeci i ostatni retry = 3 min total."
+                  },
+                  {
+                      "parameters":  {
+                                         "url":  "=https://api.json2video.com/v2/movies?project={{ $(\u0027json2video Start Render\u0027).item.json.project }}",
+                                         "authentication":  "genericCredentialType",
+                                         "genericAuthType":  "httpHeaderAuth",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+
+                                                                                 ]
+                                                              },
+                                         "options":  {
+                                                         "timeout":  30000
+                                                     }
+                                     },
+                      "id":  "5560e481-954a-4c17-a417-84404e07e07f",
+                      "name":  "Check Status 3",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       -10112,
+                                       -1824
+                                   ],
+                      "notes":  "Last retry."
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  true,
+                                                                            "leftValue":  "",
+                                                                            "typeValidation":  "loose",
+                                                                            "version":  2
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "id":  "done3",
+                                                                                   "leftValue":  "={{ $json.movie?.status }}",
+                                                                                   "rightValue":  "done",
+                                                                                   "operator":  {
+                                                                                                    "type":  "string",
+                                                                                                    "operation":  "equals"
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "bfcb94dd-1528-435a-aed5-37cff64f5118",
+                      "name":  "Done 3?",
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       -9888,
+                                       -1824
+                                   ],
+                      "notes":  "Last check."
+                  },
+                  {
+                      "parameters":  {
+                                         "operation":  "update",
+                                         "base":  {
+                                                      "__rl":  true,
+                                                      "value":  "appcf067e6003c219",
+                                                      "mode":  "id"
+                                                  },
+                                         "table":  {
+                                                       "__rl":  true,
+                                                       "value":  "tblKtzgKI89ab4UjD",
+                                                       "mode":  "id"
+                                                   },
+                                         "columns":  {
+                                                         "mappingMode":  "defineBelow",
+                                                         "value":  {
+                                                                       "id":  "={{ $(\u0027Validate Scenario (BUG FIX #13)\u0027).item.json.publication_id }}",
+                                                                       "URL Rolki (Przed publikacją)":  "={{ $json.movie.url }}"
+                                                                   },
+                                                         "matchingColumns":  [
+                                                                                 "id"
+                                                                             ],
+                                                         "schema":  [
+
+                                                                    ]
+                                                     },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "3bd37c6d-5e58-4770-bc76-5e7f86bc84c4",
+                      "name":  "Save Rendered URL to Airtable",
+                      "type":  "n8n-nodes-base.airtable",
+                      "typeVersion":  2.1,
+                      "position":  [
+                                       -9664,
+                                       -2064
+                                   ],
+                      "notes":  "Zapisuje URL filmu do Publikacji. Pole klientki: \u0027URL Rolki (Przed publikacją)\u0027."
+                  },
+                  {
+                      "parameters":  {
+                                         "operation":  "sendVideo",
+                                         "chatId":  "={{ $(\u0027Validate Scenario (BUG FIX #13)\u0027).item.json.chat_id }}",
+                                         "file":  "={{ $(\u0027Save Rendered URL to Airtable\u0027).item.json[\u0027URL Rolki (Przed publikacją)\u0027] || $(\u0027Save Rendered URL to Airtable\u0027).item.json.fields[\u0027URL Rolki (Przed publikacją)\u0027] }}",
+                                         "replyMarkup":  "inlineKeyboard",
+                                         "inlineKeyboard":  {
+                                                                "rows":  [
+                                                                             {
+                                                                                 "row":  {
+                                                                                             "buttons":  [
+                                                                                                             {
+                                                                                                                 "text":  "🚀 Publikuj wszystkie",
+                                                                                                                 "additionalFields":  {
+                                                                                                                                          "callback_data":  "=mb:{{ $(\u0027Validate Scenario (BUG FIX #13)\u0027).item.json.publication_id }}:complete:publish_all"
+                                                                                                                                      }
+                                                                                                             },
+                                                                                                             {
+                                                                                                                 "text":  "📅 Zaplanuj wszystkie",
+                                                                                                                 "additionalFields":  {
+                                                                                                                                          "callback_data":  "=mb:{{ $(\u0027Validate Scenario (BUG FIX #13)\u0027).item.json.publication_id }}:complete:schedule_all"
+                                                                                                                                      }
+                                                                                                             }
+                                                                                                         ]
+                                                                                         }
+                                                                             },
+                                                                             {
+                                                                                 "row":  {
+                                                                                             "buttons":  [
+                                                                                                             {
+                                                                                                                 "text":  "📘 FB",
+                                                                                                                 "additionalFields":  {
+                                                                                                                                          "callback_data":  "=mb:{{ $(\u0027Validate Scenario (BUG FIX #13)\u0027).item.json.publication_id }}:complete:publish_fb"
+                                                                                                                                      }
+                                                                                                             },
+                                                                                                             {
+                                                                                                                 "text":  "📸 IG",
+                                                                                                                 "additionalFields":  {
+                                                                                                                                          "callback_data":  "=mb:{{ $(\u0027Validate Scenario (BUG FIX #13)\u0027).item.json.publication_id }}:complete:publish_ig"
+                                                                                                                                      }
+                                                                                                             },
+                                                                                                             {
+                                                                                                                 "text":  "🎵 TT",
+                                                                                                                 "additionalFields":  {
+                                                                                                                                          "callback_data":  "=mb:{{ $(\u0027Validate Scenario (BUG FIX #13)\u0027).item.json.publication_id }}:complete:publish_tt"
+                                                                                                                                      }
+                                                                                                             }
+                                                                                                         ]
+                                                                                         }
+                                                                             },
+                                                                             {
+                                                                                 "row":  {
+                                                                                             "buttons":  [
+                                                                                                             {
+                                                                                                                 "text":  "📝 Bloga teraz",
+                                                                                                                 "additionalFields":  {
+                                                                                                                                          "callback_data":  "=mb:{{ $(\u0027Validate Scenario (BUG FIX #13)\u0027).item.json.publication_id }}:complete:blog"
+                                                                                                                                      }
+                                                                                                             }
+                                                                                                         ]
+                                                                                         }
+                                                                             }
+                                                                         ]
+                                                            },
+                                         "additionalFields":  {
+                                                                  "caption":  "✅ Rolka wyrenderowana! Możesz przejść do publikacji.",
+                                                                  "parse_mode":  "HTML"
+                                                              }
+                                     },
+                      "id":  "1e595906-bee3-4d25-a106-46b8727366cb",
+                      "name":  "Notify Success (Telegram)",
+                      "type":  "n8n-nodes-base.telegram",
+                      "typeVersion":  1.2,
+                      "position":  [
+                                       -9440,
+                                       -2064
+                                   ],
+                      "webhookId":  "14f2c658-2e1e-4c04-8632-59df1964052d",
+                      "notes":  "Async render notification (improvement: klientka moze pojsc na kawe i wrocic). Zastapi to Phase 7 z preview file + buttons."
+                  },
+                  {
+                      "parameters":  {
+                                         "chatId":  "={{ $(\u0027Validate Scenario (BUG FIX #13)\u0027).item.json.chat_id }}",
+                                         "text":  "=⏱️ Render rolki nie zakonczyl sie powodzeniem.\n\nStatus json2video: {{ $(\u0027Check Status 3\u0027).item.json.movie?.status || \u0027brak odpowiedzi (za dlugo)\u0027 }}\nSzczegoly: {{ $(\u0027Check Status 3\u0027).item.json.movie?.message || \u0027render nie zwrocil URL w wyznaczonym czasie\u0027 }}\n\nWroc do podgladu i sprobuj ponownie albo skontaktuj sie z Nicolasem.\n",
+                                         "replyMarkup":  "inlineKeyboard",
+                                         "inlineKeyboard":  {
+                                                                "rows":  [
+                                                                             {
+                                                                                 "row":  {
+                                                                                             "buttons":  [
+                                                                                                             {
+                                                                                                                 "text":  "⬅️ Wróć do podglądu",
+                                                                                                                 "additionalFields":  {
+                                                                                                                                          "callback_data":  "=mb:{{ $(\u0027Validate Scenario (BUG FIX #13)\u0027).item.json.publication_id }}:preview:back"
+                                                                                                                                      }
+                                                                                                             }
+                                                                                                         ]
+                                                                                         }
+                                                                             }
+                                                                         ]
+                                                            },
+                                         "additionalFields":  {
+                                                                  "appendAttribution":  false
+                                                              }
+                                     },
+                      "id":  "2382c9bb-79cf-4fc4-af1d-17c4766cab14",
+                      "name":  "Notify Timeout (Telegram)",
+                      "type":  "n8n-nodes-base.telegram",
+                      "typeVersion":  1.2,
+                      "position":  [
+                                       -9664,
+                                       -1776
+                                   ],
+                      "webhookId":  "1b6acf74-6c12-41df-8a07-6f3a3963882c",
+                      "notes":  "Po 3 retries (3 min total) - bez wiadomosci o sukcesie."
+                  },
+                  {
+                      "parameters":  {
+                                         "chatId":  "={{ $json.chat_id }}",
+                                         "text":  "=❌ Nie moge wyrenderowac rolki - scenariusz nie przeszedl walidacji.\n\nProblemy:\n{{ $json.errors.join(\u0027\\n- \u0027) }}\n\nPopraw wskazane slajdy (tekst/obraz) i regeneruj rolke.",
+                                         "replyMarkup":  "inlineKeyboard",
+                                         "inlineKeyboard":  {
+                                                                "rows":  [
+                                                                             {
+                                                                                 "row":  {
+                                                                                             "buttons":  [
+                                                                                                             {
+                                                                                                                 "text":  "⬅️ Wróć do podglądu",
+                                                                                                                 "additionalFields":  {
+                                                                                                                                          "callback_data":  "=mb:{{ $json.publication_id }}:preview:back"
+                                                                                                                                      }
+                                                                                                             }
+                                                                                                         ]
+                                                                                         }
+                                                                             }
+                                                                         ]
+                                                            },
+                                         "additionalFields":  {
+                                                                  "appendAttribution":  false
+                                                              }
+                                     },
+                      "id":  "54fc77d0-dff8-4238-b1ec-823fb3fbd8b2",
+                      "name":  "Notify Invalid Scenario",
+                      "type":  "n8n-nodes-base.telegram",
+                      "typeVersion":  1.2,
+                      "position":  [
+                                       -12128,
+                                       -1776
+                                   ],
+                      "webhookId":  "39c62b28-c4a6-4ee3-8012-5aa6dc8e9277",
+                      "notes":  "Bug fix #13. Klientka dostaje precyzyjny komunikat ze ktore slajdy nie maja obrazu."
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const input = $input.first().json;\nconst scenario = input.scenario || input;\nconst elementsObj = scenario.elements || {};\n\nconst audioSrc = scenario.audio?.src || elementsObj.audio?.src || \u0027\u0027;\nconst overlayText = scenario.text_overlay || elementsObj.textOverlay?.content || \u0027\u0027;\nconst enableSubtitles = (scenario.subtitles?.enabled ?? scenario.subtitles?.wordByWord ?? elementsObj.subtitles?.enabled) !== false;\nconst VOICE_ID = \u0027hIssydxXZ1WuDorjx6Ic\u0027;\nconst VOICE_MODEL = \u0027elevenlabs-flash-v2-5\u0027;\nconst LOGO_URL = \u0027https://dl.dropboxusercontent.com/scl/fi/muheamff4x2b5ue9abxnh/download.jpg?rlkey=cfjuz3qovtu3b3spipfljsoum\u0026dl=1\u0027;\n\n// Build scenes with proper json2video v2 structure\nconst scenes = (scenario.scenes || []).map((s, idx) =\u003e {\n  const sceneElements = [];\n\n  // Image element (z fallback dla placeholder logo)\n  if (s.type === \u0027image\u0027 || s.src || s.prompt) {\n    const isPlaceholder = s.src \u0026\u0026 typeof s.src === \u0027string\u0027 \u0026\u0026 s.src.includes(\u0027PLACEHOLDER\u0027);\n\n    if (s.src \u0026\u0026 !isPlaceholder) {\n      sceneElements.push({\n        type: \u0027image\u0027,\n        src: s.src,\n        resize: \u0027cover\u0027,\n        position: \u0027center-center\u0027\n      });\n    } else if (isPlaceholder \u0026\u0026 LOGO_URL) {\n      sceneElements.push({\n        type: \u0027image\u0027,\n        src: LOGO_URL,\n        resize: \u0027contain\u0027,\n        position: \u0027center-center\u0027\n      });\n    } else if (isPlaceholder \u0026\u0026 !LOGO_URL) {\n      sceneElements.push({\n        type: \u0027image\u0027,\n        model: \u0027flux-pro\u0027,\n        prompt: \u0027Minimalist black background with white centered text \"M\u0026B Investment\", elegant typography, vertical 9:16 format, no other elements, clean and simple\u0027,\n        \u0027aspect-ratio\u0027: \u0027vertical\u0027,\n        resize: \u0027cover\u0027,\n        position: \u0027center-center\u0027\n      });\n    } else if (s.prompt) {\n      sceneElements.push({\n        type: \u0027image\u0027,\n        model: s.model || \u0027flux-pro\u0027,\n        prompt: s.prompt,\n        \u0027aspect-ratio\u0027: s[\u0027aspect-ratio\u0027] || \u0027vertical\u0027,\n        resize: \u0027cover\u0027,\n        position: \u0027center-center\u0027\n      });\n    }\n  }\n\n  // Voice element (ElevenLabs)\n  if (s.narration || s.text) {\n    sceneElements.push({\n      type: \u0027voice\u0027,\n      voice: VOICE_ID,\n      model: VOICE_MODEL,\n      text: s.narration || s.text,\n      \u0027fade-in\u0027: 0.2,\n      \u0027fade-out\u0027: 0.2\n    });\n  }\n\n  // Subtitles per scene (word-by-word)\n  if (enableSubtitles \u0026\u0026 (s.narration || s.text)) {\n    sceneElements.push({\n      type: \u0027subtitles\u0027,\n      style: \u0027word-by-word\u0027,\n      language: \u0027pl\u0027,\n      \u0027font-family\u0027: \u0027Montserrat\u0027,\n      \u0027font-weight\u0027: \u0027700\u0027,\n      \u0027font-size\u0027: 75,\n      \u0027max-words-per-line\u0027: 4,\n      \u0027outline-color\u0027: \u0027#000000\u0027,\n      \u0027outline-width\u0027: 10,\n      \u0027word-color\u0027: \u0027#FFFF00\u0027,\n      \u0027line-color\u0027: \u0027#FFFFFF\u0027,\n      position: \u0027custom\u0027,\n      x: 540,\n      y: 1500\n    });\n  }\n\n  // Text overlay per scene (POWIERZCHNIA | CENA)\n  if (overlayText) {\n    sceneElements.push({\n      type: \u0027text\u0027,\n      text: overlayText,\n      x: 540,\n      y: 120,\n      \u0027font-size\u0027: 42,\n      color: \u0027#FFFFFF\u0027,\n      \u0027background-color\u0027: \u0027rgba(0,0,0,0.75)\u0027\n    });\n  }\n\n  return {\n    comment: s.comment || `Slajd ${idx + 1}`,\n    \u0027background-color\u0027: s[\u0027background-color\u0027] || \u0027#000000\u0027,\n    elements: sceneElements\n  };\n});\n\n// Root-level elements: background music przez caly film\nconst rootElements = [];\nif (audioSrc) {\n  rootElements.push({\n    type: \u0027audio\u0027,\n    src: audioSrc,\n    duration: -2,\n    volume: 0.02,\n    \u0027fade-in\u0027: 1.5,\n    \u0027fade-out\u0027: 2.5\n  });\n}\n\nconst finalJson = {\n  resolution: \u0027custom\u0027,\n  width: 1080,\n  height: 1920,\n  quality: scenario.quality || \u0027high\u0027,\n  draft: scenario.draft || false,\n  elements: rootElements,\n  scenes: scenes\n};\n\nreturn [{\n  json: {\n    ...input,\n    transformed_scenario: finalJson\n  }\n}];"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       -12128,
+                                       -1968
+                                   ],
+                      "id":  "f70c429b-074a-4ac2-a576-6cfddab3410a",
+                      "name":  "Transform to json2video Format",
+                      "disabled":  true
+                  },
+                  {
+                      "parameters":  {
+                                         "operation":  "update",
+                                         "base":  {
+                                                      "__rl":  true,
+                                                      "value":  "appcf067e6003c219",
+                                                      "mode":  "list",
+                                                      "cachedResultName":  "Baza",
+                                                      "cachedResultUrl":  "https://airtable.com/appcf067e6003c219"
+                                                  },
+                                         "table":  {
+                                                       "__rl":  true,
+                                                       "value":  "tbldPn3OtxnKiRVL3",
+                                                       "mode":  "list",
+                                                       "cachedResultName":  "Sesje Telegram",
+                                                       "cachedResultUrl":  "https://airtable.com/appcf067e6003c219/tbldPn3OtxnKiRVL3"
+                                                   },
+                                         "columns":  {
+                                                         "mappingMode":  "defineBelow",
+                                                         "value":  {
+                                                                       "id":  "={{ ($(\u0027Get Publikacja\u0027).first().json[\u0027Sesje Telegram\u0027] || [])[0] }}",
+                                                                       "Aktualny krok":  "reel_complete"
+                                                                   },
+                                                         "matchingColumns":  [
+                                                                                 "id"
+                                                                             ],
+                                                         "schema":  [
+                                                                        {
+                                                                            "id":  "id",
+                                                                            "displayName":  "id",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "ID chatu Telegram",
+                                                                            "displayName":  "ID chatu Telegram",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "number",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Nazwa użytkownika Telegram",
+                                                                            "displayName":  "Nazwa użytkownika Telegram",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Aktualny krok",
+                                                                            "displayName":  "Aktualny krok",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "options",
+                                                                            "options":  [
+                                                                                            {
+                                                                                                "name":  "reel_draft",
+                                                                                                "value":  "reel_draft"
+                                                                                            },
+                                                                                            {
+                                                                                                "name":  "reel_hashtags_pending",
+                                                                                                "value":  "reel_hashtags_pending"
+                                                                                            },
+                                                                                            {
+                                                                                                "name":  "reel_hashtags_approved",
+                                                                                                "value":  "reel_hashtags_approved"
+                                                                                            },
+                                                                                            {
+                                                                                                "name":  "reel_script_pending",
+                                                                                                "value":  "reel_script_pending"
+                                                                                            },
+                                                                                            {
+                                                                                                "name":  "reel_script_approved",
+                                                                                                "value":  "reel_script_approved"
+                                                                                            },
+                                                                                            {
+                                                                                                "name":  "reel_fb_text_pending",
+                                                                                                "value":  "reel_fb_text_pending"
+                                                                                            },
+                                                                                            {
+                                                                                                "name":  "reel_fb_text_approved",
+                                                                                                "value":  "reel_fb_text_approved"
+                                                                                            },
+                                                                                            {
+                                                                                                "name":  "reel_ig_text_pending",
+                                                                                                "value":  "reel_ig_text_pending"
+                                                                                            },
+                                                                                            {
+                                                                                                "name":  "reel_ig_text_approved",
+                                                                                                "value":  "reel_ig_text_approved"
+                                                                                            },
+                                                                                            {
+                                                                                                "name":  "reel_tiktok_text_pending",
+                                                                                                "value":  "reel_tiktok_text_pending"
+                                                                                            },
+                                                                                            {
+                                                                                                "name":  "reel_tiktok_text_approved",
+                                                                                                "value":  "reel_tiktok_text_approved"
+                                                                                            },
+                                                                                            {
+                                                                                                "name":  "reel_images_pending",
+                                                                                                "value":  "reel_images_pending"
+                                                                                            },
+                                                                                            {
+                                                                                                "name":  "reel_images_approved",
+                                                                                                "value":  "reel_images_approved"
+                                                                                            },
+                                                                                            {
+                                                                                                "name":  "reel_preview_pending",
+                                                                                                "value":  "reel_preview_pending"
+                                                                                            },
+                                                                                            {
+                                                                                                "name":  "reel_preview_approved",
+                                                                                                "value":  "reel_preview_approved"
+                                                                                            },
+                                                                                            {
+                                                                                                "name":  "reel_render_pending",
+                                                                                                "value":  "reel_render_pending"
+                                                                                            },
+                                                                                            {
+                                                                                                "name":  "reel_render_approved",
+                                                                                                "value":  "reel_render_approved"
+                                                                                            },
+                                                                                            {
+                                                                                                "name":  "reel_complete",
+                                                                                                "value":  "reel_complete"
+                                                                                            },
+                                                                                            {
+                                                                                                "name":  "blog_draft",
+                                                                                                "value":  "blog_draft"
+                                                                                            },
+                                                                                            {
+                                                                                                "name":  "blog_sections_pending",
+                                                                                                "value":  "blog_sections_pending"
+                                                                                            },
+                                                                                            {
+                                                                                                "name":  "blog_sections_approved",
+                                                                                                "value":  "blog_sections_approved"
+                                                                                            },
+                                                                                            {
+                                                                                                "name":  "blog_seo_pending",
+                                                                                                "value":  "blog_seo_pending"
+                                                                                            },
+                                                                                            {
+                                                                                                "name":  "blog_seo_approved",
+                                                                                                "value":  "blog_seo_approved"
+                                                                                            },
+                                                                                            {
+                                                                                                "name":  "blog_graphics_pending",
+                                                                                                "value":  "blog_graphics_pending"
+                                                                                            },
+                                                                                            {
+                                                                                                "name":  "blog_graphics_approved",
+                                                                                                "value":  "blog_graphics_approved"
+                                                                                            },
+                                                                                            {
+                                                                                                "name":  "blog_featured_pending",
+                                                                                                "value":  "blog_featured_pending"
+                                                                                            },
+                                                                                            {
+                                                                                                "name":  "blog_featured_approved",
+                                                                                                "value":  "blog_featured_approved"
+                                                                                            },
+                                                                                            {
+                                                                                                "name":  "blog_preview_pending",
+                                                                                                "value":  "blog_preview_pending"
+                                                                                            },
+                                                                                            {
+                                                                                                "name":  "blog_preview_approved",
+                                                                                                "value":  "blog_preview_approved"
+                                                                                            },
+                                                                                            {
+                                                                                                "name":  "blog_complete",
+                                                                                                "value":  "blog_complete"
+                                                                                            },
+                                                                                            {
+                                                                                                "name":  "session_publishing",
+                                                                                                "value":  "session_publishing"
+                                                                                            },
+                                                                                            {
+                                                                                                "name":  "session_published",
+                                                                                                "value":  "session_published"
+                                                                                            },
+                                                                                            {
+                                                                                                "name":  "wybor_typu",
+                                                                                                "value":  "wybor_typu"
+                                                                                            },
+                                                                                            {
+                                                                                                "name":  "numer_dzialki",
+                                                                                                "value":  "numer_dzialki"
+                                                                                            },
+                                                                                            {
+                                                                                                "name":  "temat_edukacyjny",
+                                                                                                "value":  "temat_edukacyjny"
+                                                                                            },
+                                                                                            {
+                                                                                                "name":  "dodatkowe_info",
+                                                                                                "value":  "dodatkowe_info"
+                                                                                            },
+                                                                                            {
+                                                                                                "name":  "wizja_rolki",
+                                                                                                "value":  "wizja_rolki"
+                                                                                            },
+                                                                                            {
+                                                                                                "name":  "foto_wybor",
+                                                                                                "value":  "foto_wybor"
+                                                                                            },
+                                                                                            {
+                                                                                                "name":  "generowanie",
+                                                                                                "value":  "generowanie"
+                                                                                            },
+                                                                                            {
+                                                                                                "name":  "wybor_muzyki",
+                                                                                                "value":  "wybor_muzyki"
+                                                                                            }
+                                                                                        ],
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Powiązana publikacja",
+                                                                            "displayName":  "Powiązana publikacja",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "array",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Ostatnia aktualizacja",
+                                                                            "displayName":  "Ostatnia aktualizacja",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  true,
+                                                                            "removed":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "Typ Sesji",
+                                                                            "displayName":  "Typ Sesji",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Sesja-ID Działki",
+                                                                            "displayName":  "Sesja-ID Działki",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "NumerDzialki",
+                                                                            "displayName":  "NumerDzialki",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Wybrane Zdjęcia",
+                                                                            "displayName":  "Wybrane Zdjęcia",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "WizjaRolki",
+                                                                            "displayName":  "WizjaRolki",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "NewRecordIDSession",
+                                                                            "displayName":  "NewRecordIDSession",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "ListaWszystkichZdjec",
+                                                                            "displayName":  "ListaWszystkichZdjec",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "MessageIDWybworZdjec",
+                                                                            "displayName":  "MessageIDWybworZdjec",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "number",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Temat Edukacyjny",
+                                                                            "displayName":  "Temat Edukacyjny",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Wybrana Muzyka",
+                                                                            "displayName":  "Wybrana Muzyka",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "array",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Zasób (from Wybrana Muzyka)",
+                                                                            "displayName":  "Zasób (from Wybrana Muzyka)",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  true,
+                                                                            "removed":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "Edytowane Pole",
+                                                                            "displayName":  "Edytowane Pole",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Edytowana publikacja",
+                                                                            "displayName":  "Edytowana publikacja",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "array",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Numer_slajdu_edycja",
+                                                                            "displayName":  "Numer_slajdu_edycja",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "number",
+                                                                            "readOnly":  false,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "Calculation",
+                                                                            "displayName":  "Calculation",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "readOnly":  true,
+                                                                            "removed":  true
+                                                                        }
+                                                                    ],
+                                                         "attemptToConvertTypes":  false,
+                                                         "convertFieldsToString":  false
+                                                     },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.airtable",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       -9232,
+                                       -2064
+                                   ],
+                      "id":  "8c969a8b-6c72-4160-99b3-55aaa9f9d83b",
+                      "name":  "Update record"
+                  }
+              ],
+    "connections":  {
+                        "When called by another workflow":  {
+                                                                "main":  [
+                                                                             [
+                                                                                 {
+                                                                                     "node":  "Get Publikacja",
+                                                                                     "type":  "main",
+                                                                                     "index":  0
+                                                                                 }
+                                                                             ]
+                                                                         ]
+                                                            },
+                        "Get Publikacja":  {
+                                               "main":  [
+                                                            [
+                                                                {
+                                                                    "node":  "Validate Scenario (BUG FIX #13)",
+                                                                    "type":  "main",
+                                                                    "index":  0
+                                                                }
+                                                            ]
+                                                        ]
+                                           },
+                        "Validate Scenario (BUG FIX #13)":  {
+                                                                "main":  [
+                                                                             [
+                                                                                 {
+                                                                                     "node":  "Is Valid?",
+                                                                                     "type":  "main",
+                                                                                     "index":  0
+                                                                                 }
+                                                                             ]
+                                                                         ]
+                                                            },
+                        "Is Valid?":  {
+                                          "main":  [
+                                                       [
+                                                           {
+                                                               "node":  "Transform to json2video Format",
+                                                               "type":  "main",
+                                                               "index":  0
+                                                           }
+                                                       ],
+                                                       [
+                                                           {
+                                                               "node":  "Notify Invalid Scenario",
+                                                               "type":  "main",
+                                                               "index":  0
+                                                           }
+                                                       ]
+                                                   ]
+                                      },
+                        "json2video Start Render":  {
+                                                        "main":  [
+                                                                     [
+                                                                         {
+                                                                             "node":  "Wait 60s",
+                                                                             "type":  "main",
+                                                                             "index":  0
+                                                                         }
+                                                                     ]
+                                                                 ]
+                                                    },
+                        "Wait 60s":  {
+                                         "main":  [
+                                                      [
+                                                          {
+                                                              "node":  "Check Status 1",
+                                                              "type":  "main",
+                                                              "index":  0
+                                                          }
+                                                      ]
+                                                  ]
+                                     },
+                        "Check Status 1":  {
+                                               "main":  [
+                                                            [
+                                                                {
+                                                                    "node":  "Done 1?",
+                                                                    "type":  "main",
+                                                                    "index":  0
+                                                                }
+                                                            ]
+                                                        ]
+                                           },
+                        "Done 1?":  {
+                                        "main":  [
+                                                     [
+                                                         {
+                                                             "node":  "Save Rendered URL to Airtable",
+                                                             "type":  "main",
+                                                             "index":  0
+                                                         }
+                                                     ],
+                                                     [
+                                                         {
+                                                             "node":  "Wait 60s (retry 2)",
+                                                             "type":  "main",
+                                                             "index":  0
+                                                         }
+                                                     ]
+                                                 ]
+                                    },
+                        "Wait 60s (retry 2)":  {
+                                                   "main":  [
+                                                                [
+                                                                    {
+                                                                        "node":  "Check Status 2",
+                                                                        "type":  "main",
+                                                                        "index":  0
+                                                                    }
+                                                                ]
+                                                            ]
+                                               },
+                        "Check Status 2":  {
+                                               "main":  [
+                                                            [
+                                                                {
+                                                                    "node":  "Done 2?",
+                                                                    "type":  "main",
+                                                                    "index":  0
+                                                                }
+                                                            ]
+                                                        ]
+                                           },
+                        "Done 2?":  {
+                                        "main":  [
+                                                     [
+                                                         {
+                                                             "node":  "Save Rendered URL to Airtable",
+                                                             "type":  "main",
+                                                             "index":  0
+                                                         }
+                                                     ],
+                                                     [
+                                                         {
+                                                             "node":  "Wait 60s (retry 3)",
+                                                             "type":  "main",
+                                                             "index":  0
+                                                         }
+                                                     ]
+                                                 ]
+                                    },
+                        "Wait 60s (retry 3)":  {
+                                                   "main":  [
+                                                                [
+                                                                    {
+                                                                        "node":  "Check Status 3",
+                                                                        "type":  "main",
+                                                                        "index":  0
+                                                                    }
+                                                                ]
+                                                            ]
+                                               },
+                        "Check Status 3":  {
+                                               "main":  [
+                                                            [
+                                                                {
+                                                                    "node":  "Done 3?",
+                                                                    "type":  "main",
+                                                                    "index":  0
+                                                                }
+                                                            ]
+                                                        ]
+                                           },
+                        "Done 3?":  {
+                                        "main":  [
+                                                     [
+                                                         {
+                                                             "node":  "Save Rendered URL to Airtable",
+                                                             "type":  "main",
+                                                             "index":  0
+                                                         }
+                                                     ],
+                                                     [
+                                                         {
+                                                             "node":  "Notify Timeout (Telegram)",
+                                                             "type":  "main",
+                                                             "index":  0
+                                                         }
+                                                     ]
+                                                 ]
+                                    },
+                        "Save Rendered URL to Airtable":  {
+                                                              "main":  [
+                                                                           [
+                                                                               {
+                                                                                   "node":  "Notify Success (Telegram)",
+                                                                                   "type":  "main",
+                                                                                   "index":  0
+                                                                               }
+                                                                           ]
+                                                                       ]
+                                                          },
+                        "Notify Success (Telegram)":  {
+                                                          "main":  [
+                                                                       [
+                                                                           {
+                                                                               "node":  "Update record",
+                                                                               "type":  "main",
+                                                                               "index":  0
+                                                                           }
+                                                                       ]
+                                                                   ]
+                                                      },
+                        "Transform to json2video Format":  {
+                                                               "main":  [
+                                                                            [
+                                                                                {
+                                                                                    "node":  "json2video Start Render",
+                                                                                    "type":  "main",
+                                                                                    "index":  0
+                                                                                }
+                                                                            ]
+                                                                        ]
+                                                           }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1",
+                     "timezone":  "Europe/Warsaw",
+                     "saveDataErrorExecution":  "all",
+                     "saveDataSuccessExecution":  "all",
+                     "binaryMode":  "separate"
+                 },
+    "staticData":  null,
+    "meta":  {
+                 "templateCredsSetupCompleted":  true
+             },
+    "nodeGroups":  [
+
+                   ],
+    "versionId":  "ae127488-b118-4d87-9a20-424ca0b63ea6",
+    "activeVersionId":  null,
+    "versionCounter":  10,
+    "triggerCount":  0,
+    "sourceWorkflowId":  null,
+    "shared":  [
+                   {
+                       "updatedAt":  "2026-05-01T18:40:21.696Z",
+                       "createdAt":  "2026-05-01T18:40:21.696Z",
+                       "role":  "workflow:owner",
+                       "workflowId":  "k4j96a1FSwQU3oKC",
+                       "projectId":  "9rVJoULaKk30HdBB",
+                       "project":  {
+                                       "updatedAt":  "2025-06-26T00:18:14.615Z",
+                                       "createdAt":  "2025-06-25T23:37:35.363Z",
+                                       "id":  "9rVJoULaKk30HdBB",
+                                       "name":  "Nicolas Bednarz \u003cowner@example.com\u003e",
+                                       "type":  "personal",
+                                       "icon":  null,
+                                       "description":  null,
+                                       "customTelemetryTags":  [
+
+                                                               ],
+                                       "creatorId":  "af23e566-dd44-45a3-ac35-e15a8cdef3f2"
+                                   }
+                   }
+               ],
+    "tags":  [
+
+             ],
+    "activeVersion":  null
+}

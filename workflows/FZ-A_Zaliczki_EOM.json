@@ -1,0 +1,560 @@
+{
+    "updatedAt":  "2026-04-24T19:07:07.942Z",
+    "createdAt":  "2026-04-24T18:59:59.142Z",
+    "id":  "36GjLqqvQV9aWdpx",
+    "name":  "FZ-A_Zaliczki_EOM",
+    "description":  null,
+    "active":  false,
+    "isArchived":  false,
+    "nodes":  [
+                  {
+                      "id":  "trigger",
+                      "name":  "Cron EOM 17:00",
+                      "type":  "n8n-nodes-base.scheduleTrigger",
+                      "typeVersion":  1.2,
+                      "position":  [
+                                       -1200,
+                                       400
+                                   ],
+                      "parameters":  {
+                                         "rule":  {
+                                                      "interval":  [
+                                                                       {
+                                                                           "field":  "cronExpression",
+                                                                           "expression":  "0 17 L * *"
+                                                                       }
+                                                                   ]
+                                                  }
+                                     },
+                      "notes":  "Ostatni dzień miesiąca o 17:00 (TZ workflow: Europe/Warsaw).\nCron: 0 17 L * *"
+                  },
+                  {
+                      "id":  "bl-get-orders",
+                      "name":  "BL getOrders",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       -960,
+                                       400
+                                   ],
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "https://api.baselinker.com/connector.php",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "X-BLToken",
+                                                                                         "value":  "TODO_BL_TOKEN_CREDENTIAL"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "sendBody":  true,
+                                         "contentType":  "form-urlencoded",
+                                         "bodyParameters":  {
+                                                                "parameters":  [
+                                                                                   {
+                                                                                       "name":  "method",
+                                                                                       "value":  "getOrders"
+                                                                                   },
+                                                                                   {
+                                                                                       "name":  "parameters",
+                                                                                       "value":  "{\"status_id\": STATUS_PAID_UNSHIPPED, \"get_unconfirmed_orders\": false}"
+                                                                                   }
+                                                                               ]
+                                                            }
+                                     },
+                      "notes":  "TODO: podmienić STATUS_PAID_UNSHIPPED + credential BL."
+                  },
+                  {
+                      "id":  "split",
+                      "name":  "Split batches",
+                      "type":  "n8n-nodes-base.splitInBatches",
+                      "typeVersion":  3,
+                      "position":  [
+                                       -720,
+                                       400
+                                   ],
+                      "parameters":  {
+                                         "batchSize":  1,
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "notes":  "Iteracja 1 zamówienie na raz."
+                  },
+                  {
+                      "id":  "wait",
+                      "name":  "Wait 700ms",
+                      "type":  "n8n-nodes-base.wait",
+                      "typeVersion":  1.1,
+                      "position":  [
+                                       -480,
+                                       400
+                                   ],
+                      "parameters":  {
+                                         "amount":  0.7,
+                                         "unit":  "seconds"
+                                     },
+                      "notes":  "Rate limit BL.",
+                      "webhookId":  "4c8cd0ef-3ebf-475a-85cb-f09275ebce70"
+                  },
+                  {
+                      "id":  "if-already",
+                      "name":  "IF już wystawiona?",
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       -240,
+                                       400
+                                   ],
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  true,
+                                                                            "leftValue":  "",
+                                                                            "typeValidation":  "loose",
+                                                                            "version":  2
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "leftValue":  "={{ $json.extra_field_1 }}",
+                                                                                   "rightValue":  "",
+                                                                                   "operator":  {
+                                                                                                    "type":  "string",
+                                                                                                    "operation":  "notEmpty"
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        }
+                                     },
+                      "notes":  "TODO: podmienić extra_field_1. True=już jest → skip. False=wystaw."
+                  },
+                  {
+                      "id":  "build-payload",
+                      "name":  "Build payload zaliczki",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       0,
+                                       400
+                                   ],
+                      "parameters":  {
+                                         "language":  "javaScript",
+                                         "jsCode":  "const order = $json;\nconst paymentDate = new Date(order.date_confirmed * 1000).toISOString().slice(0, 10);\n\nconst payload = {\n  api_token: \u0027TODO_FAKTUROWNIA_TOKEN\u0027,\n  invoice: {\n    kind: \u0027advance\u0027,\n    issue_date: paymentDate,\n    sell_date: paymentDate,\n    payment_to: paymentDate,\n    buyer_name: order.delivery_fullname || order.invoice_fullname,\n    buyer_tax_no: order.invoice_nip || \u0027\u0027,\n    buyer_post_code: order.invoice_postcode || \u0027\u0027,\n    buyer_city: order.invoice_city || \u0027\u0027,\n    buyer_street: order.invoice_address || \u0027\u0027,\n    buyer_country: order.invoice_country_code || \u0027PL\u0027,\n    buyer_email: order.email || \u0027\u0027,\n    positions: [{\n      name: `Zaliczka do zamówienia nr ${order.order_id}`,\n      tax: 23,\n      total_price_gross: order.order_total_gross || 0,\n      quantity: 1\n    }],\n    description: `Zaliczka 100% do zamówienia BaseLinker nr ${order.order_id}`,\n    payment_type: \u0027transfer\u0027,\n    status: \u0027paid\u0027\n  },\n  _order_id: order.order_id\n};\n\nreturn [{ json: payload }];"
+                                     },
+                      "notes":  "Mapowanie BL → Fakturownia."
+                  },
+                  {
+                      "id":  "fakturownia-advance",
+                      "name":  "Fakturownia addInvoice (advance)",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       240,
+                                       400
+                                   ],
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "https://TODO_SLUG.fakturownia.pl/invoices.json",
+                                         "sendBody":  true,
+                                         "contentType":  "json",
+                                         "jsonBody":  "={{ JSON.stringify({ api_token: $json.api_token, invoice: $json.invoice }) }}",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "onError":  "continueRegularOutput",
+                      "notes":  "TODO: podmienić SLUG."
+                  },
+                  {
+                      "id":  "if-success",
+                      "name":  "IF success",
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       480,
+                                       400
+                                   ],
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  true,
+                                                                            "leftValue":  "",
+                                                                            "typeValidation":  "loose",
+                                                                            "version":  2
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "leftValue":  "={{ $json.id }}",
+                                                                                   "rightValue":  "",
+                                                                                   "operator":  {
+                                                                                                    "type":  "string",
+                                                                                                    "operation":  "notEmpty"
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        }
+                                     },
+                      "notes":  "True=sukces, False=error → ClickUp."
+                  },
+                  {
+                      "id":  "bl-extra-fields",
+                      "name":  "BL setOrderExtraFields",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       720,
+                                       300
+                                   ],
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "https://api.baselinker.com/connector.php",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "X-BLToken",
+                                                                                         "value":  "TODO_BL_TOKEN_CREDENTIAL"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "sendBody":  true,
+                                         "contentType":  "form-urlencoded",
+                                         "bodyParameters":  {
+                                                                "parameters":  [
+                                                                                   {
+                                                                                       "name":  "method",
+                                                                                       "value":  "setOrderExtraFields"
+                                                                                   },
+                                                                                   {
+                                                                                       "name":  "parameters",
+                                                                                       "value":  "={{ JSON.stringify({ order_id: $(\u0027Build payload zaliczki\u0027).item.json._order_id, extra_fields: { extra_field_1: String($json.id), extra_field_2: $json.view_url } }) }}"
+                                                                                   }
+                                                                               ]
+                                                            }
+                                     },
+                      "notes":  "Zapis ID faktury + link PDF do BL."
+                  },
+                  {
+                      "id":  "bl-status",
+                      "name":  "BL setOrderStatus (ZALICZKA)",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       960,
+                                       300
+                                   ],
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "https://api.baselinker.com/connector.php",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "X-BLToken",
+                                                                                         "value":  "TODO_BL_TOKEN_CREDENTIAL"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "sendBody":  true,
+                                         "contentType":  "form-urlencoded",
+                                         "bodyParameters":  {
+                                                                "parameters":  [
+                                                                                   {
+                                                                                       "name":  "method",
+                                                                                       "value":  "setOrderStatus"
+                                                                                   },
+                                                                                   {
+                                                                                       "name":  "parameters",
+                                                                                       "value":  "={{ JSON.stringify({ order_id: $(\u0027Build payload zaliczki\u0027).item.json._order_id, status_id: \u0027STATUS_ADVANCE_ISSUED\u0027 }) }}"
+                                                                                   }
+                                                                               ]
+                                                            }
+                                     },
+                      "notes":  "TODO: podmienić STATUS_ADVANCE_ISSUED."
+                  },
+                  {
+                      "id":  "clickup-error",
+                      "name":  "ClickUp createTask (error)",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       720,
+                                       500
+                                   ],
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "https://api.clickup.com/api/v2/list/TODO_LIST_ID/task",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "Authorization",
+                                                                                         "value":  "TODO_CLICKUP_TOKEN"
+                                                                                     },
+                                                                                     {
+                                                                                         "name":  "Content-Type",
+                                                                                         "value":  "application/json"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "sendBody":  true,
+                                         "contentType":  "json",
+                                         "jsonBody":  "={{ JSON.stringify({ name: \u0027Ręcznie wystaw fakturę zaliczkową — zam. \u0027 + $(\u0027Build payload zaliczki\u0027).item.json._order_id, description: \u0027Automat FZ-A nie zdołał wystawić faktury.\u0027, priority: 2 }) }}",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "onError":  "continueRegularOutput",
+                      "notes":  "TODO: podmienić LIST_ID i CLICKUP_TOKEN."
+                  },
+                  {
+                      "id":  "sticky-1",
+                      "name":  "Sticky Note — Trigger",
+                      "type":  "n8n-nodes-base.stickyNote",
+                      "typeVersion":  1,
+                      "position":  [
+                                       -1260,
+                                       200
+                                   ],
+                      "parameters":  {
+                                         "content":  "## 1️⃣ Trigger EOM + pobranie zamówień\n\nCron `0 17 L * *` (ostatni dzień miesiąca 17:00, TZ Europe/Warsaw).\n\nPobiera z BaseLinkera wszystkie zamówienia ze statusem **OPŁACONE. NIEWYSŁANE. SPRAWDŹ ZALICZKĘ**.\n\n**TODO**: podstawić `status_id` + credential BL.",
+                                         "width":  520,
+                                         "height":  180,
+                                         "color":  5
+                                     }
+                  },
+                  {
+                      "id":  "sticky-2",
+                      "name":  "Sticky Note — Iteracja",
+                      "type":  "n8n-nodes-base.stickyNote",
+                      "typeVersion":  1,
+                      "position":  [
+                                       -720,
+                                       200
+                                   ],
+                      "parameters":  {
+                                         "content":  "## 2️⃣ Iteracja + idempotencja\n\n- Split 1 order at a time\n- Wait 700ms (rate limit BL)\n- IF sprawdza pole `FAKTURA_ZALICZKOWA_ID` — jeśli jest → skip\n\nIdempotencja — ponowne uruchomienie nie wystawia dubli.",
+                                         "width":  500,
+                                         "height":  180,
+                                         "color":  4
+                                     }
+                  },
+                  {
+                      "id":  "sticky-3",
+                      "name":  "Sticky Note — Wystawienie",
+                      "type":  "n8n-nodes-base.stickyNote",
+                      "typeVersion":  1,
+                      "position":  [
+                                       -20,
+                                       200
+                                   ],
+                      "parameters":  {
+                                         "content":  "## 3️⃣ Wystawienie faktury zaliczkowej\n\n- **Build payload**: BL order → JSON Fakturowni (kind=advance, data=date_confirmed)\n- **POST** do `{slug}.fakturownia.pl/invoices.json`\n- **IF success** = sprawdza czy response.id istnieje\n\n**Kluczowe**: `issue_date` i `sell_date` = data wpłaty.",
+                                         "width":  720,
+                                         "height":  180,
+                                         "color":  3
+                                     }
+                  },
+                  {
+                      "id":  "sticky-4",
+                      "name":  "Sticky Note — Zapis / Error",
+                      "type":  "n8n-nodes-base.stickyNote",
+                      "typeVersion":  1,
+                      "position":  [
+                                       700,
+                                       200
+                                   ],
+                      "parameters":  {
+                                         "content":  "## 4️⃣ Zapis w BL / Error\n\n**Success**:\n- setOrderExtraFields → `FAKTURA_ZALICZKOWA_ID` + link PDF\n- setOrderStatus → `ZALICZKA WYSTAWIONA`\n\n**Error** → task w ClickUp (status BL bez zmiany).",
+                                         "width":  480,
+                                         "height":  180,
+                                         "color":  2
+                                     }
+                  }
+              ],
+    "connections":  {
+                        "Cron EOM 17:00":  {
+                                               "main":  [
+                                                            [
+                                                                {
+                                                                    "node":  "BL getOrders",
+                                                                    "type":  "main",
+                                                                    "index":  0
+                                                                }
+                                                            ]
+                                                        ]
+                                           },
+                        "BL getOrders":  {
+                                             "main":  [
+                                                          [
+                                                              {
+                                                                  "node":  "Split batches",
+                                                                  "type":  "main",
+                                                                  "index":  0
+                                                              }
+                                                          ]
+                                                      ]
+                                         },
+                        "Split batches":  {
+                                              "main":  [
+                                                           [
+
+                                                           ],
+                                                           [
+                                                               {
+                                                                   "node":  "Wait 700ms",
+                                                                   "type":  "main",
+                                                                   "index":  0
+                                                               }
+                                                           ]
+                                                       ]
+                                          },
+                        "Wait 700ms":  {
+                                           "main":  [
+                                                        [
+                                                            {
+                                                                "node":  "IF już wystawiona?",
+                                                                "type":  "main",
+                                                                "index":  0
+                                                            }
+                                                        ]
+                                                    ]
+                                       },
+                        "IF już wystawiona?":  {
+                                                   "main":  [
+                                                                [
+                                                                    {
+                                                                        "node":  "Split batches",
+                                                                        "type":  "main",
+                                                                        "index":  0
+                                                                    }
+                                                                ],
+                                                                [
+                                                                    {
+                                                                        "node":  "Build payload zaliczki",
+                                                                        "type":  "main",
+                                                                        "index":  0
+                                                                    }
+                                                                ]
+                                                            ]
+                                               },
+                        "Build payload zaliczki":  {
+                                                       "main":  [
+                                                                    [
+                                                                        {
+                                                                            "node":  "Fakturownia addInvoice (advance)",
+                                                                            "type":  "main",
+                                                                            "index":  0
+                                                                        }
+                                                                    ]
+                                                                ]
+                                                   },
+                        "Fakturownia addInvoice (advance)":  {
+                                                                 "main":  [
+                                                                              [
+                                                                                  {
+                                                                                      "node":  "IF success",
+                                                                                      "type":  "main",
+                                                                                      "index":  0
+                                                                                  }
+                                                                              ]
+                                                                          ]
+                                                             },
+                        "IF success":  {
+                                           "main":  [
+                                                        [
+                                                            {
+                                                                "node":  "BL setOrderExtraFields",
+                                                                "type":  "main",
+                                                                "index":  0
+                                                            }
+                                                        ],
+                                                        [
+                                                            {
+                                                                "node":  "ClickUp createTask (error)",
+                                                                "type":  "main",
+                                                                "index":  0
+                                                            }
+                                                        ]
+                                                    ]
+                                       },
+                        "BL setOrderExtraFields":  {
+                                                       "main":  [
+                                                                    [
+                                                                        {
+                                                                            "node":  "BL setOrderStatus (ZALICZKA)",
+                                                                            "type":  "main",
+                                                                            "index":  0
+                                                                        }
+                                                                    ]
+                                                                ]
+                                                   },
+                        "BL setOrderStatus (ZALICZKA)":  {
+                                                             "main":  [
+                                                                          [
+                                                                              {
+                                                                                  "node":  "Split batches",
+                                                                                  "type":  "main",
+                                                                                  "index":  0
+                                                                              }
+                                                                          ]
+                                                                      ]
+                                                         },
+                        "ClickUp createTask (error)":  {
+                                                           "main":  [
+                                                                        [
+                                                                            {
+                                                                                "node":  "Split batches",
+                                                                                "type":  "main",
+                                                                                "index":  0
+                                                                            }
+                                                                        ]
+                                                                    ]
+                                                       }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1",
+                     "timezone":  "Europe/Warsaw"
+                 },
+    "staticData":  null,
+    "meta":  null,
+    "nodeGroups":  [
+
+                   ],
+    "pinData":  null,
+    "versionId":  "47cd68a7-d44f-42fa-befe-ff85e42f4440",
+    "activeVersionId":  null,
+    "versionCounter":  2,
+    "triggerCount":  0,
+    "sourceWorkflowId":  null,
+    "shared":  [
+                   {
+                       "updatedAt":  "2026-04-24T18:59:59.142Z",
+                       "createdAt":  "2026-04-24T18:59:59.142Z",
+                       "role":  "workflow:owner",
+                       "workflowId":  "36GjLqqvQV9aWdpx",
+                       "projectId":  "9rVJoULaKk30HdBB",
+                       "project":  {
+                                       "updatedAt":  "2025-06-26T00:18:14.615Z",
+                                       "createdAt":  "2025-06-25T23:37:35.363Z",
+                                       "id":  "9rVJoULaKk30HdBB",
+                                       "name":  "Nicolas Bednarz \u003cowner@example.com\u003e",
+                                       "type":  "personal",
+                                       "icon":  null,
+                                       "description":  null,
+                                       "customTelemetryTags":  [
+
+                                                               ],
+                                       "creatorId":  "af23e566-dd44-45a3-ac35-e15a8cdef3f2"
+                                   }
+                   }
+               ],
+    "tags":  [
+
+             ],
+    "activeVersion":  null
+}

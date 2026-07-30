@@ -1,0 +1,896 @@
+{
+    "updatedAt":  "2026-01-08T03:31:04.564Z",
+    "createdAt":  "2026-01-08T01:11:47.336Z",
+    "id":  "aYHOAGRhmxHgmzka",
+    "name":  "SystemSAM - Telegram Handler v2",
+    "description":  null,
+    "active":  false,
+    "isArchived":  false,
+    "nodes":  [
+                  {
+                      "parameters":  {
+                                         "updates":  [
+                                                         "message"
+                                                     ],
+                                         "additionalFields":  {
+
+                                                              }
+                                     },
+                      "id":  "telegram-trigger",
+                      "name":  "Telegram Trigger",
+                      "type":  "n8n-nodes-base.telegramTrigger",
+                      "position":  [
+                                       0,
+                                       -112
+                                   ],
+                      "typeVersion":  1.2,
+                      "webhookId":  "2e087286-3ff4-4aa1-87e8-dd44cbe89a63",
+                      "credentials":  {
+                                          "telegramApi":  {
+                                                              "id":  "I7zUJVPP02OEKir8",
+                                                              "name":  "SAM_BOT"
+                                                          }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const message = $input.first().json.message;\nconst text = message?.text?.toLowerCase() || \u0027\u0027;\nconst chatId = message?.chat?.id;\n\n// Określ kontekst wiadomości\nlet context = \u0027unknown\u0027;\n\n// Sprawdź czy to odpowiedź na podsumowanie dnia\nif (text.includes(\u0027,\u0027) || \n    text.includes(\u0027nic\u0027) || \n    text.includes(\u0027wszystko\u0027) ||\n    text.includes(\u0027done\u0027) ||\n    text.includes(\u0027zrobione\u0027)) {\n  context = \u0027daily_summary\u0027;\n}\n\n// Sprawdź czy to odpowiedź tak/nie (przesunięcie tasków)\nif (text === \u0027tak\u0027 || text === \u0027nie\u0027 || text === \u0027t\u0027 || text === \u0027n\u0027 || text === \u0027yes\u0027 || text === \u0027no\u0027) {\n  context = \u0027postpone_response\u0027;\n}\n\n// Komendy specjalne\nif (text.startsWith(\u0027/\u0027)) {\n  if (text === \u0027/status\u0027 || text === \u0027/stats\u0027) context = \u0027command_status\u0027;\n  if (text === \u0027/plan\u0027 || text === \u0027/today\u0027) context = \u0027command_plan\u0027;\n  if (text === \u0027/help\u0027) context = \u0027command_help\u0027;\n}\n\nreturn [{\n  json: {\n    context: context,\n    text: message?.text || \u0027\u0027,\n    chatId: chatId,\n    messageId: message?.message_id,\n    userId: message?.from?.id,\n    timestamp: Date.now()\n  }\n}];"
+                                     },
+                      "id":  "check-context",
+                      "name":  "Check Context",
+                      "type":  "n8n-nodes-base.code",
+                      "position":  [
+                                       224,
+                                       -112
+                                   ],
+                      "typeVersion":  2
+                  },
+                  {
+                      "parameters":  {
+                                         "rules":  {
+                                                       "values":  [
+                                                                      {
+                                                                          "conditions":  {
+                                                                                             "options":  {
+                                                                                                             "version":  2,
+                                                                                                             "leftValue":  "",
+                                                                                                             "caseSensitive":  true,
+                                                                                                             "typeValidation":  "strict"
+                                                                                                         },
+                                                                                             "combinator":  "and",
+                                                                                             "conditions":  [
+                                                                                                                {
+                                                                                                                    "operator":  {
+                                                                                                                                     "type":  "string",
+                                                                                                                                     "operation":  "equals"
+                                                                                                                                 },
+                                                                                                                    "leftValue":  "={{ $json.context }}",
+                                                                                                                    "rightValue":  "daily_summary"
+                                                                                                                }
+                                                                                                            ]
+                                                                                         },
+                                                                          "renameOutput":  true,
+                                                                          "outputKey":  "daily_summary"
+                                                                      },
+                                                                      {
+                                                                          "conditions":  {
+                                                                                             "options":  {
+                                                                                                             "version":  2,
+                                                                                                             "leftValue":  "",
+                                                                                                             "caseSensitive":  true,
+                                                                                                             "typeValidation":  "strict"
+                                                                                                         },
+                                                                                             "combinator":  "and",
+                                                                                             "conditions":  [
+                                                                                                                {
+                                                                                                                    "operator":  {
+                                                                                                                                     "type":  "string",
+                                                                                                                                     "operation":  "equals"
+                                                                                                                                 },
+                                                                                                                    "leftValue":  "={{ $json.context }}",
+                                                                                                                    "rightValue":  "postpone_response"
+                                                                                                                }
+                                                                                                            ]
+                                                                                         },
+                                                                          "renameOutput":  true,
+                                                                          "outputKey":  "postpone"
+                                                                      },
+                                                                      {
+                                                                          "conditions":  {
+                                                                                             "options":  {
+                                                                                                             "version":  2,
+                                                                                                             "leftValue":  "",
+                                                                                                             "caseSensitive":  true,
+                                                                                                             "typeValidation":  "strict"
+                                                                                                         },
+                                                                                             "combinator":  "and",
+                                                                                             "conditions":  [
+                                                                                                                {
+                                                                                                                    "operator":  {
+                                                                                                                                     "type":  "string",
+                                                                                                                                     "operation":  "equals"
+                                                                                                                                 },
+                                                                                                                    "leftValue":  "={{ $json.context }}",
+                                                                                                                    "rightValue":  "command_status"
+                                                                                                                }
+                                                                                                            ]
+                                                                                         },
+                                                                          "renameOutput":  true,
+                                                                          "outputKey":  "status"
+                                                                      },
+                                                                      {
+                                                                          "conditions":  {
+                                                                                             "options":  {
+                                                                                                             "version":  2,
+                                                                                                             "leftValue":  "",
+                                                                                                             "caseSensitive":  true,
+                                                                                                             "typeValidation":  "strict"
+                                                                                                         },
+                                                                                             "combinator":  "and",
+                                                                                             "conditions":  [
+                                                                                                                {
+                                                                                                                    "operator":  {
+                                                                                                                                     "type":  "string",
+                                                                                                                                     "operation":  "equals"
+                                                                                                                                 },
+                                                                                                                    "leftValue":  "={{ $json.context }}",
+                                                                                                                    "rightValue":  "command_help"
+                                                                                                                }
+                                                                                                            ]
+                                                                                         },
+                                                                          "renameOutput":  true,
+                                                                          "outputKey":  "help"
+                                                                      }
+                                                                  ]
+                                                   },
+                                         "options":  {
+                                                         "fallbackOutput":  "extra"
+                                                     }
+                                     },
+                      "id":  "router",
+                      "name":  "Route by Context",
+                      "type":  "n8n-nodes-base.switch",
+                      "position":  [
+                                       448,
+                                       -160
+                                   ],
+                      "typeVersion":  3.2
+                  },
+                  {
+                      "parameters":  {
+                                         "url":  "https://api.clickup.com/api/v2/list/901519287429/task",
+                                         "authentication":  "predefinedCredentialType",
+                                         "nodeCredentialType":  "clickUpApi",
+                                         "sendQuery":  true,
+                                         "queryParameters":  {
+                                                                 "parameters":  [
+                                                                                    {
+                                                                                        "name":  "include_closed",
+                                                                                        "value":  "false"
+                                                                                    }
+                                                                                ]
+                                                             },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "get-daily-task",
+                      "name":  "Get Today Task",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "position":  [
+                                       672,
+                                       -400
+                                   ],
+                      "typeVersion":  4.3,
+                      "credentials":  {
+                                          "clickUpApi":  {
+                                                             "id":  "FVDkMa0LpqdXzbIQ",
+                                                             "name":  "ClickUp_ADHD_V2"
+                                                         }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const inputData = $(\u0027Check Context\u0027).first().json;\nconst userResponse = inputData.text;\nconst tasksData = $input.first().json;\n\n// Znajdź dzisiejszy task\nconst today = new Date().toISOString().split(\u0027T\u0027)[0];\nconst tasks = tasksData.tasks || [];\nlet todayTask = tasks.find(t =\u003e t.name.includes(today)) || tasks[0];\n\nif (!todayTask) {\n  return [{\n    json: {\n      error: true,\n      summary: \u0027❌ Nie znaleziono dzisiejszego Daily Task.\u0027,\n      chatId: inputData.chatId,\n      completed: [],\n      incomplete: []\n    }\n  }];\n}\n\n// POBIERZ MAPOWANIE Z DESCRIPTION\nlet taskMapping = [];\nconst desc = todayTask.description || \u0027\u0027;\nconst mappingMatch = desc.match(/\u003c!-- TASK_MAPPING_JSON\\n(.+?)\\nEND_TASK_MAPPING --\u003e/s);\nif (mappingMatch) {\n  try {\n    taskMapping = JSON.parse(mappingMatch[1]);\n  } catch (e) {\n    taskMapping = [];\n  }\n}\n\n// Pobierz wszystkie itemy z checklisty (z numerami)\nconst checklists = todayTask.checklists || [];\nlet allItems = [];\nlet checklistId = null;\nlet itemIndex = 1;\n\nfor (const checklist of checklists) {\n  checklistId = checklist.id;\n  for (const item of checklist.items || []) {\n    if (item.name.includes(\u0027───\u0027)) continue; // Separator\n    \n    // Znajdź mapowanie dla tego itema\n    const mapping = taskMapping.find(m =\u003e m.name === item.name) || {};\n    \n    allItems.push({\n      index: itemIndex,\n      id: item.id,\n      name: item.name,\n      resolved: item.resolved || false,\n      checklistId: checklist.id,\n      // Mapowanie do oryginalnego taska\n      originalTaskId: mapping.originalTaskId || null,\n      originalListId: mapping.originalListId || null,\n      isHabit: mapping.isHabit || false\n    });\n    itemIndex++;\n  }\n}\n\nif (allItems.length === 0) {\n  return [{\n    json: {\n      error: true,\n      summary: \u0027❌ Brak itemów w checkliście.\u0027,\n      chatId: inputData.chatId,\n      completed: [],\n      incomplete: []\n    }\n  }];\n}\n\n// Parsuj odpowiedź użytkownika\nconst userText = userResponse.trim();\n\n// Sprawdź czy to numery (np. \"1,3,5\" lub \"1, 3, 5\")\nconst numberPattern = /^[\\d,\\s]+$/;\nconst isNumbers = numberPattern.test(userText);\n\nconst completed = [];\nconst incomplete = [];\n\nif (userText.toLowerCase() === \u0027wszystko\u0027 || userText.toLowerCase() === \u0027all\u0027) {\n  completed.push(...allItems.filter(i =\u003e !i.resolved));\n  incomplete.push(...allItems.filter(i =\u003e i.resolved));\n} else if (userText.toLowerCase() === \u0027nic\u0027 || userText === \u00270\u0027) {\n  incomplete.push(...allItems);\n} else if (isNumbers) {\n  const selectedNumbers = userText.split(\u0027,\u0027).map(n =\u003e parseInt(n.trim())).filter(n =\u003e !isNaN(n));\n  \n  for (const item of allItems) {\n    if (selectedNumbers.includes(item.index)) {\n      completed.push(item);\n    } else {\n      incomplete.push(item);\n    }\n  }\n} else {\n  const userItems = userText.toLowerCase().split(\u0027,\u0027).map(s =\u003e s.trim()).filter(s =\u003e s.length \u003e 0);\n  \n  for (const item of allItems) {\n    const itemLower = item.name.toLowerCase();\n    const itemClean = itemLower.replace(/^[\\u{1F300}-\\u{1F9FF}\\s]+/u, \u0027\u0027).trim();\n    \n    const matched = userItems.some(userItem =\u003e {\n      if (userItem.length \u003c 3) return false;\n      if (itemLower === userItem || itemClean === userItem) return true;\n      if (userItem.length \u003e= 5 \u0026\u0026 (itemLower.includes(userItem) || itemClean.includes(userItem))) return true;\n      return false;\n    });\n    \n    if (matched) {\n      completed.push(item);\n    } else {\n      incomplete.push(item);\n    }\n  }\n}\n\n// Przygotuj podsumowanie z numerami\nlet summary = \u0027📋 *Lista zadań:*\\n\u0027;\nfor (const item of allItems) {\n  const isDone = completed.some(c =\u003e c.id === item.id);\n  const mark = isDone ? \u0027✅\u0027 : \u0027⬜\u0027;\n  summary += `${mark} ${item.index}. ${item.name}\\n`;\n}\n\nsummary += \u0027\\n\u0027;\n\nif (completed.length \u003e 0) {\n  summary += `✅ Zaznaczono: ${completed.length} zadań\\n`;\n}\n\nif (incomplete.length \u003e 0 \u0026\u0026 completed.length \u003e 0) {\n  summary += `⬜ Pozostało: ${incomplete.length} zadań\\n`;\n}\n\nconst allDone = incomplete.length === 0 \u0026\u0026 completed.length \u003e 0;\n\nif (allDone) {\n  summary += \u0027\\n🔥 *Wszystko zrobione! Streak +1!* 🎉\u0027;\n} else if (completed.length === 0) {\n  summary += \u0027\\n💡 Wpisz numery wykonanych zadań, np: *1, 3, 5*\\n\u0027;\n  summary += \u0027lub: *wszystko* / *nic*\u0027;\n}\n\nreturn [{\n  json: {\n    error: false,\n    taskId: todayTask.id,\n    checklistId: checklistId,\n    completed: completed,\n    incomplete: incomplete,\n    allDone: allDone,\n    summary: summary,\n    chatId: inputData.chatId\n  }\n}];"
+                                     },
+                      "id":  "process-summary",
+                      "name":  "Process Summary",
+                      "type":  "n8n-nodes-base.code",
+                      "position":  [
+                                       896,
+                                       -400
+                                   ],
+                      "typeVersion":  2
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const data = $input.first().json;\n\nif (data.error || !data.completed || data.completed.length === 0) {\n  return [{\n    json: {\n      skip: true,\n      ...data\n    }\n  }];\n}\n\n// Zwróć każdy completed item jako osobny output\nconst items = data.completed.map(item =\u003e ({\n  json: {\n    itemId: item.id,\n    checklistId: item.checklistId,\n    itemName: item.name,\n    // Mapowanie do oryginalnego taska\n    originalTaskId: item.originalTaskId,\n    originalListId: item.originalListId,\n    isHabit: item.isHabit,\n    originalData: data\n  }\n}));\n\nreturn items;"
+                                     },
+                      "id":  "update-checklist-items",
+                      "name":  "Prepare Items to Update",
+                      "type":  "n8n-nodes-base.code",
+                      "position":  [
+                                       1568,
+                                       -400
+                                   ],
+                      "typeVersion":  2
+                  },
+                  {
+                      "parameters":  {
+                                         "chatId":  "={{ $(\u0027Check Context\u0027).first().json.chatId }}",
+                                         "text":  "={{ $(\u0027Calculate XP\u0027).first().json.xpSummary }}",
+                                         "additionalFields":  {
+                                                                  "parse_mode":  "Markdown"
+                                                              }
+                                     },
+                      "id":  "send-summary",
+                      "name":  "Send Summary",
+                      "type":  "n8n-nodes-base.telegram",
+                      "position":  [
+                                       3584,
+                                       -400
+                                   ],
+                      "typeVersion":  1.2,
+                      "webhookId":  "e18d1517-b59c-4fca-8617-60dd1f5d7047",
+                      "credentials":  {
+                                          "telegramApi":  {
+                                                              "id":  "I7zUJVPP02OEKir8",
+                                                              "name":  "SAM_BOT"
+                                                          }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const inputData = $(\u0027Check Context\u0027).first().json;\nconst response = inputData.text.toLowerCase();\n\nlet message = \u0027\u0027;\n\nif (response === \u0027tak\u0027 || response === \u0027t\u0027 || response === \u0027yes\u0027) {\n  message = \u0027✅ *Przesunięte na jutro!*\\n\\nMiłych snów! 😴\\nJutro nowy dzień, nowy streak! 💪\u0027;\n} else {\n  message = \u0027OK, zostawiam bez zmian.\\n\\nMiłych snów! 😴\u0027;\n}\n\nreturn [{\n  json: {\n    message: message,\n    chatId: inputData.chatId\n  }\n}];"
+                                     },
+                      "id":  "handle-postpone",
+                      "name":  "Handle Postpone",
+                      "type":  "n8n-nodes-base.code",
+                      "position":  [
+                                       672,
+                                       -208
+                                   ],
+                      "typeVersion":  2
+                  },
+                  {
+                      "parameters":  {
+                                         "chatId":  "={{ $json.chatId }}",
+                                         "text":  "={{ $json.message }}",
+                                         "additionalFields":  {
+                                                                  "parse_mode":  "Markdown"
+                                                              }
+                                     },
+                      "id":  "send-postpone-response",
+                      "name":  "Send Postpone Response",
+                      "type":  "n8n-nodes-base.telegram",
+                      "position":  [
+                                       896,
+                                       -208
+                                   ],
+                      "typeVersion":  1.2,
+                      "webhookId":  "011304ea-591d-4aa8-8696-793ad07818ae",
+                      "credentials":  {
+                                          "telegramApi":  {
+                                                              "id":  "I7zUJVPP02OEKir8",
+                                                              "name":  "SAM_BOT"
+                                                          }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "url":  "https://api.clickup.com/api/v2/task/86c7ec2db",
+                                         "authentication":  "predefinedCredentialType",
+                                         "nodeCredentialType":  "clickUpApi",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "get-player-stats-cmd",
+                      "name":  "Get Player Stats CMD",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "position":  [
+                                       672,
+                                       -16
+                                   ],
+                      "typeVersion":  4.3,
+                      "credentials":  {
+                                          "clickUpApi":  {
+                                                             "id":  "FVDkMa0LpqdXzbIQ",
+                                                             "name":  "ClickUp_ADHD_V2"
+                                                         }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const task = $input.first().json;\nconst chatId = $(\u0027Check Context\u0027).first().json.chatId;\n\nlet currentStreak = 0;\nlet bestStreak = 0;\nlet totalDays = 0;\nlet totalXP = 0;\n\nfor (const field of task.custom_fields || []) {\n  if (field.name === \u0027Current Streak\u0027) currentStreak = parseInt(field.value) || 0;\n  if (field.name === \u0027Best Streak\u0027) bestStreak = parseInt(field.value) || 0;\n  if (field.name === \u0027Total Days Completed\u0027) totalDays = parseInt(field.value) || 0;\n  if (field.name === \u0027Total XP\u0027) totalXP = parseInt(field.value) || 0;\n}\n\n// Oblicz level\nconst levelThresholds = [\n  {level: 1, xp: 0, title: \u0027Nowicjusz\u0027},\n  {level: 2, xp: 100, title: \u0027Początkujący\u0027},\n  {level: 3, xp: 250, title: \u0027Adept\u0027},\n  {level: 4, xp: 500, title: \u0027Praktyk\u0027},\n  {level: 5, xp: 1000, title: \u0027Skupiony\u0027},\n  {level: 7, xp: 2000, title: \u0027Weteran\u0027},\n  {level: 10, xp: 3500, title: \u0027Ekspert\u0027},\n  {level: 15, xp: 6000, title: \u0027Mistrz\u0027},\n  {level: 20, xp: 10000, title: \u0027Legenda\u0027},\n  {level: 25, xp: 15000, title: \u0027ADHD Conqueror\u0027}\n];\n\nlet currentLevel = levelThresholds[0];\nlet nextLevel = levelThresholds[1];\nfor (let i = 0; i \u003c levelThresholds.length; i++) {\n  if (totalXP \u003e= levelThresholds[i].xp) {\n    currentLevel = levelThresholds[i];\n    nextLevel = levelThresholds[i + 1] || null;\n  }\n}\n\n// Streak bonus info\nlet streakBonusInfo = \u0027+0 XP/dzień\u0027;\nif (currentStreak \u003e= 31) streakBonusInfo = \u0027+20 XP/dzień 💎\u0027;\nelse if (currentStreak \u003e= 15) streakBonusInfo = \u0027+15 XP/dzień 🔥\u0027;\nelse if (currentStreak \u003e= 8) streakBonusInfo = \u0027+10 XP/dzień 🔥\u0027;\nelse if (currentStreak \u003e= 4) streakBonusInfo = \u0027+5 XP/dzień\u0027;\n\nlet message = \u0027📊 *PLAYER STATS*\\n\u0027;\nmessage += \u0027━━━━━━━━━━━━━━━━\\n\\n\u0027;\n\nmessage += `🎮 *Level ${currentLevel.level}:* ${currentLevel.title}\\n`;\nif (nextLevel) {\n  const xpToNext = nextLevel.xp - totalXP;\n  message += `   Next: ${nextLevel.title} (${xpToNext} XP)\\n`;\n}\nmessage += \u0027\\n\u0027;\n\nmessage += `⭐ *Total XP:* ${totalXP.toLocaleString()}\\n`;\nmessage += `📅 *Days Completed:* ${totalDays}\\n\\n`;\n\nmessage += `🔥 *Current Streak:* ${currentStreak} dni\\n`;\nmessage += `   Bonus: ${streakBonusInfo}\\n`;\nmessage += `🏆 *Best Streak:* ${bestStreak} dni\\n\\n`;\n\n// Następne milestone\u0027y\nmessage += \u0027🎯 *Next Goals:*\\n\u0027;\nif (currentStreak \u003c 7) message += `   🔥 Fire Starter: ${7 - currentStreak} dni\\n`;\nelse if (currentStreak \u003c 14) message += `   🔥🔥 Inferno: ${14 - currentStreak} dni\\n`;\nelse if (currentStreak \u003c 30) message += `   👑 Eternal Flame: ${30 - currentStreak} dni\\n`;\nelse if (currentStreak \u003c 60) message += `   💎 Unstoppable: ${60 - currentStreak} dni\\n`;\n\nconst xpMilestones = [100, 500, 1000, 2500, 5000, 10000];\nfor (const milestone of xpMilestones) {\n  if (totalXP \u003c milestone) {\n    message += `   ⭐ ${milestone} XP: ${milestone - totalXP} XP\\n`;\n    break;\n  }\n}\n\nreturn [{\n  json: {\n    message: message,\n    chatId: chatId\n  }\n}];"
+                                     },
+                      "id":  "format-status",
+                      "name":  "Format Status",
+                      "type":  "n8n-nodes-base.code",
+                      "position":  [
+                                       896,
+                                       -16
+                                   ],
+                      "typeVersion":  2
+                  },
+                  {
+                      "parameters":  {
+                                         "chatId":  "={{ $json.chatId }}",
+                                         "text":  "={{ $json.message }}",
+                                         "additionalFields":  {
+                                                                  "parse_mode":  "Markdown"
+                                                              }
+                                     },
+                      "id":  "send-status",
+                      "name":  "Send Status",
+                      "type":  "n8n-nodes-base.telegram",
+                      "position":  [
+                                       1120,
+                                       -16
+                                   ],
+                      "typeVersion":  1.2,
+                      "webhookId":  "c77f8680-02e5-4ebd-83c2-f0c40ecff134",
+                      "credentials":  {
+                                          "telegramApi":  {
+                                                              "id":  "I7zUJVPP02OEKir8",
+                                                              "name":  "SAM_BOT"
+                                                          }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "chatId":  "={{ $(\u0027Check Context\u0027).first().json.chatId }}",
+                                         "text":  "🤖 *SystemSAM - Komendy:*\n\n/status - Pokaż statystyki\n/plan - Pokaż dzisiejszy plan\n/help - Ta wiadomość\n\n*Podsumowanie dnia:*\nWpisz wykonane taski po przecinku\nnp. _task1, task2, nauka słówek_\n\n*Przesunięcie tasków:*\nOdpowiedz _tak_ lub _nie_",
+                                         "additionalFields":  {
+                                                                  "parse_mode":  "Markdown"
+                                                              }
+                                     },
+                      "id":  "send-help",
+                      "name":  "Send Help",
+                      "type":  "n8n-nodes-base.telegram",
+                      "position":  [
+                                       672,
+                                       176
+                                   ],
+                      "typeVersion":  1.2,
+                      "webhookId":  "4d045c91-b9fb-4d8d-8310-1d9965bfc7c9",
+                      "credentials":  {
+                                          "telegramApi":  {
+                                                              "id":  "I7zUJVPP02OEKir8",
+                                                              "name":  "SAM_BOT"
+                                                          }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "content":  "## 🤖 SystemSAM - Telegram Handler\n\n**Trigger:** Każda wiadomość Telegram\n\n**Routing:**\n- daily_summary → Proces podsumowania\n- postpone_response → Obsługa tak/nie\n- command_status → /status\n- command_help → /help"
+                                     },
+                      "id":  "sticky-note",
+                      "name":  "Sticky Note",
+                      "type":  "n8n-nodes-base.stickyNote",
+                      "position":  [
+                                       -96,
+                                       -144
+                                   ],
+                      "typeVersion":  1
+                  },
+                  {
+                      "parameters":  {
+                                         "method":  "PUT",
+                                         "url":  "=https://api.clickup.com/api/v2/checklist/{{ $json.checklistId }}/checklist_item/{{ $json.itemId }}",
+                                         "authentication":  "predefinedCredentialType",
+                                         "nodeCredentialType":  "clickUpApi",
+                                         "sendBody":  true,
+                                         "specifyBody":  "json",
+                                         "jsonBody":  "={\"resolved\": true, \"_originalTaskId\": \"{{ $json.originalTaskId }}\", \"_itemName\": \"{{ $json.itemName }}\"}",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "update-item-clickup",
+                      "name":  "Update Item in ClickUp",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.3,
+                      "position":  [
+                                       2016,
+                                       -328
+                                   ],
+                      "credentials":  {
+                                          "clickUpApi":  {
+                                                             "id":  "FVDkMa0LpqdXzbIQ",
+                                                             "name":  "ClickUp_ADHD_V2"
+                                                         }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "version":  2,
+                                                                            "leftValue":  "",
+                                                                            "caseSensitive":  true,
+                                                                            "typeValidation":  "strict"
+                                                                        },
+                                                            "combinator":  "and",
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "operator":  {
+                                                                                                    "type":  "boolean",
+                                                                                                    "operation":  "false",
+                                                                                                    "singleValue":  true
+                                                                                                },
+                                                                                   "leftValue":  "={{ $json.skip }}",
+                                                                                   "id":  "condition-1767836529661-600r5jxi2"
+                                                                               }
+                                                                           ]
+                                                        },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "if-skip",
+                      "name":  "Has Items?",
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       1792,
+                                       -400
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// Zbierz wszystkie wyniki i przekazuj oryginalne dane\nconst items = $input.all();\nconst firstItem = items[0]?.json?.originalData || $(\u0027Process Summary\u0027).first().json;\n\nreturn [{\n  json: firstItem\n}];"
+                                     },
+                      "id":  "merge-results",
+                      "name":  "Collect Results",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       2688,
+                                       -328
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "url":  "https://api.clickup.com/api/v2/task/86c7ec2db",
+                                         "authentication":  "predefinedCredentialType",
+                                         "nodeCredentialType":  "clickUpApi",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "get-player-stats",
+                      "name":  "Get Player Stats",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.3,
+                      "position":  [
+                                       1120,
+                                       -400
+                                   ],
+                      "credentials":  {
+                                          "clickUpApi":  {
+                                                             "id":  "FVDkMa0LpqdXzbIQ",
+                                                             "name":  "ClickUp_ADHD_V2"
+                                                         }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const processData = $(\u0027Process Summary\u0027).first().json;\nconst playerStats = $input.first().json;\n\n// Pobierz aktualne statystyki\nlet currentStreak = 0;\nlet bestStreak = 0;\nlet totalXP = 0;\nlet totalDays = 0;\n\nfor (const field of playerStats.custom_fields || []) {\n  if (field.name === \u0027Current Streak\u0027) currentStreak = parseInt(field.value) || 0;\n  if (field.name === \u0027Best Streak\u0027) bestStreak = parseInt(field.value) || 0;\n  if (field.name === \u0027Total XP\u0027) totalXP = parseInt(field.value) || 0;\n  if (field.name === \u0027Total Days Completed\u0027) totalDays = parseInt(field.value) || 0;\n}\n\nconst completedCount = processData.completed?.length || 0;\nconst allDone = processData.allDone || false;\n\n// === OBLICZANIE XP ===\n\n// 1. Base XP: 5 XP per completed task\nconst baseXP = completedCount * 5;\n\n// 2. Bonus za complete day: +20 XP\nconst completeDayBonus = allDone ? 20 : 0;\n\n// 3. Streak bonus (dzienny)\nlet streakBonus = 0;\nif (allDone) {\n  const newStreak = currentStreak + 1;\n  if (newStreak \u003e= 31) streakBonus = 20;\n  else if (newStreak \u003e= 15) streakBonus = 15;\n  else if (newStreak \u003e= 8) streakBonus = 10;\n  else if (newStreak \u003e= 4) streakBonus = 5;\n}\n\n// Suma earned XP\nconst earnedXP = baseXP + completeDayBonus + streakBonus;\n\n// === OBLICZANIE STREAK ===\nlet newStreak = allDone ? currentStreak + 1 : 0;\nlet newBestStreak = Math.max(bestStreak, newStreak);\nlet newTotalDays = allDone ? totalDays + 1 : totalDays;\nlet newTotalXP = totalXP + earnedXP;\n\n// === SPRAWDZANIE ACHIEVEMENTÓW ===\nconst unlockedAchievements = [];\n\n// Streak achievements\nif (newStreak === 7) unlockedAchievements.push({name: \u0027🔥 Fire Starter\u0027, xp: 50});\nif (newStreak === 14) unlockedAchievements.push({name: \u0027🔥🔥 Inferno\u0027, xp: 100});\nif (newStreak === 30) unlockedAchievements.push({name: \u0027👑 Eternal Flame\u0027, xp: 250});\nif (newStreak === 60) unlockedAchievements.push({name: \u0027💎 Unstoppable\u0027, xp: 500});\n\n// XP milestones\nif (totalXP \u003c 100 \u0026\u0026 newTotalXP \u003e= 100) unlockedAchievements.push({name: \u0027⭐ First Steps\u0027, xp: 10});\nif (totalXP \u003c 500 \u0026\u0026 newTotalXP \u003e= 500) unlockedAchievements.push({name: \u0027⭐⭐ Getting Serious\u0027, xp: 25, reward: \u0027☕ Kawa Speciality\u0027});\nif (totalXP \u003c 1000 \u0026\u0026 newTotalXP \u003e= 1000) unlockedAchievements.push({name: \u0027⭐⭐⭐ XP Collector\u0027, xp: 50, reward: \u0027🍫 Słodycze Premium\u0027});\nif (totalXP \u003c 2500 \u0026\u0026 newTotalXP \u003e= 2500) unlockedAchievements.push({name: \u0027🌟 Dedicated\u0027, xp: 100, reward: \u0027🎧 Gadget\u0027});\nif (totalXP \u003c 5000 \u0026\u0026 newTotalXP \u003e= 5000) unlockedAchievements.push({name: \u0027🌟🌟 Veteran\u0027, xp: 150, reward: \u0027📦 Item\u0027});\nif (totalXP \u003c 10000 \u0026\u0026 newTotalXP \u003e= 10000) unlockedAchievements.push({name: \u0027💫 Legend\u0027, xp: 300, reward: \u0027🎁 MEGA\u0027});\n\n// Dodaj XP za achievements\nlet achievementXP = 0;\nfor (const ach of unlockedAchievements) {\n  achievementXP += ach.xp;\n}\nnewTotalXP += achievementXP;\n\n// === OBLICZANIE LEVELU ===\nconst levelThresholds = [\n  {level: 1, xp: 0, title: \u0027Nowicjusz\u0027},\n  {level: 2, xp: 100, title: \u0027Początkujący\u0027},\n  {level: 3, xp: 250, title: \u0027Adept\u0027},\n  {level: 4, xp: 500, title: \u0027Praktyk\u0027},\n  {level: 5, xp: 1000, title: \u0027Skupiony\u0027},\n  {level: 7, xp: 2000, title: \u0027Weteran\u0027},\n  {level: 10, xp: 3500, title: \u0027Ekspert\u0027},\n  {level: 15, xp: 6000, title: \u0027Mistrz\u0027},\n  {level: 20, xp: 10000, title: \u0027Legenda\u0027},\n  {level: 25, xp: 15000, title: \u0027ADHD Conqueror\u0027}\n];\n\nlet currentLevel = levelThresholds[0];\nfor (const threshold of levelThresholds) {\n  if (newTotalXP \u003e= threshold.xp) currentLevel = threshold;\n}\n\n// === BUDOWANIE SUMMARY ===\nlet summary = processData.summary + \u0027\\n\\n\u0027;\nsummary += \u0027━━━━━━━━━━━━━━━━\\n\u0027;\nsummary += \u0027💰 *XP Earned:*\\n\u0027;\nsummary += `   Tasks: +${baseXP} XP\\n`;\nif (completeDayBonus \u003e 0) summary += `   Complete Day: +${completeDayBonus} XP\\n`;\nif (streakBonus \u003e 0) summary += `   Streak Bonus: +${streakBonus} XP\\n`;\nif (achievementXP \u003e 0) summary += `   Achievements: +${achievementXP} XP\\n`;\nsummary += `   *Total: +${earnedXP + achievementXP} XP*\\n\\n`;\n\nif (unlockedAchievements.length \u003e 0) {\n  summary += \u0027🏆 *UNLOCKED:*\\n\u0027;\n  for (const ach of unlockedAchievements) {\n    summary += `   ${ach.name}!\\n`;\n    if (ach.reward) summary += `   🎁 Reward: ${ach.reward}\\n`;\n  }\n  summary += \u0027\\n\u0027;\n}\n\nsummary += `🔥 Streak: ${newStreak} dni\\n`;\nsummary += `⭐ Total XP: ${newTotalXP}\\n`;\nsummary += `📊 Level ${currentLevel.level}: ${currentLevel.title}`;\n\nreturn [{\n  json: {\n    ...processData,\n    // XP data\n    earnedXP: earnedXP + achievementXP,\n    baseXP,\n    completeDayBonus,\n    streakBonus,\n    achievementXP,\n    // New stats\n    newStreak,\n    newBestStreak,\n    newTotalXP,\n    newTotalDays,\n    // Level\n    currentLevel: currentLevel.level,\n    levelTitle: currentLevel.title,\n    // Achievements\n    unlockedAchievements,\n    // Summary\n    xpSummary: summary\n  }\n}];"
+                                     },
+                      "id":  "calculate-xp",
+                      "name":  "Calculate XP",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       1344,
+                                       -400
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "version":  2,
+                                                                            "leftValue":  "",
+                                                                            "caseSensitive":  true,
+                                                                            "typeValidation":  "loose"
+                                                                        },
+                                                            "combinator":  "and",
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "operator":  {
+                                                                                                    "type":  "string",
+                                                                                                    "operation":  "exists"
+                                                                                                },
+                                                                                   "leftValue":  "={{ $(\u0027Prepare Items to Update\u0027).item.json.originalTaskId }}",
+                                                                                   "id":  "condition-1767840995633-9hrczekiy"
+                                                                               }
+                                                                           ]
+                                                        },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "filter-has-original",
+                      "name":  "Has Original Task?",
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       2240,
+                                       -328
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// Pobierz dane z Calculate XP\nconst xpData = $(\u0027Calculate XP\u0027).first().json;\nconst taskId = $(\u0027Process Summary\u0027).first().json.taskId;\nconst chatId = $(\u0027Check Context\u0027).first().json.chatId;\n\n// Player Stats Task ID\nconst playerStatsId = \u002786c7ec2db\u0027;\n\n// Przygotuj listę aktualizacji do wykonania przez HTTP Request\nconst updates = [\n  // Player Stats\n  { taskId: playerStatsId, fieldId: \u0027ae4e0c86-eacc-426a-a76a-1a3e1a65db12\u0027, value: xpData.newStreak, name: \u0027Current Streak\u0027 },\n  { taskId: playerStatsId, fieldId: \u00273bf835b6-0323-4930-9cf0-3e33a8a98829\u0027, value: xpData.newBestStreak, name: \u0027Best Streak\u0027 },\n  { taskId: playerStatsId, fieldId: \u0027a6e04afa-5257-493e-8704-6bf27b79dcdf\u0027, value: xpData.newTotalXP, name: \u0027Total XP\u0027 },\n  { taskId: playerStatsId, fieldId: \u002792dd47d6-c58c-4c42-b739-673a87db9470\u0027, value: xpData.newTotalDays, name: \u0027Total Days\u0027 },\n  { taskId: playerStatsId, fieldId: \u002752c699be-429c-4878-a818-415ca331175c\u0027, value: Date.now(), name: \u0027Last Active\u0027 },\n  // Daily Task\n  { taskId: taskId, fieldId: \u00278896c9a2-87f8-4221-bf52-e38ce246f24b\u0027, value: xpData.earnedXP, name: \u0027XP Earned Today\u0027 },\n  { taskId: taskId, fieldId: \u002787050fe6-ddb6-452a-8bc0-95a2f6c045b9\u0027, value: xpData.newStreak, name: \u0027Streak Days\u0027 }\n];\n\n// Zwróć jako osobne itemy dla Split In Batches\nreturn updates.map(u =\u003e ({\n  json: {\n    ...u,\n    xpSummary: xpData.xpSummary,\n    chatId: chatId\n  }\n}));"
+                                     },
+                      "id":  "update-all-stats",
+                      "name":  "Prepare Field Updates",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       2912,
+                                       -400
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "=https://api.clickup.com/api/v2/task/{{ $json.taskId }}/field/{{ $json.fieldId }}",
+                                         "authentication":  "predefinedCredentialType",
+                                         "nodeCredentialType":  "clickUpApi",
+                                         "sendBody":  true,
+                                         "specifyBody":  "json",
+                                         "jsonBody":  "={\"value\": {{ $json.value }} }",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "update-field-http",
+                      "name":  "Update Custom Field",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.3,
+                      "position":  [
+                                       3136,
+                                       -400
+                                   ],
+                      "credentials":  {
+                                          "clickUpApi":  {
+                                                             "id":  "FVDkMa0LpqdXzbIQ",
+                                                             "name":  "ClickUp_ADHD_V2"
+                                                         }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+
+                                     },
+                      "id":  "limit-one",
+                      "name":  "Get First",
+                      "type":  "n8n-nodes-base.limit",
+                      "typeVersion":  1,
+                      "position":  [
+                                       3360,
+                                       -400
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "operation":  "update",
+                                         "id":  "={{ $(\u0027Prepare Items to Update\u0027).item.json.originalTaskId }}",
+                                         "updateFields":  {
+                                                              "status":  "closed"
+                                                          }
+                                     },
+                      "id":  "close-original-task",
+                      "name":  "Close Original Task",
+                      "type":  "n8n-nodes-base.clickUp",
+                      "typeVersion":  1,
+                      "position":  [
+                                       2464,
+                                       -400
+                                   ],
+                      "credentials":  {
+                                          "clickUpApi":  {
+                                                             "id":  "FVDkMa0LpqdXzbIQ",
+                                                             "name":  "ClickUp_ADHD_V2"
+                                                         }
+                                      },
+                      "continueOnFail":  true
+                  }
+              ],
+    "connections":  {
+                        "Telegram Trigger":  {
+                                                 "main":  [
+                                                              [
+                                                                  {
+                                                                      "node":  "Check Context",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ]
+                                                          ]
+                                             },
+                        "Check Context":  {
+                                              "main":  [
+                                                           [
+                                                               {
+                                                                   "node":  "Route by Context",
+                                                                   "type":  "main",
+                                                                   "index":  0
+                                                               }
+                                                           ]
+                                                       ]
+                                          },
+                        "Route by Context":  {
+                                                 "main":  [
+                                                              [
+                                                                  {
+                                                                      "node":  "Get Today Task",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ],
+                                                              [
+                                                                  {
+                                                                      "node":  "Handle Postpone",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ],
+                                                              [
+                                                                  {
+                                                                      "node":  "Get Player Stats CMD",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ],
+                                                              [
+                                                                  {
+                                                                      "node":  "Send Help",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ]
+                                                          ]
+                                             },
+                        "Get Today Task":  {
+                                               "main":  [
+                                                            [
+                                                                {
+                                                                    "node":  "Process Summary",
+                                                                    "type":  "main",
+                                                                    "index":  0
+                                                                }
+                                                            ]
+                                                        ]
+                                           },
+                        "Process Summary":  {
+                                                "main":  [
+                                                             [
+                                                                 {
+                                                                     "node":  "Get Player Stats",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ]
+                                                         ]
+                                            },
+                        "Handle Postpone":  {
+                                                "main":  [
+                                                             [
+                                                                 {
+                                                                     "node":  "Send Postpone Response",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ]
+                                                         ]
+                                            },
+                        "Get Player Stats CMD":  {
+                                                     "main":  [
+                                                                  [
+                                                                      {
+                                                                          "node":  "Format Status",
+                                                                          "type":  "main",
+                                                                          "index":  0
+                                                                      }
+                                                                  ]
+                                                              ]
+                                                 },
+                        "Format Status":  {
+                                              "main":  [
+                                                           [
+                                                               {
+                                                                   "node":  "Send Status",
+                                                                   "type":  "main",
+                                                                   "index":  0
+                                                               }
+                                                           ]
+                                                       ]
+                                          },
+                        "Prepare Items to Update":  {
+                                                        "main":  [
+                                                                     [
+                                                                         {
+                                                                             "node":  "Has Items?",
+                                                                             "type":  "main",
+                                                                             "index":  0
+                                                                         }
+                                                                     ]
+                                                                 ]
+                                                    },
+                        "Has Items?":  {
+                                           "main":  [
+                                                        [
+                                                            {
+                                                                "node":  "Update Item in ClickUp",
+                                                                "type":  "main",
+                                                                "index":  0
+                                                            }
+                                                        ],
+                                                        [
+                                                            {
+                                                                "node":  "Prepare Field Updates",
+                                                                "type":  "main",
+                                                                "index":  0
+                                                            }
+                                                        ]
+                                                    ]
+                                       },
+                        "Get Player Stats":  {
+                                                 "main":  [
+                                                              [
+                                                                  {
+                                                                      "node":  "Calculate XP",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ]
+                                                          ]
+                                             },
+                        "Calculate XP":  {
+                                             "main":  [
+                                                          [
+                                                              {
+                                                                  "node":  "Prepare Items to Update",
+                                                                  "type":  "main",
+                                                                  "index":  0
+                                                              }
+                                                          ]
+                                                      ]
+                                         },
+                        "Update Item in ClickUp":  {
+                                                       "main":  [
+                                                                    [
+                                                                        {
+                                                                            "node":  "Has Original Task?",
+                                                                            "type":  "main",
+                                                                            "index":  0
+                                                                        }
+                                                                    ]
+                                                                ]
+                                                   },
+                        "Has Original Task?":  {
+                                                   "main":  [
+                                                                [
+                                                                    {
+                                                                        "node":  "Close Original Task",
+                                                                        "type":  "main",
+                                                                        "index":  0
+                                                                    }
+                                                                ],
+                                                                [
+                                                                    {
+                                                                        "node":  "Collect Results",
+                                                                        "type":  "main",
+                                                                        "index":  0
+                                                                    }
+                                                                ]
+                                                            ]
+                                               },
+                        "Collect Results":  {
+                                                "main":  [
+                                                             [
+                                                                 {
+                                                                     "node":  "Prepare Field Updates",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ]
+                                                         ]
+                                            },
+                        "Prepare Field Updates":  {
+                                                      "main":  [
+                                                                   [
+                                                                       {
+                                                                           "node":  "Update Custom Field",
+                                                                           "type":  "main",
+                                                                           "index":  0
+                                                                       }
+                                                                   ]
+                                                               ]
+                                                  },
+                        "Update Custom Field":  {
+                                                    "main":  [
+                                                                 [
+                                                                     {
+                                                                         "node":  "Get First",
+                                                                         "type":  "main",
+                                                                         "index":  0
+                                                                     }
+                                                                 ]
+                                                             ]
+                                                },
+                        "Get First":  {
+                                          "main":  [
+                                                       [
+                                                           {
+                                                               "node":  "Send Summary",
+                                                               "type":  "main",
+                                                               "index":  0
+                                                           }
+                                                       ]
+                                                   ]
+                                      },
+                        "Close Original Task":  {
+                                                    "main":  [
+                                                                 [
+                                                                     {
+                                                                         "node":  "Collect Results",
+                                                                         "type":  "main",
+                                                                         "index":  0
+                                                                     }
+                                                                 ]
+                                                             ]
+                                                }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1",
+                     "saveDataErrorExecution":  "all",
+                     "saveDataSuccessExecution":  "all",
+                     "saveManualExecutions":  true,
+                     "saveExecutionProgress":  true,
+                     "callerPolicy":  "workflowsFromSameOwner",
+                     "availableInMCP":  false
+                 },
+    "staticData":  null,
+    "meta":  {
+                 "templateCredsSetupCompleted":  true
+             },
+    "nodeGroups":  [
+
+                   ],
+    "versionId":  "1063fc7f-8d23-4abd-9cad-5e2de6e548f0",
+    "activeVersionId":  null,
+    "versionCounter":  78,
+    "triggerCount":  1,
+    "sourceWorkflowId":  null,
+    "shared":  [
+                   {
+                       "updatedAt":  "2026-01-08T01:11:47.336Z",
+                       "createdAt":  "2026-01-08T01:11:47.336Z",
+                       "role":  "workflow:owner",
+                       "workflowId":  "aYHOAGRhmxHgmzka",
+                       "projectId":  "9rVJoULaKk30HdBB",
+                       "project":  {
+                                       "updatedAt":  "2025-06-26T00:18:14.615Z",
+                                       "createdAt":  "2025-06-25T23:37:35.363Z",
+                                       "id":  "9rVJoULaKk30HdBB",
+                                       "name":  "Nicolas Bednarz \u003cowner@example.com\u003e",
+                                       "type":  "personal",
+                                       "icon":  null,
+                                       "description":  null,
+                                       "customTelemetryTags":  [
+
+                                                               ],
+                                       "creatorId":  "af23e566-dd44-45a3-ac35-e15a8cdef3f2"
+                                   }
+                   }
+               ],
+    "tags":  [
+
+             ],
+    "activeVersion":  null
+}

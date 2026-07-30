@@ -1,0 +1,370 @@
+{
+    "updatedAt":  "2026-05-06T15:43:27.851Z",
+    "createdAt":  "2026-05-06T15:38:43.505Z",
+    "id":  "ie2Lw7emTwuPhZTn",
+    "name":  "KSEF-Wysylka-Dzienna",
+    "description":  null,
+    "active":  false,
+    "isArchived":  false,
+    "nodes":  [
+                  {
+                      "parameters":  {
+                                         "rule":  {
+                                                      "interval":  [
+                                                                       {
+                                                                           "field":  "cronExpression",
+                                                                           "expression":  "0 19 * * *"
+                                                                       }
+                                                                   ]
+                                                  }
+                                     },
+                      "id":  "a5d04544-6626-4567-b36a-c797a411536e",
+                      "name":  "Schedule-Trigger-19",
+                      "type":  "n8n-nodes-base.scheduleTrigger",
+                      "typeVersion":  1.2,
+                      "position":  [
+                                       64,
+                                       160
+                                   ],
+                      "notes":  "Codziennie 19:00 Europe/Warsaw. TZ z settings workflow."
+                  },
+                  {
+                      "parameters":  {
+
+                                     },
+                      "id":  "29c82f95-bc11-458d-9f5f-723c81c687e1",
+                      "name":  "Manual-Trigger",
+                      "type":  "n8n-nodes-base.manualTrigger",
+                      "typeVersion":  1,
+                      "position":  [
+                                       64,
+                                       368
+                                   ],
+                      "notes":  "Do testow ad-hoc."
+                  },
+                  {
+                      "parameters":  {
+                                         "url":  "https://TODO_SLUG.fakturownia.pl/invoices.json",
+                                         "sendQuery":  true,
+                                         "queryParameters":  {
+                                                                 "parameters":  [
+                                                                                    {
+                                                                                        "name":  "period",
+                                                                                        "value":  "more"
+                                                                                    },
+                                                                                    {
+                                                                                        "name":  "date_from",
+                                                                                        "value":  "={{ $now.setZone(\u0027Europe/Warsaw\u0027).toFormat(\u0027yyyy-MM-dd\u0027) }}"
+                                                                                    },
+                                                                                    {
+                                                                                        "name":  "date_to",
+                                                                                        "value":  "={{ $now.setZone(\u0027Europe/Warsaw\u0027).toFormat(\u0027yyyy-MM-dd\u0027) }}"
+                                                                                    }
+                                                                                ]
+                                                             },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "0d78e0b1-ab8b-4853-8f8b-0854e08b53e9",
+                      "name":  "Fakturownia-getInvoices",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       304,
+                                       272
+                                   ],
+                      "notes":  "Pobiera faktury z dzisiejszej daty wystawienia. TODO: SLUG + TOKEN."
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  true,
+                                                                            "leftValue":  "",
+                                                                            "typeValidation":  "strict",
+                                                                            "version":  2
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "id":  "cond-empty",
+                                                                                   "leftValue":  "={{ $json.gov_status }}",
+                                                                                   "rightValue":  "",
+                                                                                   "operator":  {
+                                                                                                    "type":  "string",
+                                                                                                    "operation":  "empty"
+                                                                                                }
+                                                                               },
+                                                                               {
+                                                                                   "id":  "cond-error",
+                                                                                   "leftValue":  "={{ $json.gov_status }}",
+                                                                                   "rightValue":  "send_error",
+                                                                                   "operator":  {
+                                                                                                    "type":  "string",
+                                                                                                    "operation":  "equals"
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "or"
+                                                        },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "6a2a79b9-4be4-4406-b4af-19b5085df8ae",
+                      "name":  "Filter-Do-Wyslania",
+                      "type":  "n8n-nodes-base.filter",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       544,
+                                       272
+                                   ],
+                      "notes":  "Przepuszcza faktury niewyslane (gov_status puste) lub z bledem (send_error)."
+                  },
+                  {
+                      "parameters":  {
+                                         "url":  "=https://TODO_SLUG.fakturownia.pl/invoices/{{ $json.id }}.json",
+                                         "sendQuery":  true,
+                                         "queryParameters":  {
+                                                                 "parameters":  [
+                                                                                    {
+                                                                                        "name":  "send_to_ksef",
+                                                                                        "value":  "yes"
+                                                                                    },
+                                                                                    {
+                                                                                        "name":  "api_token",
+                                                                                        "value":  "TODO_FAKTUROWNIA_TOKEN"
+                                                                                    }
+                                                                                ]
+                                                             },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "53e1cb47-ceea-4d46-9764-16608ecaa852",
+                      "name":  "Fakturownia-SendToKsef",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       784,
+                                       272
+                                   ],
+                      "onError":  "continueRegularOutput",
+                      "notes":  "Endpoint natywny Fakturowni: GET /invoices/{id}.json?send_to_ksef=yes."
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  true,
+                                                                            "leftValue":  "",
+                                                                            "typeValidation":  "loose",
+                                                                            "version":  2
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "id":  "cond-send-error",
+                                                                                   "leftValue":  "={{ $json.gov_status }}",
+                                                                                   "rightValue":  "send_error",
+                                                                                   "operator":  {
+                                                                                                    "type":  "string",
+                                                                                                    "operation":  "equals"
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "3ba01d74-f814-4f74-92bb-90a52c0bd647",
+                      "name":  "IF-Czy-Blad",
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       1024,
+                                       272
+                                   ],
+                      "notes":  "True=blad -\u003e Email-Alert. False=processing/ok -\u003e koniec."
+                  },
+                  {
+                      "parameters":  {
+                                         "fromEmail":  "TODO_FROM_EMAIL",
+                                         "toEmail":  "owner@example.com",
+                                         "subject":  "=KSeF: blad wysylki faktury {{ $json.number || $json.id }}",
+                                         "emailFormat":  "text",
+                                         "text":  "=Faktura nie zostala wyslana do KSeF.\n\nNumer faktury: {{ $json.number }}\nID Fakturowni: {{ $json.id }}\nData wystawienia: {{ $json.issue_date }}\nStatus KSeF: {{ $json.gov_status }}\nBledy: {{ JSON.stringify($json.gov_error_messages) }}\n\nLink do faktury: https://TODO_SLUG.fakturownia.pl/invoices/{{ $json.id }}\n\nWymaga recznego sprawdzenia i ponownej wysylki.",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "b63f4abd-010b-44e8-a3d8-9fe7f3af5b18",
+                      "name":  "Email-Alert-Blad",
+                      "type":  "n8n-nodes-base.emailSend",
+                      "typeVersion":  2.1,
+                      "position":  [
+                                       1264,
+                                       160
+                                   ],
+                      "webhookId":  "2a5e46d7-37c6-4149-8554-df7159c26798",
+                      "notes":  "TODO: from email + credential SMTP. Adres docelowy do potwierdzenia z Kamilem."
+                  },
+                  {
+                      "parameters":  {
+                                         "content":  "## 1. Triggery + pobranie\n\nSchedule 0 19 * * * (Europe/Warsaw, z settings workflow).\nManual-Trigger do testow ad-hoc.\nOba leca do Fakturownia-getInvoices.\n\nTODO: SLUG Fakturowni + API_TOKEN.",
+                                         "height":  220,
+                                         "width":  480,
+                                         "color":  5
+                                     },
+                      "id":  "d36e915a-f28f-4cf9-be63-0d0ce7e4655e",
+                      "name":  "Sticky-1-Triggery",
+                      "type":  "n8n-nodes-base.stickyNote",
+                      "typeVersion":  1,
+                      "position":  [
+                                       0,
+                                       0
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "content":  "## 2. Filtr + wysylka per faktura\n\nFilter-Do-Wyslania: gov_status puste LUB send_error.\nFakturownia-SendToKsef: GET /invoices/{id}.json?send_to_ksef=yes.\nContinue on Fail = TRUE.\nn8n iteruje per item natywnie - bez Loop.",
+                                         "height":  240,
+                                         "width":  480,
+                                         "color":  4
+                                     },
+                      "id":  "fb6c72a1-32ab-4684-9d39-3ee81e5b3f54",
+                      "name":  "Sticky-2-Filtr-Wysylka",
+                      "type":  "n8n-nodes-base.stickyNote",
+                      "typeVersion":  1,
+                      "position":  [
+                                       496,
+                                       0
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "content":  "## 3. Alert na blad\n\nIF-Czy-Blad: gov_status = send_error.\nEmail-Alert-Blad: 1 mail per fakture z bledem.\n\nTODO: from email + credential SMTP.",
+                                         "height":  220,
+                                         "width":  480,
+                                         "color":  2
+                                     },
+                      "id":  "09598705-2d84-4116-8527-ad274cdfac7b",
+                      "name":  "Sticky-3-Alert",
+                      "type":  "n8n-nodes-base.stickyNote",
+                      "typeVersion":  1,
+                      "position":  [
+                                       992,
+                                       0
+                                   ]
+                  }
+              ],
+    "connections":  {
+                        "Schedule-Trigger-19":  {
+                                                    "main":  [
+                                                                 [
+                                                                     {
+                                                                         "node":  "Fakturownia-getInvoices",
+                                                                         "type":  "main",
+                                                                         "index":  0
+                                                                     }
+                                                                 ]
+                                                             ]
+                                                },
+                        "Manual-Trigger":  {
+                                               "main":  [
+                                                            [
+                                                                {
+                                                                    "node":  "Fakturownia-getInvoices",
+                                                                    "type":  "main",
+                                                                    "index":  0
+                                                                }
+                                                            ]
+                                                        ]
+                                           },
+                        "Fakturownia-getInvoices":  {
+                                                        "main":  [
+                                                                     [
+                                                                         {
+                                                                             "node":  "Filter-Do-Wyslania",
+                                                                             "type":  "main",
+                                                                             "index":  0
+                                                                         }
+                                                                     ]
+                                                                 ]
+                                                    },
+                        "Filter-Do-Wyslania":  {
+                                                   "main":  [
+                                                                [
+                                                                    {
+                                                                        "node":  "Fakturownia-SendToKsef",
+                                                                        "type":  "main",
+                                                                        "index":  0
+                                                                    }
+                                                                ]
+                                                            ]
+                                               },
+                        "Fakturownia-SendToKsef":  {
+                                                       "main":  [
+                                                                    [
+                                                                        {
+                                                                            "node":  "IF-Czy-Blad",
+                                                                            "type":  "main",
+                                                                            "index":  0
+                                                                        }
+                                                                    ]
+                                                                ]
+                                                   },
+                        "IF-Czy-Blad":  {
+                                            "main":  [
+                                                         [
+                                                             {
+                                                                 "node":  "Email-Alert-Blad",
+                                                                 "type":  "main",
+                                                                 "index":  0
+                                                             }
+                                                         ]
+                                                     ]
+                                        }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1",
+                     "binaryMode":  "separate"
+                 },
+    "staticData":  null,
+    "meta":  null,
+    "nodeGroups":  [
+
+                   ],
+    "versionId":  "6dd2fccf-ccad-42e5-96af-25c4444b255e",
+    "activeVersionId":  null,
+    "versionCounter":  3,
+    "triggerCount":  0,
+    "sourceWorkflowId":  null,
+    "shared":  [
+                   {
+                       "updatedAt":  "2026-05-06T15:38:43.505Z",
+                       "createdAt":  "2026-05-06T15:38:43.505Z",
+                       "role":  "workflow:owner",
+                       "workflowId":  "ie2Lw7emTwuPhZTn",
+                       "projectId":  "9rVJoULaKk30HdBB",
+                       "project":  {
+                                       "updatedAt":  "2025-06-26T00:18:14.615Z",
+                                       "createdAt":  "2025-06-25T23:37:35.363Z",
+                                       "id":  "9rVJoULaKk30HdBB",
+                                       "name":  "Nicolas Bednarz \u003cowner@example.com\u003e",
+                                       "type":  "personal",
+                                       "icon":  null,
+                                       "description":  null,
+                                       "customTelemetryTags":  [
+
+                                                               ],
+                                       "creatorId":  "af23e566-dd44-45a3-ac35-e15a8cdef3f2"
+                                   }
+                   }
+               ],
+    "tags":  [
+
+             ],
+    "activeVersion":  null
+}
