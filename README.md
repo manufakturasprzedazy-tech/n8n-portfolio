@@ -1,6 +1,6 @@
-# n8n Workflow Portfolio — Nicolas Bednarz
+# n8n Workflow Portfolio
 
-Production automations built between 2024 and 2026 for clients in e-commerce, manufacturing, real estate, services and healthcare, plus internal tooling.
+Nicolas Bednarz. Production automations built between 2024 and 2026 for clients in e-commerce, manufacturing, real estate, services and healthcare, plus internal tooling.
 
 **46 workflows · 965 nodes · 20+ integrated services**
 
@@ -8,7 +8,7 @@ Production automations built between 2024 and 2026 for clients in e-commerce, ma
 |---|---|
 | Contact | nicolas.bednarz2209@gmail.com · [LinkedIn](https://www.linkedin.com/in/nicolasbednarz) |
 | Site | [opiekunautomatyzacji.pl](https://opiekunautomatyzacji.pl) |
-| Also | [github.com/manufakturasprzedazy-tech/ekstraktor](https://github.com/manufakturasprzedazy-tech/ekstraktor) — FastAPI service, live on Railway |
+| Also | [github.com/manufakturasprzedazy-tech/ekstraktor](https://github.com/manufakturasprzedazy-tech/ekstraktor), a FastAPI service running on Railway |
 
 ---
 
@@ -18,21 +18,21 @@ Every file is a complete, importable n8n workflow.
 
 1. Open any n8n canvas (cloud or self-hosted)
 2. Copy the raw JSON
-3. Paste directly onto the canvas — `Ctrl+V`
+3. Paste directly onto the canvas with `Ctrl+V`
 
-The full graph renders immediately: nodes, connections, parameters and branching logic. No import dialog needed.
+Nodes, connections, parameters and branching logic all render. No import dialog needed.
 
-**Credentials are not included.** n8n stores them separately from workflow definitions, so these files carry references only — never secrets. Any API key visible in an HTTP node has been replaced with a placeholder.
+**Credentials are not included.** n8n stores them separately from workflow definitions, so these files carry credential references, not credential values. Any API key visible in an HTTP node has been replaced with a placeholder.
 
 ---
 
-## Where the volume is
+## Breakdown
 
 | Group | Workflows | Nodes | What it does |
 |---|---:|---:|---|
 | [Content & social publishing](#content--social-publishing) | 9 | 293 | AI content generation → video render → publish to 4 platforms, driven from Telegram |
 | [Marketplace orders & invoicing](#marketplace-orders--invoicing) | 6 | 214 | Order sync across Allegro, Erli, Empik, eMAG · FX conversion · invoice issuing |
-| [Voice AI](#voice-ai) | 6 | 132 | Phone booking bots — LLM-agent and deterministic variants, compared in production |
+| [Voice AI](#voice-ai) | 6 | 132 | Phone booking bots. LLM-agent and deterministic variants, compared in production |
 | [AI email triage](#ai-email-triage) | 7 | 46 | Classification, PII anonymization, jailbreak filtering, LLM judge, Slack approval |
 | [Invoicing & tax compliance](#invoicing--tax-compliance) | 6 | 69 | Advance/final invoices, KSeF submission, payment-failure recovery |
 | [Scraping & enrichment](#scraping--enrichment) | 2 | 43 | Apify-based scraping into Sheets and Airtable |
@@ -48,7 +48,7 @@ Nine connected workflows. The client runs the entire system from a Telegram chat
 | Workflow | Nodes | Description |
 |---|---:|---|
 | `MB_Telegram_Bot` | **152** | State machine driving the whole system. Session handling, type menus, callback acknowledgement, sequential approval, per-element edit and regeneration |
-| `MB_Regenerator` | 38 | Regenerates a single element by scope — hashtags, script, per-platform copy, SEO, graphics or render — without rerunning the pipeline |
+| `MB_Regenerator` | 38 | Regenerates a single element by scope: hashtags, script, per-platform copy, SEO, graphics or render, without rerunning the pipeline |
 | `MB_Content_Generator` | 29 | Routes by content type, pulls active guidelines and property data, generates the piece |
 | `MB_Publish` | 25 | Per-platform publishing: Facebook Reels three-step upload, Instagram container + publish, TikTok, WordPress |
 | `MB_Video_Render` | 20 | json2video render with status polling and scenario validation |
@@ -57,7 +57,7 @@ Nine connected workflows. The client runs the entire system from a Telegram chat
 | `MB_Publish_Scheduler` | 5 | 15-minute cron dispatching anything scheduled |
 | `MB_ErrorHandler` | 4 | Error trigger mapping failures to plain-language messages sent to the operator |
 
-**Engineering notes.** Publishing is failure-isolated — one platform going down does not block the others, verified on a live run. An out-of-memory crash was traced to unforced image output format returning ~9 MB PNGs; setting JPEG at quality 80 cut payload size by 20–30×.
+**Engineering notes.** Publishing is failure-isolated. One platform going down does not block the others, verified on a live run. An out-of-memory crash was traced to unforced image output format returning ~9 MB PNGs; setting JPEG at quality 80 cut payload size by 20–30×.
 
 ---
 
@@ -82,14 +82,14 @@ Two architectures for the same problem, built and compared in production: an LLM
 
 | Workflow | Nodes | Description |
 |---|---:|---|
-| `NoAgentVoiceBotv3` | 55 | Deterministic booking flow — slot computation, availability ranges, response payload assembly. No LLM in the decision path |
+| `NoAgentVoiceBotv3` | 55 | Deterministic booking flow: slot computation, availability ranges, response payload assembly. No LLM in the decision path |
 | `NoAgentVoiceBot_-_Complete` | 23 | Webhook validation, request-type routing, availability logic |
 | `TheBestOfVoiceBot` | 23 | Refined variant of the deterministic architecture |
 | `Voice_AI_BS` | 12 | LLM agent with availability tool and conversation memory |
-| `Sekretrarka_AI` | 10 | ElevenLabs voice agent with appointment tools — check, create, edit, delete |
+| `Sekretrarka_AI` | 10 | ElevenLabs voice agent with appointment tools: check, create, edit, delete |
 | `VAPI_Klinika` | 9 | VAPI webhook → agent with Postgres memory → Airtable booking records |
 
-**Takeaway from running both:** the deterministic flow is larger but predictable, and for booking it turned out to be the safer default. The agent variant is smaller and more flexible but harder to guarantee.
+**Result of running both.** The deterministic flow is larger but predictable, and for booking it turned out to be the safer default. The agent variant is smaller and more flexible, but harder to guarantee.
 
 ---
 
@@ -122,7 +122,7 @@ Classifies incoming mail, drafts a reply, and routes it for human approval. It n
 | `FZ-B_Faktura_Koncowa` | 11 | Webhook → final invoice derived from the advance, PDF back to the order |
 | `KSEF-Wysylka-Dzienna` | 7 | Daily submission to the Polish national e-invoicing system, with a separate verification line and a single aggregated error report |
 
-Every one of these is idempotent — reruns cannot double-issue an invoice.
+Every one of these is idempotent. Reruns cannot double-issue an invoice.
 
 ---
 
@@ -137,7 +137,7 @@ Every one of these is idempotent — reruns cannot double-issue an invoice.
 
 ## Personal productivity system
 
-Internal tooling — a gamified task system I built for myself and use daily.
+Internal tooling. A gamified task system I built for myself and use daily.
 
 | Workflow | Nodes | Description |
 |---|---:|---|
@@ -154,26 +154,27 @@ Internal tooling — a gamified task system I built for myself and use daily.
 |---|---:|---|
 | `Telegram_10` | 65 | Telegram bot with Airtable-backed session store and router dispatch |
 | `Agent_AI_-_Centrum_Dowodzenia` | 17 | Slack-triggered assistant, branches on text vs audio and transcribes voice input |
-| `_Ogrodzenia_-_Agent_Sprzedaowy_Gmail` | 10 | Email sales agent — data extraction → GPT-4.1 agent → Postgres conversation memory → pricing pulled from Sheets |
+| `_Ogrodzenia_-_Agent_Sprzedaowy_Gmail` | 10 | Email sales agent: data extraction → GPT-4.1 agent → Postgres conversation memory → pricing pulled from Sheets |
 | `Email_Automation_Agent_v13` | 10 | Gmail → validation → CRM lookup → agent with conversation memory |
-| `Uzgadnianie_faktur_-_pipeline_3-etapowy_demo` | 9 | Three-stage LLM pipeline — normalize → match → verify. Built for a benchmark of 14 models on payment reconciliation |
+| `Uzgadnianie_faktur_-_pipeline_3-etapowy_demo` | 9 | Three-stage LLM pipeline: normalize → match → verify. Built for a benchmark of 14 models on payment reconciliation |
 | `Konwersacja_Mailowa` | 7 | Email conversation agent with a pricing tool, Postgres memory and CRM lead creation |
 
 ---
 
-## A note on what is here
+## About these files
 
-These are working files, not polished demos. Some carry version suffixes, some are staging variants of a production flow, and a few are earlier iterations kept deliberately so the evolution is visible.
+These are working files. Some carry version suffixes, some are staging variants of a production flow, and a few are earlier iterations kept on purpose so the evolution is visible.
 
-Two of these started from publicly available community templates and were rebuilt for a client's process rather than written from scratch: `Email_Automation_Agent_v13` and `_Ogrodzenia_-_Agent_Sprzedaowy_Gmail`.
+Two of them started from publicly available community templates and were rebuilt for a client's process instead of written from scratch: `Email_Automation_Agent_v13` and `_Ogrodzenia_-_Agent_Sprzedaowy_Gmail`.
 
-## And what is not here
+## What is not here
 
-This repo is what I can show, not everything I have built. Two of the more demanding systems are missing from it:
+Several of the more demanding systems run on client infrastructure I do not own, or fall under confidentiality. They are not in this repo:
 
-- **A 16-chapter document generator (~55 pages per run)** with a two-layer quality gate: six rule-based detectors plus an LLM judge working against a closed list of violations, and a gate that blocks delivery of an incomplete document. Rebuilt from a ~100-node monolith that failed on the third chapter every time. Generation cost dropped by roughly two thirds.
-- **A document extraction pipeline** combining a vision model for OCR, Cohere reranking and a separate matching model, with deterministic guardrails in code. Prompt redesign took accuracy from 67% to 92.5%.
+- **A 16-chapter document generator** (~55 pages per run) with a two-layer quality gate: six rule-based detectors, an LLM judge working against a closed list of violations, and a gate that blocks delivery of an incomplete document. Rebuilt from a ~100-node monolith that failed on the third chapter every single run. Quality went from 15/16 to 16/16 chapters passing; generation cost dropped by roughly two thirds.
+- **A customs document pipeline**, 24 steps, combining a vision model for OCR, Cohere reranking and a separate matching model, with deterministic guardrails in code and a hard requirement that totals across three generated documents reconcile to the cent. Prompt redesign took accuracy from 67% to 92.5%.
+- **Supplier price tracking** for goods sourced from overseas: OCR of order baskets, currency conversion at the central bank rate, AI product matching benchmarked across five models, four guardrails enforced in code, append-only price history. The 31B model beat the 397B one on every criterion at a fraction of the cost.
+- **Bank payment reconciliation** that matches incoming transfers to invoices FIFO per client, instead of parsing transfer titles, which turned out to be non-deterministic. Designed after analysing real payment records, where the payer tax ID I expected to key on did not exist in the data at all.
+- **A production execution system (MES)** outside n8n: FastAPI, PostgreSQL 16, Docker, GitHub Actions. Taken over from another developer with no handover. 13 production deploys in four days, zero rollbacks.
 
-Both run on client infrastructure I do not own, and both are covered by confidentiality. I can walk through either on a screen share.
-
-Happy to walk through anything here the same way.
+I can walk through any of this on a screen share, both the workflows in this repo and the systems above.
