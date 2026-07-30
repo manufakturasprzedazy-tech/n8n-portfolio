@@ -167,4 +167,13 @@ These are working files, not polished demos. Some carry version suffixes, some a
 
 Two of these started from publicly available community templates and were rebuilt for a client's process rather than written from scratch: `Email_Automation_Agent_v13` and `_Ogrodzenia_-_Agent_Sprzedaowy_Gmail`.
 
-Happy to walk through any of them on a screen share.
+## And what is not here
+
+This repo is what I can show, not everything I have built. Two of the more demanding systems are missing from it:
+
+- **A 16-chapter document generator (~55 pages per run)** with a two-layer quality gate: six rule-based detectors plus an LLM judge working against a closed list of violations, and a gate that blocks delivery of an incomplete document. Rebuilt from a ~100-node monolith that failed on the third chapter every time. Generation cost dropped by roughly two thirds.
+- **A document extraction pipeline** combining a vision model for OCR, Cohere reranking and a separate matching model, with deterministic guardrails in code. Prompt redesign took accuracy from 67% to 92.5%.
+
+Both run on client infrastructure I do not own, and both are covered by confidentiality. I can walk through either on a screen share.
+
+Happy to walk through anything here the same way.
